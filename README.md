@@ -27,3 +27,18 @@ kubectl apply -f logging/fluentd-daemonset-syslog.yaml
 ```shell
 kubectl delete -f logging/fluentd-daemonset-syslog.yaml
 ```
+
+## a9s PaaS
+
+### Prerequisites
+
+- a9s Kubernetes instance
+
+### Logging
+
+#### Install Fluentd DaemonSet
+
+```shell
+kubectl apply -f logging/fluentd-daemonset-permissions.yaml
+kubectl apply -f logging/fluentd-daemonset-syslog.yaml
+```
