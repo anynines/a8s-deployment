@@ -15,7 +15,11 @@ docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LIS
 
 WIP: ip is hardcoded to RG's local setup
 
+#### Install Fluentd DaemonSet
+
 ```shell
 kubectl apply -f logging/fluentd-daemonset-permissions.yaml
 kubectl apply -f logging/fluentd-daemonset-syslog.yaml
 ```
+
+##### Delete Fluentd DaemonSet Setup
