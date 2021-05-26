@@ -23,3 +23,7 @@ kubectl apply -f logging/fluentd-daemonset-syslog.yaml
 ```
 
 ##### Delete Fluentd DaemonSet Setup
+
+```shell
+kubectl delete -f logging/fluentd-daemonset-syslog.yaml
+```
