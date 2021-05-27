@@ -18,17 +18,33 @@ docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LIS
 
 WIP: ip is hardcoded to RG's local setup
 
+### Install Elasticsearch
+
+```shell
+kubectl apply -f dashboard/a8s-logging.yaml
+kubectl apply -f dashboard/elasticsearch_svc.yaml
+kubectl apply -f dashboard/elasticsearch_statefulset.yaml
+kubectl rollout status statefulset/es-cluster --namespace a8s-system
+```
+
+### Install Kibana
+
+```shell
+kubectl apply -f dashboard/kibana.yaml
+kubectl rollout status deployment/kibana --namespace a8s-system
+```
+
 #### Install Fluentd DaemonSet
 
 ```shell
 kubectl apply -f logging/fluentd-daemonset-permissions.yaml
-kubectl apply -f logging/fluentd-daemonset-syslog-minikube.yaml
+kubectl apply -f logging/fluentd-daemonset-elasticsearch.yaml
 ```
 
 ##### Delete Fluentd DaemonSet Setup
 
 ```shell
-kubectl delete -f logging/fluentd-daemonset-syslog.yaml
+kubectl delete -f logging/fluentd-daemonset-elasticsearch.yaml
 ```
 
 ## a9s PaaS
