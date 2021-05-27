@@ -26,6 +26,8 @@ spec:
       - name: fluentd
         image: fluent/fluentd-kubernetes-daemonset:v1-debian-elasticsearch
         env:
+          - name: FLUENTD_SYSTEMD_CONF
+            value: disable
           - name:  FLUENT_ELASTICSEARCH_HOST
             value: "elasticsearch.a8s-system.svc.cluster.local"
           - name:  FLUENT_ELASTICSEARCH_PORT

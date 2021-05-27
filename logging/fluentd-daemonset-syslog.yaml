@@ -26,6 +26,8 @@ spec:
       - name: fluentd
         image: fluent/fluentd-kubernetes-daemonset:v1-debian-syslog
         env:
+          - name: FLUENTD_SYSTEMD_CONF
+            value: disable
           - name:  SYSLOG_HOST
             value: "192.168.178.45"
           - name:  SYSLOG_PORT
