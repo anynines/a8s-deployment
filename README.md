@@ -21,7 +21,7 @@ WIP: ip is hardcoded to RG's local setup
 ### Install Elasticsearch
 
 ```shell
-kubectl apply -f dashboard/a8s-logging.yaml
+kubectl apply -f dashboard/a8s-system.yaml
 kubectl apply -f dashboard/elasticsearch_svc.yaml
 kubectl apply -f dashboard/elasticsearch_statefulset.yaml
 kubectl rollout status statefulset/es-cluster --namespace a8s-system
