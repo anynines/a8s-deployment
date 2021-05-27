@@ -1,5 +1,8 @@
 # a8s-deployment
 
+**WARNING: This repo is WIP. We will cleanup, squash and force commit `main` in
+the future.**
+
 ## minikube on macOS
 
 ### Prerequisites
