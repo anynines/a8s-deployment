@@ -19,7 +19,7 @@ WIP: ip is hardcoded to RG's local setup
 
 ```shell
 kubectl apply -f logging/fluentd-daemonset-permissions.yaml
-kubectl apply -f logging/fluentd-daemonset-syslog.yaml
+kubectl apply -f logging/fluentd-daemonset-syslog-minikube.yaml
 ```
 
 ##### Delete Fluentd DaemonSet Setup
