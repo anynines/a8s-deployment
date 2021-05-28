@@ -45,8 +45,8 @@ fields:
 
 In order to now parse those log files, we will use a
 [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-, mount directories on the Kubernetes nodes to our pods and use a software to
-process the logs within the pods.
+, mount relevant directories on the Kubernetes nodes to our pods and use a
+software to process the logs within the pods.
 
 Some people already built tools to process those kind of logs, so we can base
 our work on that. There are for example [Fluentd](https://www.fluentd.org/) and
@@ -93,3 +93,13 @@ kubectl delete -f logging/demo-app-counter.yaml
 ```
 
 ### Notes
+- Do we have access to the container logs in all products (AWS, ...)?
+- What's the deal with systemd journal?
+- In what way is is the filename format and the json file format given? Is it a
+  standard kind of in the source code of Kubernetes and Docker? If it changes,
+  a lot of things break.
+- What to do where depends on the customer requirements and special cases we
+  cannot forsee at the moment.
+- It looks quite easy to write your own fluentd image with the appropriate
+  configuration(s) for our own framework/product. But would be great of course
+  to use preexisting docker images as much as possible.
