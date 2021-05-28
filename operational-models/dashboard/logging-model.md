@@ -43,9 +43,9 @@ downtime.
 kubectl apply -f dashboard/kibana.yaml
 ```
 
-Kibana is a window into Elasticsearch. It provides a browser-based  analytics
-and search dashboard dashboard. We deploy it as a Kubernetes
-[Deployment][deployment] since we don't require storage for Kibana.
+Kibana is a window into Elasticsearch. It provides a browser-based analytics
+and search dashboard. We deploy it as a Kubernetes [Deployment][deployment]
+since we don't require storage for Kibana.
 
 [namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
