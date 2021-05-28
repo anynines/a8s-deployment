@@ -33,7 +33,7 @@ spec:
           - name:  SYSLOG_PORT
             value: "54321"
           - name:  SYSLOG_PROTOCOL
-            value: "udp"
+            value: "tcp"
         resources:
           limits:
             memory: 200Mi
