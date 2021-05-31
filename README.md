@@ -103,5 +103,5 @@ kubectl delete -f logging/fluentd-daemonset-elasticsearch.yaml
 
 ```shell
 kubectl apply -f logging/fluentd-daemonset-permissions.yaml
-kubectl apply -f logging/fluentd-daemonset-syslog.yaml
+kubectl apply -f logging/fluentd-daemonset-syslog-a9s-kubernetes.yaml
 ```
