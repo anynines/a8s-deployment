@@ -2,8 +2,6 @@
 
 Based on minikube.
 
-## Manual steps
-
 We create a separate namespace for a8s system components such as
 the logging framework. This allows us to isolate a8s Kubernetes objects from
 the rest of the cluster.
@@ -52,8 +50,12 @@ Some people already built tools to process those kind of logs, so we can base
 our work on that. There are for example [Fluentd](https://www.fluentd.org/) and
 [Fluent Bit](https://fluentbit.io/) available.
 
-In the following we will use some Fluentd tooling to process the logs on minikube.
 
+# Fluentd
+
+## Manual steps
+
+In the following we will use some Fluentd tooling to process the logs on minikube.
 
 ### Creation
 
