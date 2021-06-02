@@ -50,6 +50,47 @@ Some people already built tools to process those kind of logs, so we can base
 our work on that. There are for example [Fluentd](https://www.fluentd.org/) and
 [Fluent Bit](https://fluentbit.io/) available.
 
+# Fluent Bit
+
+## Manual Steps
+
+In the following we will use some Fluent Bit tooling to process the logs on
+minikube.
+
+### Creation
+
+First we need to install the Fluent Bit daemonset.
+It is configured in a way that it forwards the processed logs to an
+Elasticsearch instance.
+
+```bash
+kubectl apply -f logging/fluent-bit-daemonset-permissions.yaml
+kubectl apply -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
+kubectl apply -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
+```
+
+You can use a demo app to generate some application specific logs:
+
+```shell
+kubectl apply -f logging/demo-app-counter.yaml
+```
+
+### Deletion
+
+If you want to get rid of the whole daemon set setup, you can run the following
+commands:
+
+```shell
+kubectl delete -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
+kubectl delete -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
+kubectl delete -f logging/fluent-bit-daemonset-permissions.yaml
+```
+
+If you used the demo app, delete it using the following commands:
+
+```shell
+kubectl delete -f logging/demo-app-counter.yaml
+```
 
 # Fluentd
 
@@ -95,6 +136,9 @@ kubectl delete -f logging/demo-app-counter.yaml
 ```
 
 ### Notes
+
+Some general notes independent of Fluent Bit or Fluentd most of the time:
+
 - Do we have access to the container logs in all products (AWS, ...)?
 - What's the deal with systemd journal?
 - In what way is is the filename format and the json file format given? Is it a
