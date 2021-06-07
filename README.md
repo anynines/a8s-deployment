@@ -34,11 +34,12 @@ kubectl rollout status deployment/kibana --namespace a8s-system
 
 ### Logging
 
-#### Install Fluentd DaemonSet
+#### Install Fluent Bit DaemonSet
 
 ```shell
-kubectl apply -f logging/fluentd-daemonset-permissions.yaml
-kubectl apply -f logging/fluentd-daemonset-elasticsearch.yaml
+kubectl apply -f logging/fluent-bit-daemonset-permissions.yaml
+kubectl apply -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
+kubectl apply -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
 ```
 
 #### Using Dashboard
@@ -85,10 +86,12 @@ The logs will be available to interact using your new filter.
 
 ![Kibana6](operational-models/images/kibana/6.png)
 
-##### Delete Fluentd DaemonSet Setup
+#### Delete Fluent Bit DaemonSet Setup
 
 ```shell
-kubectl delete -f logging/fluentd-daemonset-elasticsearch.yaml
+kubectl delete -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
+kubectl delete -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
+kubectl delete -f logging/fluent-bit-daemonset-permissions.yaml
 ```
 
 ## a9s PaaS
