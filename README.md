@@ -34,12 +34,20 @@ kubectl rollout status deployment/kibana --namespace a8s-system
 
 ### Logging
 
-#### Install Fluent Bit DaemonSet
+#### Install Fluent Bit DaemonSet as a log forwarder
 
 ```shell
 kubectl apply -f logging/fluent-bit-daemonset-permissions.yaml
-kubectl apply -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
-kubectl apply -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
+kubectl apply -f logging/fluent-bit-daemonset-configmap-forward-minikube.yaml
+kubectl apply -f logging/fluent-bit-daemonset-forward-minikube.yaml
+```
+
+#### Install Fluentd statefulset as a log aggregator
+
+```shell
+kubectl apply -f logging/fluentd-aggregator-configmap.yaml
+kubectl apply -f logging/fluentd-aggregator-service.yaml
+kubectl apply -f logging/fluentd-aggregator-statefulset.yaml
 ```
 
 #### Using Dashboard
