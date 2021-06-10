@@ -101,18 +101,3 @@ kubectl delete -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
 kubectl delete -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
 kubectl delete -f logging/fluent-bit-daemonset-permissions.yaml
 ```
-
-## a9s PaaS
-
-### Prerequisites
-
-- a9s Kubernetes instance
-
-### Logging
-
-#### Install Fluentd DaemonSet
-
-```shell
-kubectl apply -f logging/fluentd-daemonset-permissions.yaml
-kubectl apply -f logging/fluentd-daemonset-syslog-a9s-kubernetes.yaml
-```
