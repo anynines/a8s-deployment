@@ -16,20 +16,24 @@ docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LIS
 
 ### Dashboard
 
-#### Install Elasticsearch
+#### Install Open Distro for Elasticsearch and Kibana
+
+Ensure docker image for Open Search Kibana Dashboard is available.
 
 ```shell
-kubectl apply -f dashboard/a8s-system.yaml
-kubectl apply -f dashboard/elasticsearch_svc.yaml
-kubectl apply -f dashboard/elasticsearch_statefulset.yaml
-kubectl rollout status statefulset/es-cluster --namespace a8s-system
+cd docker
+export IMG=localhost:5000/kibana
+docker build -t $IMG .
+docker push $IMG
+cd ..
 ```
 
-#### Install Kibana
+```shell
+kubectl create namespace a8s-system
+```
 
 ```shell
-kubectl apply -f dashboard/kibana.yaml
-kubectl rollout status deployment/kibana --namespace a8s-system
+kubectl apply -f opendistro
 ```
 
 ### Logging
@@ -55,7 +59,7 @@ kubectl apply -f logging/fluentd-aggregator-statefulset.yaml
 First, get the Kibana pod name
 
 ```shell
-kibana=$(kubectl get pod -l app=kibana --namespace a8s-system | grep kibana | awk -F ' ' '{print $1}')
+kibana=$(kubectl get pod -l role=kibana --namespace a8s-system | grep kibana | awk -F ' ' '{print $1}')
 ```
 
 Use port-forward to connect to the pod. This is just for testing purposes on
