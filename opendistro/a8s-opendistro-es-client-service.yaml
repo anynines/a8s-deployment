@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: a8s-opendistro-es
+    release: a8s
+    role: client
+  name: a8s-opendistro-es-client-service
+  namespace: a8s-system
+spec:
+  clusterIP: 10.111.49.112
+  clusterIPs:
+  - 10.111.49.112
+  ports:
+  - name: http
+    port: 9200
+    protocol: TCP
+    targetPort: 9200
+  - name: transport
+    port: 9300
+    protocol: TCP
+    targetPort: 9300
+  - name: metrics
+    port: 9600
+    protocol: TCP
+    targetPort: 9600
+  - name: rca
+    port: 9650
+    protocol: TCP
+    targetPort: 9650
+  selector:
+    role: client
+  sessionAffinity: None
+  type: ClusterIP

@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: a8s-opendistro-es
+    release: a8s
+    role: kibana
+  name: a8s-opendistro-es-kibana
+  namespace: a8s-system
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: a8s-opendistro-es
+      release: a8s
+      role: kibana
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: a8s-opendistro-es
+        release: a8s
+        role: kibana
+    spec:
+      containers:
+      - env:
+        - name: CLUSTER_NAME
+          value: elasticsearch
+        image: localhost:5000/kibana
+        imagePullPolicy: Always
+        name: a8s-opendistro-es-kibana
+        ports:
+        - containerPort: 5601
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /usr/share/kibana/config/kibana.yml
+          name: config
+          subPath: kibana.yml
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: a8s-opendistro-es-kibana
+      serviceAccountName: a8s-opendistro-es-kibana
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: config
+        secret:
+          defaultMode: 420
+          secretName: a8s-opendistro-es-kibana-config

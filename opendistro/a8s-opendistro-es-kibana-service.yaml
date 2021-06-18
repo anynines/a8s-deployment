@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: a8s-opendistro-es
+    release: a8s
+    role: kibana
+  name: a8s-opendistro-es-kibana-svc
+  namespace: a8s-system
+spec:
+  clusterIP: 10.106.49.236
+  clusterIPs:
+  - 10.106.49.236
+  ports:
+  - name: kibana-svc
+    port: 443
+    protocol: TCP
+    targetPort: 5601
+  selector:
+    role: kibana
+  sessionAffinity: None
+  type: ClusterIP

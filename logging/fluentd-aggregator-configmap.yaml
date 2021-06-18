@@ -12,13 +12,13 @@ data:
        @id out_es
        @log_level info
        include_tag_key true
-       host elasticsearch.a8s-system.svc.cluster.local
+       host a8s-opendistro-es-client-service.a8s-system.svc.cluster.local
        port 9200
        scheme 'http'
        ssl_verify 'true'
        ssl_version 'TLSv1_2'
-       user 'elastic'
-       password 'changeme'
+       user 'admin'
+       password 'admin'
        reload_connections 'false'
        reconnect_on_error 'true'
        reload_on_failure 'true'
