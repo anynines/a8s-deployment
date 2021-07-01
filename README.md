@@ -1,7 +1,10 @@
 # a8s-deployment
 
-**WARNING: This repo is WIP. We will cleanup, squash and force commit `main` in
-the future.**
+**WARNING: This branch of the repo is DEPRECATED. It's an archive of the old version of this repo.
+We chose to archive the old version of this repo when we decided to expose the repo to users. It
+still contains a lot of things that core developers of the a8s team might want to check
+occasionally, but as a user you should never need what's here; only what's in the `main` branch is
+relevant to you.**
 
 ## minikube on macOS
 
