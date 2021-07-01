@@ -1,0 +1,9 @@
+apiVersion: backups.anynines.com/v1alpha1
+kind: Recovery
+metadata:
+  name: recovery-sample
+spec:
+  serviceInstance:
+    name: "sample-pg-cluster"
+    kind: "PostgreSQL"
+  backupName: backup-sample

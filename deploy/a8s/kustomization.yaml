@@ -1,0 +1,24 @@
+resources:
+- postgresql-operator.yaml
+- a8s-system-namespace.yaml
+- service-binding-controller.yaml
+- backup-manager.yaml
+
+# Generate the configmap that holds the coordinates of the S3 bucket where backups will be stored.
+configMapGenerator:
+- name: backup-store-config
+  namespace: a8s-system
+  files:
+  - ./backup-store-config.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+
+# Generate the secret that holds the credentials of the S3 bucket where backups will be stored.
+secretGenerator:
+- name: a8s-backup-cloud-credentials
+  namespace: a8s-system
+  files: 
+  - ./access-key-id
+  - ./secret-access-key
+generatorOptions:
+  disableNameSuffixHash: true

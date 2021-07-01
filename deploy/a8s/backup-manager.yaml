@@ -1,0 +1,482 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: backups.backups.anynines.com
+spec:
+  group: backups.anynines.com
+  names:
+    kind: Backup
+    listKind: BackupList
+    plural: backups
+    shortNames:
+    - bkp
+    singular: backup
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Backup is the Schema for the backups API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BackupSpec defines the desired state of Backup.
+            properties:
+              serviceInstance:
+                description: ServiceInstance identifies the Data Service Instance to backup.
+                properties:
+                  kind:
+                    description: Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to to backup or restore (e.g. PostgreSQL, Redis, etc...).
+                    type: string
+                  name:
+                    description: Name is the name of the Kubernetes API resource that represents the Data Service Instance to backup or restore.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+            required:
+            - serviceInstance
+            type: object
+          status:
+            description: BackupStatus defines the observed state of Backup.
+            properties:
+              backupID:
+                description: BackupID is the ID of the Backup; clients can use this to poll the status of the Backup at the Pod identified by `PodUsedID`.
+                type: string
+              condition:
+                description: "Condition describes the last observed status of the Backup. It tells whether the backup `succeeded`, is `inProgress` or `failed` (and error messages with more details if so), as well as the timestamp of when the Condition was last observed to be true. After `Condition.Type` reaches a value of `succeeded`, the Condition is never updated again. \n TODO: this API is consistent with K8s API Conditions (https://github.com/kubernetes/kubernetes/issues/7856), but backups are probably not well-suited to be described by Conditions. Also, the time at which the backup was taken should probably be described more accurately and *more explicitly* than with `Condition.LastObservationTime`. So maybe we want to simplify the status of backups."
+                properties:
+                  error:
+                    description: Error contains a message describing what went wrong in case `Type` has value `failed`.
+                    type: string
+                  lastObservationTime:
+                    description: LastObservationTime is the timestamp of the last time the Condition was observed to be true.
+                    format: date-time
+                    type: string
+                  type:
+                    description: Type is a short camelCase message describing the last observed condition of the backup or recovery. Can be one of `succeeded`, `inProgress`, `failed`.
+                    type: string
+                type: object
+              podUsedNamespacedName:
+                description: 'PodUsedNamespacedName is the namespaced name of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedID` (below) via a PodRef.'
+                type: string
+              podUsedUID:
+                description: 'PodUsedUID is the UID of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedNamespacedName` (above) via a PodRef.'
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: recoveries.backups.anynines.com
+spec:
+  group: backups.anynines.com
+  names:
+    kind: Recovery
+    listKind: RecoveryList
+    plural: recoveries
+    shortNames:
+    - rcv
+    singular: recovery
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Recovery is the Schema for the recoveries API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RecoverySpec defines the desired state of Recovery
+            properties:
+              backupName:
+                description: BackupName is the name of the Backup API object to use for the Recovery; the namespace is assumed to be the same as the one for the Recovery object, we might reconsider this assumption in the future.
+                type: string
+              serviceInstance:
+                description: ServiceInstance identifies the Data Service Instance to restore.
+                properties:
+                  kind:
+                    description: Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to to backup or restore (e.g. PostgreSQL, Redis, etc...).
+                    type: string
+                  name:
+                    description: Name is the name of the Kubernetes API resource that represents the Data Service Instance to backup or restore.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+            required:
+            - backupName
+            - serviceInstance
+            type: object
+          status:
+            description: RecoveryStatus defines the observed state of Recovery
+            properties:
+              condition:
+                description: Condition describes the last observed status of the Recovery. It tells whether the recovery `succeeded`, is `inProgress` or `failed` (and error messages with more details if so), as well as the timestamp of when the Condition was last observed to be true. After `Condition.Type` reaches a value of `succeeded`, the Condition is never updated again.
+                properties:
+                  error:
+                    description: Error contains a message describing what went wrong in case `Type` has value `failed`.
+                    type: string
+                  lastObservationTime:
+                    description: LastObservationTime is the timestamp of the last time the Condition was observed to be true.
+                    format: date-time
+                    type: string
+                  type:
+                    description: Type is a short camelCase message describing the last observed condition of the backup or recovery. Can be one of `succeeded`, `inProgress`, `failed`.
+                    type: string
+                type: object
+              podToPoll:
+                description: The Pod to poll to learn the status of the Recovery, if the recovery is in Progress.
+                properties:
+                  ip:
+                    description: IP is the IP of the Pod.
+                    type: string
+                  namespacedName:
+                    description: NamespacedName is the namespaced name of the Pod.
+                    type: string
+                  uid:
+                    description: UID is the UID of the Pod.
+                    type: string
+                required:
+                - ip
+                - namespacedName
+                - uid
+                type: object
+              recoveryID:
+                description: RecoveryID is the ID of the Recovery; clients can use this to poll the status of the Recovery at the Pod identified by `PodToHit`.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: a8s-backup-leader-election-role
+  namespace: a8s-system
+rules:
+- apiGroups:
+  - ""
+  - coordination.k8s.io
+  resources:
+  - configmaps
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: a8s-backup-manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - secrets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - backups
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - backups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - backups/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - recoveries
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - recoveries/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - recoveries/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: a8s-backup-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: a8s-backup-proxy-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: a8s-backup-leader-election-rolebinding
+  namespace: a8s-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: a8s-backup-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: a8s-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: a8s-backup-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: a8s-backup-manager-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: a8s-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: a8s-backup-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: a8s-backup-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: a8s-system
+---
+apiVersion: v1
+data:
+  controller_manager_config.yaml: |
+    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    webhook:
+      port: 9443
+    leaderElection:
+      leaderElect: true
+      resourceName: e1f943aa.anynines.com
+kind: ConfigMap
+metadata:
+  name: a8s-backup-manager-config
+  namespace: a8s-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: a8s-backup-controller-manager-metrics-service
+  namespace: a8s-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+  name: a8s-backup-controller-manager
+  namespace: a8s-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+      - args:
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
+        command:
+        - /manager
+        image: "c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/a8s-backup-manager:0.4.0"
+        env:
+        - name: systemNamespace
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+        volumeMounts:
+        - mountPath: /etc/config
+          name: backup-store-config-volume
+      securityContext:
+        runAsUser: 65532
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          name: backup-store-config
+          items:
+          - key: backup-store-config.yaml
+            path: config.yaml
+        name: backup-store-config-volume
