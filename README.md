@@ -49,6 +49,14 @@ kubectl apply -f logging/fluent-bit-daemonset-forward-minikube.yaml
 #### Install Fluentd statefulset as a log aggregator
 
 ```shell
+cd Images/fluentd-aggregator/
+export IMG=localhost:5000/fluentd
+docker build -t $IMG .
+docker push $IMG
+cd ../..
+```
+
+```shell
 kubectl apply -f logging/fluentd-aggregator-configmap.yaml
 kubectl apply -f logging/fluentd-aggregator-service.yaml
 kubectl apply -f logging/fluentd-aggregator-statefulset.yaml
