@@ -7,9 +7,6 @@ metadata:
   name: a8s-fluentd-aggregator
   namespace: a8s-system
 spec:
-  clusterIP: 10.110.121.190
-  clusterIPs:
-  - 10.110.121.190
   ports:
   - name: monitor
     port: 24220

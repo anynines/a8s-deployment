@@ -8,9 +8,6 @@ metadata:
   name: a8s-opendistro-es-client-service
   namespace: a8s-system
 spec:
-  clusterIP: 10.111.49.112
-  clusterIPs:
-  - 10.111.49.112
   ports:
   - name: http
     port: 9200

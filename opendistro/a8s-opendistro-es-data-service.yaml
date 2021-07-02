@@ -8,9 +8,6 @@ metadata:
   name: a8s-opendistro-es-data-svc
   namespace: a8s-system
 spec:
-  clusterIP: None
-  clusterIPs:
-  - None
   ports:
   - name: transport
     port: 9300
