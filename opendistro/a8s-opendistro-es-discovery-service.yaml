@@ -8,9 +8,6 @@ metadata:
   name: a8s-opendistro-es-discovery
   namespace: a8s-system
 spec:
-  clusterIP: None
-  clusterIPs:
-  - None
   ports:
   - port: 9300
     protocol: TCP
