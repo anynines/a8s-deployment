@@ -8,44 +8,63 @@ data:
     </source>
 
     <match **>
-       @type elasticsearch
-       @id out_es
-       @log_level info
-       include_tag_key true
-       host a8s-opendistro-es-client-service.a8s-system.svc.cluster.local
-       port 9200
-       scheme 'http'
-       ssl_verify 'true'
-       ssl_version 'TLSv1_2'
-       user 'admin'
-       password 'admin'
-       reload_connections 'false'
-       reconnect_on_error 'true'
-       reload_on_failure 'true'
-       log_es_400_reason 'false'
-       logstash_prefix 'logstash'
-       logstash_dateformat '%Y.%m.%d'
-       logstash_format 'true'
-       index_name 'logstash'
-       target_index_key use_nil
-       type_name 'fluentd'
-       include_timestamp 'false'
-       request_timeout '5s'
-       application_name use_default
-       suppress_type_name 'true'
-       enable_ilm 'false'
-       ilm_policy_id use_default
-       ilm_policy use_default
-       ilm_policy_overwrite 'false'
-       <buffer>
-         flush_thread_count '8'
-         flush_interval '5s'
-         chunk_limit_size '2M'
-         queue_limit_length '32'
-         retry_max_interval '30'
-         retry_forever true
-       </buffer>
+      @type copy
+      <store>
+        @type label_router
+        <route>
+          @label @POSTGRES
+          tag postgres_tag
+          <match>
+            labels cluster-name:sample-pg-cluster
+          </match>
+        </route>
+      </store>
+      <store>
+         @type elasticsearch
+         @id out_es
+         @log_level info
+         include_tag_key true
+         host a8s-opendistro-es-client-service.a8s-system.svc.cluster.local
+         port 9200
+         scheme 'http'
+         ssl_verify 'true'
+         ssl_version 'TLSv1_2'
+         user 'admin'
+         password 'admin'
+         reload_connections 'false'
+         reconnect_on_error 'true'
+         reload_on_failure 'true'
+         log_es_400_reason 'false'
+         logstash_prefix 'logstash'
+         logstash_dateformat '%Y.%m.%d'
+         logstash_format 'true'
+         index_name 'logstash'
+         target_index_key use_nil
+         type_name 'fluentd'
+         include_timestamp 'false'
+         request_timeout '5s'
+         application_name use_default
+         suppress_type_name 'true'
+         enable_ilm 'false'
+         ilm_policy_id use_default
+         ilm_policy use_default
+         ilm_policy_overwrite 'false'
+         <buffer>
+           flush_thread_count '8'
+           flush_interval '5s'
+           chunk_limit_size '2M'
+           queue_limit_length '32'
+           retry_max_interval '30'
+           retry_forever true
+         </buffer>
+      </store>
     </match>
+
+    <label @POSTGRES>
+      <match **>
+        @type stdout
+      </match>
+    </label>
 kind: ConfigMap
 metadata:
   labels:

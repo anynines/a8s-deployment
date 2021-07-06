@@ -23,6 +23,7 @@ RUN set -eu; \
   fluent-plugin-record-modifier \
   fluent-plugin-rewrite-tag-filter \
   fluent-plugin-route \
+  fluent-plugin-label-router \
   fluent-plugin-s3 \
   fluent-plugin-sqs; \
   sudo gem sources --clear-all; \

@@ -22,7 +22,7 @@ spec:
         app.kubernetes.io/name: fluentd-aggregator
     spec:
       containers:
-      - image: ghcr.io/stevehipwell/fluentd-aggregator:1.12.4
+      - image: "localhost:5000/fluentd"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 10
