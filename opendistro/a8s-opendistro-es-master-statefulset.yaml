@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app: a8s-opendistro-es
     release: a8s
     role: master
   name: a8s-opendistro-es-master
@@ -13,14 +12,12 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: a8s-opendistro-es
       release: a8s
       role: master
   serviceName: a8s-opendistro-es-discovery
   template:
     metadata:
       labels:
-        app: a8s-opendistro-es
         release: a8s
         role: master
     spec:

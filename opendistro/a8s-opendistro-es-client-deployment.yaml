@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: a8s-opendistro-es
     release: a8s
     role: client
   name: a8s-opendistro-es-client
@@ -13,7 +12,6 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: a8s-opendistro-es
       release: a8s
       role: client
   strategy:
@@ -24,7 +22,6 @@ spec:
   template:
     metadata:
       labels:
-        app: a8s-opendistro-es
         release: a8s
         role: client
     spec:

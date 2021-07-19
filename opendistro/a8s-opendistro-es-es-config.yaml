@@ -5,7 +5,6 @@ data:
 kind: Secret
 metadata:
   labels:
-    app: a8s-opendistro-es
     release: a8s
   name: a8s-opendistro-es-es-config
   namespace: a8s-system

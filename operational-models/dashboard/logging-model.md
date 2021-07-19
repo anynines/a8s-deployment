@@ -47,6 +47,10 @@ Kibana is a window into Elasticsearch. It provides a browser-based analytics
 and search dashboard. We deploy it as a Kubernetes [Deployment][deployment]
 since we don't require storage for Kibana.
 
+### Warning
+- Elasticsearch rejects logs from Fluentd that originate from pods with the
+  label `app`.
+
 [namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [statefulSet]: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
