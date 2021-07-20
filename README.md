@@ -16,7 +16,9 @@ docker run --rm -it --network=host alpine ash -c "apk add socat && socat TCP-LIS
 
 ### Dashboard
 
-#### Install Open Distro for Elasticsearch and Kibana
+#### Logging
+
+##### Install Open Distro for Elasticsearch and Kibana
 
 Ensure docker image for Open Search Kibana Dashboard is available.
 
@@ -34,6 +36,15 @@ kubectl create namespace a8s-system
 
 ```shell
 kubectl apply -f opendistro
+```
+#### Metrics
+
+##### Install Grafana Dashboard
+
+```shell
+kubectl apply -f dashboard/grafana-configmap.yaml
+kubectl apply -f dashboard/grafana-deployment.yaml
+kubectl apply -f dashboard/grafana-service.yaml
 ```
 
 ### Logging
@@ -112,4 +123,68 @@ The logs will be available to interact using your new filter.
 kubectl delete -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
 kubectl delete -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
 kubectl delete -f logging/fluent-bit-daemonset-permissions.yaml
+```
+
+### Metrics
+
+#### Install Prometheus as a Metrics Collector
+
+```shell
+kubectl apply -f metrics/prometheus-permissions.yaml
+kubectl apply -f metrics/prometheus-configmap.yaml
+kubectl apply -f metrics/prometheus-deployment.yaml
+kubectl apply -f metrics/prometheus-service.yaml
+```
+
+#### Using Dashboard
+
+In order to access the Grafana dashboard we need a port-forward to the Grafana
+service:
+
+```shell
+kubectl port-forward -n a8s-system service/grafana 3000 &
+```
+
+Open the Grafana dashboard by issuing:
+
+```shell
+open localhost:3000
+```
+
+Log into the dashboard by using `admin` as a username as well as the password.
+Afterwards we need to import a dashboard in order to visualize the Kubernetes
+system metrics that are scraped by the Prometheus instance.
+
+![Grafana1](operational-models/images/grafana/1.png)
+
+Go to the Dashboards section in the left menu.
+
+![Grafana2](operational-models/images/grafana/2.png)
+
+Then go to the Manage page.
+
+![Grafana3](operational-models/images/grafana/3.png)
+
+Click on Import on the right hand side.
+
+![Grafana4](operational-models/images/grafana/4.png)
+ 
+ Then Insert `8588` as the Dashboard ID and click on Load.
+
+![Grafana5](operational-models/images/grafana/5.png)
+
+Choose Prometheus as the data source.
+
+![Grafana6](operational-models/images/grafana/6.png)
+
+Now the imported metrics dashboard should visualize some of the metrics
+that are scraped by the Prometheus instance.
+
+#### Delete Prometheus
+
+```shell
+kubectl delete -f metrics/prometheus-service.yaml
+kubectl delete -f metrics/prometheus-deployment.yaml
+kubectl delete -f metrics/prometheus-configmap.yaml
+kubectl delete -f metrics/prometheus-permissions.yaml
 ```
