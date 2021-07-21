@@ -24,16 +24,6 @@ spec:
       containers:
       - image: "localhost:5000/fluentd"
         imagePullPolicy: IfNotPresent
-        livenessProbe:
-          failureThreshold: 10
-          httpGet:
-            path: /fluent.healthcheck?json=%7B%22ping%22%3A+%22pong%22%7D
-            port: http
-            scheme: HTTP
-          initialDelaySeconds: 15
-          periodSeconds: 30
-          successThreshold: 1
-          timeoutSeconds: 1
         name: fluentd-aggregator
         ports:
         - containerPort: 9880
