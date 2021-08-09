@@ -1,0 +1,13 @@
+apiVersion: postgresql.anynines.com/v1alpha1
+kind: Postgresql
+metadata:
+  name: sample-pg-cluster
+spec:
+  replicas: 3
+  image: "registry.opensource.zalan.do/acid/spilo-13:2.0-p2"
+  backupAgentImage: "c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/backup-agent:0.3.0"
+  resources:
+    requests:
+      cpu: 100m
+    limits:
+      memory: 100Mi

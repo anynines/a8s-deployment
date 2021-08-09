@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    release: a8s
+  name: a8s-opendistro-es-es
+  namespace: a8s-system
+---
+apiVersion: v1
+data:
+  elasticsearch.yml: Y2x1c3Rlci5uYW1lOiBkb2NrZXItY2x1c3RlcgpuZXR3b3JrLmhvc3Q6IDAuMC4wLjAKb3BlbmRpc3Ryb19zZWN1cml0eS5kaXNhYmxlZDogdHJ1ZQ==
+  logging.yml: YXBwZW5kZXI6CiAgY29uc29sZToKICAgIGxheW91dDoKICAgICAgY29udmVyc2lvblBhdHRlcm46ICdbJWR7SVNPODYwMX1dWyUtNXBdWyUtMjVjXSAlbSVuJwogICAgICB0eXBlOiBjb25zb2xlUGF0dGVybgogICAgdHlwZTogY29uc29sZQplcy5sb2dnZXIubGV2ZWw6IElORk8KbG9nZ2VyOgogIGFjdGlvbjogREVCVUcKICBjb20uYW1hem9uYXdzOiBXQVJOCnJvb3RMb2dnZXI6ICR7ZXMubG9nZ2VyLmxldmVsfSwgY29uc29sZQ==
+kind: Secret
+metadata:
+  labels:
+    release: a8s
+  name: a8s-opendistro-es-es-config
+  namespace: a8s-system
+type: Opaque
