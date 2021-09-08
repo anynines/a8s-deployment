@@ -32,9 +32,8 @@ a8s supports taking backups of data service instances (DSIs). Currently, the bac
 an AWS S3 bucket, so before installing a8s **you must create an AWS S3 bucket that a8s will use to
 store backups** ([here][s3-bucket-creation] is the official S3 documentation).
 
-> :warning: Currently Restores from Backups work only if the S3 bucket is called `a8s-postgresql`
-(we hope to fix this soon and allow you to choose the name you want), so make sure to name your S3
-bucket `a8s-postgresql`.
+> :warning: Currently Restores from Backups work only if the S3 bucket is called `a8s-shared-backups`
+(we hope to fix this soon and allow you to choose the name you want). Since bucket names have to be unique across an AWS partition, you will most likely have to use our bucket.
 
 Then, create an access key and secret key for the bucket. This is the key the a8s control plane
 will use to interact with the bucket.

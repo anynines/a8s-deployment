@@ -1,8 +1,8 @@
 config:
   cloud_configuration:
     provider: "AWS"
-    container: <name of your S3 bucket>
+    container: a8s-shared-backups
     secret_name: "a8s-backup-cloud-credentials"
-    region: <name of the region of your S3 bucket>
+    region: eu-central-1
   encryption:
     password: "password"
