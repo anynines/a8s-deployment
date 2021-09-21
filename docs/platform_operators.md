@@ -108,12 +108,12 @@ More precisely, these are:
 
 1. A Fluent Bit daemonset where each node-local daemon collects the logs of the Pods on its node.
 2. A FluentD aggregator that collects and aggregates the logs from the Fluent Bit daemonset.
-3. Elasticsearch and Kibana to query and visualize the logs.
+3. OpenSearch and OpenSearch Dashboards to query and visualize the logs.
 
 To install them, simply run:
 
 ```shell
-kubectl apply --recursive --filename deploy/logging/
+kubectl apply --kustomize deploy/logging
 ```
 
 To wait for all components to be up and running, run:
@@ -122,17 +122,15 @@ To wait for all components to be up and running, run:
 watch kubectl get pod --namespace a8s-system --selector=a8s.anynines/logging
 ```
 
-and wait until you see that all the pods (5 + the number of worker nodes of your Kubernetes cluster)
+and wait until you see that all the pods (3 + the number of worker nodes of your Kubernetes cluster)
 are running (value `1/1` under the `READY` column):
 
 ```shell
-NAME                                        READY   STATUS    RESTARTS   AGE
-a8s-fluentd-aggregator-0                    1/1     Running   0          5m3s
-a8s-opendistro-es-client-67f8754767-f4vrl   1/1     Running   1          5m3s
-a8s-opendistro-es-data-0                    1/1     Running   1          5m2s
-a8s-opendistro-es-kibana-8564d67997-m4z6q   1/1     Running   0          5m1s
-a8s-opendistro-es-master-0                  1/1     Running   1          5m2s
-fluent-bit-777zx                            1/1     Running   0          5m3s
+NAME                                         READY   STATUS    RESTARTS   AGE
+a8s-fluentd-aggregator-0                     1/1     Running   0          6m20s
+a8s-opensearch-cluster-0                     1/1     Running   0          6m20s
+a8s-opensearch-dashboards-648cb7d4f4-6xmq8   1/1     Running   0          6m20s
+fluent-bit-jqfgl                             1/1     Running   0          6m20s
 ```
 
 ### Uninstall the Logging Infrastructure
@@ -140,7 +138,7 @@ fluent-bit-777zx                            1/1     Running   0          5m3s
 Run:
 
 ```shell
-kubectl delete --recursive --filename deploy/logging/
+kubectl delete --kustomize deploy/logging
 ```
 
 ### (Optional) Install the Metrics Infrastructure
