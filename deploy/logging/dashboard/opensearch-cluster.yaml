@@ -3,19 +3,22 @@ kind: Service
 metadata:
   labels:
     release: a8s
-    role: data
-  name: a8s-opendistro-es-data-svc
+    app.kubernetes.io/name: opensearch
+    app.kubernetes.io/instance: opensearch-logcluster-0
+    app.kubernetes.io/part-of: a8s-logging
+    app.kubernetes.io/component: database
+  name: a8s-opensearch-cluster
   namespace: a8s-system
 spec:
   ports:
-  - name: transport
-    port: 9300
-    protocol: TCP
-    targetPort: 9300
   - name: http
     port: 9200
     protocol: TCP
     targetPort: 9200
+  - name: transport
+    port: 9300
+    protocol: TCP
+    targetPort: 9300
   - name: metrics
     port: 9600
     protocol: TCP
@@ -25,7 +28,7 @@ spec:
     protocol: TCP
     targetPort: 9650
   selector:
-    role: data
+    app.kubernetes.io/instance: opensearch-logcluster-0
   sessionAffinity: None
   type: ClusterIP
 ---
@@ -33,10 +36,14 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
+    app.kubernetes.io/name: opensearch
+    app.kubernetes.io/instance: opensearch-logcluster-0
+    app.kubernetes.io/version: "1.0.1"
+    app.kubernetes.io/part-of: a8s-logging
+    app.kubernetes.io/component: database
     release: a8s
-    role: data
     a8s.anynines/logging: "true"
-  name: a8s-opendistro-es-data
+  name: a8s-opensearch-cluster
   namespace: a8s-system
 spec:
   podManagementPolicy: OrderedReady
@@ -44,49 +51,53 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
+      app.kubernetes.io/name: opensearch
+      app.kubernetes.io/instance: opensearch-logcluster-0
+      app.kubernetes.io/version: "1.0.1"
+      app.kubernetes.io/part-of: a8s-logging
+      app.kubernetes.io/component: database
       release: a8s
-      role: data
       a8s.anynines/logging: "true"
-  serviceName: a8s-opendistro-es-data-svc
+  serviceName: a8s-opensearch-cluster
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: opensearch
+        app.kubernetes.io/instance: opensearch-logcluster-0
+        app.kubernetes.io/version: "1.0.1"
+        app.kubernetes.io/part-of: a8s-logging
+        app.kubernetes.io/component: database
         release: a8s
-        role: data
         a8s.anynines/logging: "true"
     spec:
       containers:
       - env:
-        - name: cluster.name
-          value: elasticsearch
-        - name: node.master
-          value: "false"
+        - name: node.data
+          value: "true"
         - name: node.ingest
-          value: "false"
-        - name: network.host
-          value: 0.0.0.0
+          value: "true"
+        - name: node.master
+          value: "true"
         - name: node.name
           valueFrom:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.name
         - name: discovery.seed_hosts
-          value: a8s-opendistro-es-discovery
+          value: a8s-opensearch-cluster
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
-        - name: node.data
-          value: "true"
         - name: PROCESSORS
           valueFrom:
             resourceFieldRef:
               divisor: "0"
               resource: limits.cpu
-        - name: ES_JAVA_OPTS
+        - name: OPENSEARCH_JAVA_OPTS
           value: -Xms512m -Xmx512m
-        image: docker.io/amazon/opendistro-for-elasticsearch:1.13.2
+        image: opensearchproject/opensearch:1.0.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -96,71 +107,74 @@ spec:
           tcpSocket:
             port: transport
           timeoutSeconds: 1
-        name: elasticsearch
+        name: opensearch
         ports:
         - containerPort: 9300
           name: transport
           protocol: TCP
-        resources: {}
+        - containerPort: 9200
+          name: http
+          protocol: TCP
+        - containerPort: 9600
+          name: metrics
+          protocol: TCP
+        - containerPort: 9650
+          name: rca
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "1"
+            memory: 100Mi
         securityContext:
           capabilities:
-            add:
-            - SYS_CHROOT
+            drop:
+            - ALL
+          runAsNonRoot: true
+          runAsUser: 1000
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-        - mountPath: /usr/share/elasticsearch/data
-          name: data
-        - mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+        - mountPath: /usr/share/opensearch/data
+          name: opensearch-cluster-master
+        - mountPath: /usr/share/opensearch/config/opensearch.yml
           name: config
-          subPath: elasticsearch.yml
-        - mountPath: /usr/share/elasticsearch/config/logging.yml
-          name: config
-          subPath: logging.yml
+          subPath: opensearch.yml
       dnsPolicy: ClusterFirst
       initContainers:
-      - command:
-        - sysctl
-        - -w
-        - vm.max_map_count=262144
-        image: docker.io/busybox:1.27.2
-        imagePullPolicy: IfNotPresent
-        name: init-sysctl
-        resources: {}
-        securityContext:
-          privileged: true
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-      - command:
+      - args:
+        - chown -R 1000:1000 /usr/share/opensearch/data
+        command:
         - sh
         - -c
-        - chown -R 1000:1000 /usr/share/elasticsearch/data
-        image: docker.io/busybox:1.27.2
+        image: busybox:1.33.1
         imagePullPolicy: IfNotPresent
-        name: fixmount
+        name: fsgroup-volume
         resources: {}
+        securityContext:
+          runAsUser: 0
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-        - mountPath: /usr/share/elasticsearch/data
-          name: data
+        - mountPath: /usr/share/opensearch/data
+          name: opensearch-cluster-master
       restartPolicy: Always
       schedulerName: default-scheduler
-      securityContext: {}
-      serviceAccountName: a8s-opendistro-es-es
-      terminationGracePeriodSeconds: 30
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 120
       volumes:
       - name: config
         secret:
           defaultMode: 420
-          secretName: a8s-opendistro-es-es-config
+          secretName: opensearch-cluster-config
   updateStrategy:
     type: RollingUpdate
   volumeClaimTemplates:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
-      name: data
+      name: opensearch-cluster-master
     spec:
       accessModes:
       - ReadWriteOnce

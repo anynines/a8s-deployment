@@ -233,46 +233,54 @@ kubectl delete recovery <recovery-name>
 When installing the a8s platform, the platform operator had the option to install components to
 collect and visualize the logs of the data service instances (as shown in section
 [(Optional) Install the Logging Infrastructure](/docs/platform_operators.md#optional-install-the-logging-infrastructure)).
-Among them, there's a Kibana dashboard (that runs in a Pod) and you can use to view the logs of the
+Among them, there's an OpenSearch Dashboards (that runs in a Pod) that you can use to view the logs of the
 PostgreSQL instance that you previously deployed.
 
-How you access the Kibana dashboard depends on the specifics of your cluster. In a production
+How you access the dashboard depends on the specifics of your cluster. In a production
 environment you would use an [Ingress][kubernetes-ingress], here we'll just use
 [port forwarding][kubernetes-port-forwarding].
 
 Run:
 
 ```shell
-kubectl port-forward service/a8s-opendistro-es-kibana-svc 5601:443 --namespace=a8s-system
+kubectl port-forward services/a8s-opensearch-dashboards 5601:443 -n a8s-system
 ```
 
-Then, open the Kibana dashboard in your browser.
+Then, open the OpenSearch dashboard in your browser.
 
 ```shell
 open http://localhost:5601
 ```
 
-![Kibana1](/pics/kibana/1.png)
+![OpenSearchDashboards1](/pics/opensearchdashboards/1.png)
 
-Go to discover in the top left hand corner.
+Select `Add data` and then click on the ≡ icon in the top left hand corner. In the menu select `Stack management` in the `Management` section.
 
-![Kibana2](/pics/kibana/2.png)
+![OpenSearchDashboards2](/pics/opensearchdashboards/2.png)
+
+Select `Index Patterns`.
+
+![OpenSearchDashboards3](/pics/opensearchdashboards/3.png)
+
+Click on `Create Index pattern`.
+
+![OpenSearchDashboards4](/pics/opensearchdashboards/4.png)
 
 Create an index pattern for `logstash-*`. And click `> Next step`
 
-![Kibana3](/pics/kibana/3.png)
+![OpenSearchDashboards5](/pics/opensearchdashboards/5.png)
 
 Select `@timestamp` as a time filter field name. And then click `Create index pattern`.
 
-![Kibana4](/pics/kibana/4.png)
+![OpenSearchDashboards6](/pics/opensearchdashboards/6.png)
 
 Go back to the discover tab.
 
-![Kibana5](/pics/kibana/5.png)
+![OpenSearchDashboards7](/pics/opensearchdashboards/7.png)
 
 The logs will be available to interact using your new filter.
 
-![Kibana6](/pics/kibana/6.png)
+![OpenSearchDashboards8](/pics/opensearchdashboards/8.png)
 
 ### Visualize the Metrics of the PostgreSQL Instance
 

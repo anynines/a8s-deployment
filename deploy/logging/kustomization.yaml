@@ -1,0 +1,46 @@
+resources:
+  - collection-infrastructure/fluent-bit-node-collector.yaml
+  - collection-infrastructure/fluentd-aggregator.yaml
+  - dashboard/opensearch-cluster.yaml
+  - dashboard/opensearch-dashboards.yaml
+
+secretGenerator:
+  # Generate the secret storing the fuentbit configuration
+  - name: fluent-bit-config
+    namespace: a8s-system
+    files: 
+      - ./collection-infrastructure/config/fluent-bit.conf
+  # Generate the secret storing the fluentd configuration
+  - name: a8s-fluentd-aggregator 
+    namespace: a8s-system
+    files:
+      - ./collection-infrastructure/config/fluent.conf
+  # Generate the secret storing the OpenSearch configuration
+  - name: opensearch-cluster-config
+    namespace: a8s-system
+    files:
+      - ./dashboard/config/opensearch.yml
+  # Generate the secret storing OpenSearch-Dashboards configuration
+  - name: opensearch-dashboards-config
+    namespace: a8s-system
+    files:
+      - ./dashboard/config/opensearch_dashboards.yml
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/part-of: a8s-logging
+    release: a8s
+    a8s.anynines/logging: "true"
+
+# Generate parser configMap that holds the parser configuration for fluentbit
+configMapGenerator:
+  - name: fluent-bit-config-parser
+    namespace: a8s-system
+    files:
+      - ./collection-infrastructure/config/parsers.conf
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/part-of: a8s-logging
+    release: a8s
+    a8s.anynines/logging: "true"

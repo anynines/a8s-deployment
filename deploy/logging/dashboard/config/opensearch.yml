@@ -1,0 +1,9 @@
+# Configuration of OpenSearch
+cluster:
+  name: opensearch
+  initial_master_nodes: a8s-opensearch-cluster-0
+network:
+  host: 0.0.0.0
+plugins:
+  security:
+      disabled: true

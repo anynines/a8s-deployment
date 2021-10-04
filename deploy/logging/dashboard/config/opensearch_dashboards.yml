@@ -1,0 +1,6 @@
+# OpenSearch-Dashboards configuration
+server:
+  name: opensearch-dashboards
+  host: "0"
+opensearch:
+  hosts: http://a8s-opensearch-cluster.a8s-system.svc.cluster.local:9200
