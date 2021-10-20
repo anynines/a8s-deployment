@@ -34,20 +34,24 @@ metadata:
   name: fluent-bit
   namespace: a8s-system
   labels:
-    k8s-app: fluent-bit-logging
-    version: v1
+    app.kubernetes.io/name: fluent-bit
+    app.kubernetes.io/instance: fluent-bit-0
+    app.kubernetes.io/part-of: a8s-logging
     kubernetes.io/cluster-service: "true"
     a8s.anynines/logging: "true"
 spec:
   selector:
     matchLabels:
-      k8s-app: fluent-bit-logging
+      app.kubernetes.io/name: fluent-bit
+      app.kubernetes.io/instance: fluent-bit-0
+      app.kubernetes.io/part-of: a8s-logging
       a8s.anynines/logging: "true"
   template:
     metadata:
       labels:
-        k8s-app: fluent-bit-logging
-        version: v1
+        app.kubernetes.io/name: fluent-bit
+        app.kubernetes.io/instance: fluent-bit-0
+        app.kubernetes.io/part-of: a8s-logging
         kubernetes.io/cluster-service: "true"
         a8s.anynines/logging: "true"
     spec:

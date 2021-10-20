@@ -7,12 +7,16 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: grafana
+      app.kubernetes.io/name: grafana
+      app.kubernetes.io/instance: grafana-0
+      app.kubernetes.io/part-of: a8s-metrics
   template:
     metadata:
       name: grafana
       labels:
-        app: grafana
+        app.kubernetes.io/name: grafana
+        app.kubernetes.io/instance: grafana-0
+        app.kubernetes.io/part-of: a8s-metrics
         a8s.anynines/metrics: "true"
     spec:
       containers:
