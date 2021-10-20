@@ -394,7 +394,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    control-plane: controller-manager
+    app.kubernetes.io/name: backup-manager
+    app.kubernetes.io/part-of: a8s-backup
+    app.kubernetes.io/component: controller-manager
   name: a8s-backup-controller-manager-metrics-service
   namespace: a8s-system
 spec:
@@ -403,24 +405,32 @@ spec:
     port: 8443
     targetPort: https
   selector:
-    control-plane: controller-manager
+    app.kubernetes.io/name: backup-manager
+    app.kubernetes.io/part-of: a8s-backup
+    app.kubernetes.io/component: controller-manager
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    control-plane: controller-manager
+    app.kubernetes.io/name: backup-manager
+    app.kubernetes.io/part-of: a8s-backup
+    app.kubernetes.io/component: controller-manager
   name: a8s-backup-controller-manager
   namespace: a8s-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      control-plane: controller-manager
+      app.kubernetes.io/name: backup-manager
+      app.kubernetes.io/part-of: a8s-backup
+      app.kubernetes.io/component: controller-manager
   template:
     metadata:
       labels:
-        control-plane: controller-manager
+        app.kubernetes.io/name: backup-manager
+        app.kubernetes.io/part-of: a8s-backup
+        app.kubernetes.io/component: controller-manager
       annotations:
          prometheus.io/port: "8443"
          prometheus.io/scrape: "true"
