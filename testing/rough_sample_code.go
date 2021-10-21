@@ -1,13 +1,12 @@
-package main
+package test
 
 import (
-	"time"
-	//. "github.com/onsi/ginkgo"
 	"context"
+	"time"
 
-	"github.com/docker/docker/testutil/environment"
-	. "github.com/onsi/gomega"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -15,57 +14,37 @@ import (
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-//Refer to config.yaml
+// config.yaml provided by the user
 //```yaml
-// The user can provide many TestEnvs
-//TestEnvs: # This level is unnecessary given there are no other fields at this level
-//  shareDatabasePerCluster: false # If true then sequential
-//  processors: 4 # Number of go tests processors to run tests in parallel. 1 Means sequencial
-//  kubeConfig: "~/.kube/config" # Add one or many kubeconfigs representing each cluster
-//  dataservice: "PostgreSQL:MongoDB" # How to specify version?
-//  failFast: true # When a test fails stop running the rest of the tests
-//  cleanup: onFailure # onFailure/always/never
-//  deployment: "core:logging" # core/all/logging/metrics
+//TestEnvironments:
+//  - TestEnvironment1:
+//      shareDSIPerCluster: false # If true then sequential
+//      processes: 4 # Number of go tests processors to run tests in parallel. 1 Means sequencial
+//      kubeConfig: "~/.kube/config" # Add one or many kubeconfigs representing each cluster
+//      dataservice: "PostgreSQL:MongoDB" # How to specify version?
+//      failFast: true # When a test fails stop running the rest of the tests
+//      cleanup: onFailure # onFailure/always/never
 //```
 
 // Testing framework
 func main() {
-	// We also need to parse and provide the config.yml to set options of the Infrastructure
-	// We need to be to be thread safe with sync.Mutex
-	infraEnv := NewInfrastructure(SetShareDataservice(false)) // And other options not mentioned here.
-	for i, spec := range(infraEnv.Specs()) {
-		clusters := infraEnv.Clusters()
-		// We may need to branch to run sequentially if `ShareDataServiceIsOff` or
-		// processes=1.
-		// Cluster becomes TestEnv. Each TestEnv will be configurable as to whether parallelism
-		// for the specs it runs. 
-		go func(runSpec SpecFunc, cluster Cluster) {
-			// Create dataservice using cluster.Client
-			// ds newDataservice(type string, cluster.Client)
-			// Call spec with spec(dataservice.DatabaseClientTester)
-			// Cleanup if successful or leave up depending on configuration
-			// Cluster.k8sClient.Delete(dataservice.Obj)
-		}(spec, clusters[i % len(clusters)]) // 
-		// Optional Cleanup
+	// We also need to parse and provide the config.yml to set options for the TestEnvironment
+	testEnv := NewTestEnvironment(SetShareDataservice(false)) // And other options not mentioned here.
+	for i, spec := range(testEnv.Specs()) {
+		clients := testEnv.Clients()
+		go func(runSpec Spec, client TestClient, needsCleanup bool) {
+			runSpec(client, client, needsCleanup)
+		}(spec, clients[i % len(clients)], true)
 	}
 }
 
-// Infra
-// TestInfrastructure
-type Infrastructure interface {
+// TestEnvironment - We need a better name than even this.
+// TestEnvironment? How do we avoid making this to Kubernetes specific
+type TestEnvironment interface {
 	// Methods to expose
-	Specs() []SpecFunc
-	Clusters() []Cluster
+	Specs() []Spec
+	Clients() []TestClient
 }
-
-type DeploymentComponent string // Out of scope
-
-const (
-	Core DeploymentComponent = "core"
-	All DeploymentComponent = "all"
-	Logging DeploymentComponent = "logging"
-	Metrics DeploymentComponent = "metrics"
-)
 
 type DataserviceType string
 
@@ -75,113 +54,117 @@ const (
 	Redis DataserviceType = "Redis"
 )
 
-// Infrastructure
+// TestEnvironment
 // Kubernetes infrastructure config
 // TestConfig
 // We need a better name. Its not a KuberneteEnv
-type KubernetesEnv struct { // TestingEnv
-	clusters []Cluster
+type testEnvironment struct { // TestingEnv?
+	clients []TestClient
 
 	// TestConfig Struct
-	Nodes int // 
+	Nodes int
 	ShareDataservice bool
-	DeploymentComponents []DeploymentComponent
 	DataserviceTypes []DataserviceType
 	Kubeconfigs []string
 	TestCategories []string // Default all but option to select individual tests or subset of tests
-	specs []SpecFunc
+	specs []Spec
 }
 
-
-func NewInfrastructure(options ...ConfigOption) Infrastructure { //return Infrastructure
-	// apply defaults
+func NewTestEnvironment(options ...ConfigOption) TestEnvironment { //return TestEnvironment
+	// Provide defaults
 	// Apply all options to the object.
-	return &KubernetesEnv{}
+	return &testEnvironment{}
 }
 
-type ConfigOption func(KubernetesEnv)
+type ConfigOption func(testEnvironment)
 
 func SetShareDataservice(share bool) ConfigOption {
-	return func(env KubernetesEnv) {
+	return func(env testEnvironment) {
 		env.ShareDataservice = share
 	}
 }
 
 func SetNodes(nodes int) ConfigOption {
-	return func(env KubernetesEnv) {
+	return func(env testEnvironment) {
 		env.Nodes = nodes
 	}
 }
 
-// Cluster
-type Cluster interface {
+// Clients
+// KubernetesClients? But this could be namespaces? But we need to speak with Kubernetes clients?
+// TestClients?
+// Clients
+// Clients?
+// TestClient?
+// We could use different packages to make this clear
+// This is not needed given we can use runtimeClient.Client
+// Express how this would wor
+type TestClient interface {
+	// Expose private fields of instances of TestClient
+	Namespace() string
+	Client() runtimeClient.Client
 }
 
 // This needs a better name.
-type DataserviceToManagerClientMap map[string]*runtimeClient.Client
+// How do we differentiate4 a naked client from a managed client. They need better and more
+// desciptive names? On what basis do we differentiate?
+// We could use a single client
+// DSIClient or CustomResourceClient or DataserviceClient
+type DataserviceToDSIClient map[string]*runtimeClient.Client
 
-// How we communicat with each cluster's kubernetes API
-type cluster struct {
-	Client *kubernetes.Clientset // Standard Kubernetes client (naked client)
+// How we communicate with each cluster's kubernetes API
+// We need ClientSet for interacting with standard Kubernetetes APIs in a direct cacheless way.
+// We need the managerClient to conveniently perform operations on the various CR that represent
+// our DSIs.
+type testClient struct {
+	Client *kubernetes.Clientset // Client for accessing standard Kubernetes APIs.
 	//clientSet *runtimeClient.Client // Manager client
 	Dataservices []Dataservice // Only if needed
-	DataserviceToManagerClientMap // For handling many ManagerClients for each DSI
+	DataserviceToDSIClient // For handling many ManagerClients for each DSI
 	// Kubeconfig
 }
 
-func NewCluster(...ClusterOption) Cluster {
-	// Apply ClusterOptions before return object
-	return &cluster{}
+func NewClients(...ClientsOption) TestClient {
+	// Apply ClientsOptions before return object
+	return &testClient{}
 }
 
 type Kubeconfig string
 
-type ClusterOption func(Cluster)
+type ClientsOption func(TestClient)
 
-func WithKubeConfig(...Kubeconfig) ClusterOption {
-	return func(Cluster) {
+func WithKubeConfig(...Kubeconfig) ClientsOption {
+	return func(TestClient) {
 		// Create clients
 	}
 }
 
-// The cluster will hold ManagerClients for setuping DSI CRs for each spec.
-// 
-type ManagerClient interface {
-	Create(ctx context.Context, obj runtimeClient.Object) error
-	Delete(ctx context.Context, obj runtimeClient.Object) error
-	Update(ctx context.Context, obj runtimeClient.Object) error
-}
-
-type MinimalManagerCLoient interface {
-	Create(ctx context.Context, obj runtimeClient.Object) error
-}
-
 // Dataservice
 type Dataservice interface {
-	Client() DatabaseClientTester
+	Client() DatabaseClient
 }
 
-// dataservice is an instance of a DSI used for testing.
-// Rename dataserviceInstance
+// Rename to dataserviceInstance
 type dataservice struct {
-	dbClient DatabaseClientTester
+	dbClient DatabaseClient
 	PortForwardChan chan struct{} // Used for closing portforward when cleaning up DSI
 	obj *runtimeClient.Object
 }
 
-func (dsi *dataservice) Client() DatabaseClientTester {
+func (dsi *dataservice) Client() DatabaseClient {
 	return dsi.dbClient
 }
 
 func NewDataservice() Dataservice {
-	// We need to always create a DatabaseClientTester for each dataservice to be used for
+	// We need to always create a DatabaseClient for each dataservice to be used for
 	// accessing the database.
 	return &dataservice{}
 }
 
-// DatabaseClientTester
+// DatabaseClient
 // Pick a better name. Like remove tester.
-type DatabaseClientTester interface {
+// Comment on what this and other interfaces are.
+type DatabaseClient interface {
 	DatabaseIsUp(ctx context.Context) error
 	// We still need to determine the payload mechanism so we can control data being inputted
 	// in a general way
@@ -193,27 +176,30 @@ type DatabaseClientTester interface {
 
 // SpecOptions for expressing and managing Tests to be interated upon in main loop.
 const asyncOpsTimeoutMins = time.Minute * 5
-type SpecFunc func() // This could just be called It // Or just Spec
-//type SpecfuncIt func It(text string, body interface{}, timeout ...float64) bool // We want an It. We could just call it "it"
-func TestData(ctx context.Context, dbClient DatabaseClientTester) SpecFunc {
+
+type Spec func(ctx context.Context, client TestClient)
+
+func TestInsertion(ctx context.Context, client TestClient) Spec {
 	// Some assertions may need to be eventuallys.
-	return func() {
+	return func(ctx context.Context, client TestClient) {
+		// Conditional on shareDataservice
+		customResourceClient := client.CustomResourceClient()
+		dsi := NewDataservice()
+		customResourceClient.Create(ctx, dsi)
 		Eventually(func () error {
-			return dbClient.DatabaseIsUp(ctx)
+			return dsi.Client().DatabaseIsUp(ctx)
 		}, asyncOpsTimeoutMins, ).Should(Equal(BeNil()))
-		Expect(dbClient.InsertData(ctx)).To(Succeed())
-		Expect(dbClient.GetData(ctx)).To(Succeed())
+		Expect(dsi.Client().InsertData(ctx)).To(Succeed())
+		Expect(dsi.Client().GetData(ctx)).To(Succeed())
+		// We need to a record of actions taken against the database so that we can
+		// unwind those actions in order to remove all side effects. This will enable us to
+		// safely shareDataservice across tests.
+		// Conditional on whether sharedDataservice
+		customResourceClient.Delete(ctx, dsi)
 	}
 }
 
-// Interface that requires "It" blocks rather
-
-// DatabaseIsUp
-
-// Many specs here
-
 // Convenience function for grouping SpecFuncs
-func BasicTests(ctx context.Context, dbClient DatabaseClientTester) []SpecFunc {
-	return []SpecFunc{TestData(ctx, dbClient)}
+func BasicTests(ctx context.Context, dbClient DatabaseClient, dsiClient runtimeClient.Client, dsi runtimeClient.Object) []Spec {
+	return []Spec{TestInsertion(ctx, dbClient, dsiClient, dsi)}
 }
-
