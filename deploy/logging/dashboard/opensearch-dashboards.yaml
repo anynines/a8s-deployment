@@ -77,7 +77,7 @@ spec:
     spec:
       containers:
       - name: a8s-opensearch-dashboards
-        image: c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/opensearch-dashboards:1.0.1
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/opensearch-dashboards:v1.0.1-1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5601
