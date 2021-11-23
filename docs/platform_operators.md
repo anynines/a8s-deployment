@@ -44,12 +44,12 @@ in the commands.
 ```shell
 echo <bucket-access-key-id> > deploy/a8s/access-key-id # create file that stores the ID of the key
 
-echo <bucket-secret-access-key > deploy/a8s/secret-access-key # create file that stores the secret value of the key
+echo <bucket-secret-access-key> > deploy/a8s/secret-access-key # create file that stores the secret value of the key
 
 cp deploy/a8s/backup-store-config.yaml.template deploy/a8s/backup-store-config.yaml # create file with other information about the bucket
 ```
 
-Then, use an editor to open `backup-store-config.yaml` and replace the value:
+Then, use an editor to open `deploy/a8s/backup-store-config.yaml` and replace the value:
 
 - of the `container` field with the name of the S3 bucket
 - of the `region` field with the name of the region where the bucket is located
