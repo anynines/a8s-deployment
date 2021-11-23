@@ -15,9 +15,9 @@ This file contains documentation specificly meant for application developers.
 This section is an overview of how you (an application developer) can use a8s to provision a
 PostgreSQL instance, bind an application to it and use it.
 
-The following subsections assume, besides the [General Prerequisites](#general-prerequisistes), that
-you or a platform operator have installed a8s on the Kubernetes cluster following the instructions
-in the section [Install the a8s Control Plane](/docs/platform_operators.md#install-the-a8s-control-plane).
+The following subsections assume, besides the [General Prerequisites](/docs/platform_operators.md#general-prerequisistes),
+that you or a platform operator have installed a8s on the Kubernetes cluster following the
+instructions in the section [Install the a8s Control Plane](/docs/platform_operators.md#install-the-a8s-control-plane).
 
 ### Provision a PostgreSQL Instance
 
@@ -25,7 +25,7 @@ To provision a PostgreSQL instance, you have to `kubectl apply` a yaml manifest 
 an API object of the `PostgreSQL` custom kind (which gets installed as part of a8s).
 
 There's an example of such a manifest at
-[examples/postgresql-instance.yaml](examples/postgresql-instance.yaml), so to provision it you can
+[examples/postgresql-instance.yaml](/examples/postgresql-instance.yaml), so to provision it you can
 run:
 
 ```shell
@@ -43,7 +43,7 @@ watch kubectl get postgresql sample-pg-cluster --output template='{{.status.read
 and wait until the output is equal to "3".
 
 Know that when creating `PostgreSQL` API objects you can specify more fields than those shown in
-[examples/postgresql-instance.yaml](examples/postgresql-instance.yaml). Also, you can dynamically
+[examples/postgresql-instance.yaml](/examples/postgresql-instance.yaml). Also, you can dynamically
 update most fields. Stay tuned for a complete API reference where we'll detail all the fields.
 
 To delete the PostgreSQL instance, you can run:
@@ -62,7 +62,7 @@ instance.
 This will be the user that your application logs in as when interacting with that data service
 instance.
 
-At [examples/service-binding.yaml](examples/service-binding.yaml) there's the yaml manifest of an
+At [examples/service-binding.yaml](/examples/service-binding.yaml) there's the yaml manifest of an
 example `ServiceBinding` that points to the PostgreSQL instance you previously deployed. Run:
 
 ```shell
@@ -170,7 +170,7 @@ To backup a data service instance, you have to create a custom API object of kin
 custom kind which is part of a8s). In its fields, a `Backup` API object points to the data service
 instance to backup.
 
-At [examples/backup.yaml](examples/backup.yaml) there's the yaml manifest of an example `Backup`
+At [examples/backup.yaml](/examples/backup.yaml) there's the yaml manifest of an example `Backup`
 that points to the PostgreSQL instance that you previously deployed. Run:
 
 ```shell
@@ -206,7 +206,7 @@ of a8s). A `Recovery` API object fields identify the `Backup` API object to use 
 restore. The `Recovery` will always be performed on the data service instance from which the backup
 was taken. Stay tuned for a complete reference of all the fields of `Recovery` API objects.
 
-At [examples/recovery.yaml](examples/recovery.yaml) there's the yaml manifest of an example
+At [examples/recovery.yaml](/examples/recovery.yaml) there's the yaml manifest of an example
 `Recovery` that points to the PostgreSQL instance that you previously deployed. Run:
 
 ```shell
