@@ -230,6 +230,11 @@ kubectl delete recovery <recovery-name>
 
 ### Visualize the Logs of the PostgreSQL Instance
 
+Application developers should be aware that all pods with the label field `app`
+will be adjusted within OpenSearch to have the label `app.kubernetes.io/name`.
+This pattern conforms with the [recommended labels][common-labels] expressed
+officially in the Kubernetes documentation.
+
 When installing the a8s platform, the platform operator had the option to install components to
 collect and visualize the logs of the data service instances (as shown in section
 [(Optional) Install the Logging Infrastructure](/docs/platform_operators.md#optional-install-the-logging-infrastructure)).
@@ -347,3 +352,4 @@ that are scraped by the Prometheus instance.
 [mount-secret-in-volume]: https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod
 [kubernetes-ingress]: https://kubernetes.io/docs/concepts/services-networking/ingress/
 [kubernetes-port-forwarding]: https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
+[common-labels]: https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
