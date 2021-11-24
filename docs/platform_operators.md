@@ -1,28 +1,16 @@
 # Platform Operators Documentation
 
 This file contains platform operator specific documentation on how the Kubernetes cluster needs
-to be configured.
+to be configured. We assume that the requirements from
+[Technical Requirements](/docs/technical_requirements.md) are met.
 
-- [General Prerequisites](#general-prerequisites)
-- [Install the a8s Control Plane ](#install-the-a8s-control-plane-for-platform-operators)
+- [Install the a8s Control Plane](#install-the-a8s-control-plane-for-platform-operators)
   - [Prerequisites](#prerequisites)
   - [Install the a8s Control Plane](#install-the-a8s-control-plane)
   - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
   - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
   - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
   - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
-
-## General Prerequisites
-
-You'll need:
-
-- a running Kubernetes cluster
-- `kubectl` v1.14 or higher pointed to the Kubernetes cluster
-- one [StorageClass][storage-class] marked as `default` in the Kubernetes cluster
-
-The instructions in this repo have been tested on `minikube v1.17.1`, `minikube v1.21.0` and
-Kubernetes `v1.20.2`, but they should work with any recent Kubernetes version. Please let us
-know if you encounter any issue with other versions.
 
 ## Install the a8s Control Plane
 
@@ -53,6 +41,9 @@ Then, use an editor to open `deploy/a8s/backup-store-config.yaml` and replace th
 
 - of the `container` field with the name of the S3 bucket
 - of the `region` field with the name of the region where the bucket is located
+- of the `password` field, which is the password with which your Backups will be
+  encrypted. *Disclaimer*: This password will for now be part of a configmap and
+  therefore will be stored in clear text.
 
 All the created files are gitignored so you don't have to worry about committing them by mistake
 (since they contain private data).
@@ -181,7 +172,6 @@ Run:
 kubectl delete --recursive --filename deploy/metrics/
 ```
 
-[storage-class]: https://kubernetes.io/docs/concepts/storage/storage-classes/
 [s3-bucket-creation]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html
 [mount-secret-in-env-vars]: https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables
 [mount-secret-in-volume]: https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod
