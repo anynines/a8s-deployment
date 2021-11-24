@@ -1,25 +1,23 @@
 # Application Developers Documentation
 
-This file contains documentation specificly meant for application developers.
-
-- [Usage Overview: Deploy and Use a PostgreSQL Instance](#usage-overview-deploy-and-use-a-postgresql-instance)
-  - [Provision a PostgreSQL Instance](#provision-a-postgresql-instance)
-  - [Bind an Application to the PostgreSQL Instance](#bind-an-application-to-the-postgresql-instance)
-  - [Take a Backup of the PostgreSQL Instance](#take-a-backup-of-the-postgresql-instance)
-  - [Use a Backup to Restore a PostgreSQL Instance to a Previous State](#use-a-backup-to-restore-a-postgresql-instance-to-a-previous-state)
-  - [Visualize the Logs of the PostgreSQL Instance](#visualize-the-logs-of-the-postgresql-instance)
-  - [Visualize the Metrics of the PostgreSQL Instance](#visualize-the-metrics-of-the-postgresql-instance)
-
-## Usage Overview: Deploy and Use a PostgreSQL Instance
-
-This section is an overview of how you (an application developer) can use a8s to provision a
-PostgreSQL instance, bind an application to it and use it.
+This file contains documentation specifically meant for application developers.
+It's an overview of how you (an application developer) can use a8s to provision
+a PostgreSQL instance, bind an application to it and use it.
 
 The following subsections assume, besides the [General Prerequisites](/docs/platform_operators.md#general-prerequisistes),
 that you or a platform operator have installed a8s on the Kubernetes cluster following the
 instructions in the section [Install the a8s Control Plane](/docs/platform_operators.md#install-the-a8s-control-plane).
 
-### Provision a PostgreSQL Instance
+## Index
+
+- [Provision a PostgreSQL Instance](#provision-a-postgresql-instance)
+- [Bind an Application to the PostgreSQL Instance](#bind-an-application-to-the-postgresql-instance)
+- [Take a Backup of the PostgreSQL Instance](#take-a-backup-of-the-postgresql-instance)
+- [Use a Backup to Restore a PostgreSQL Instance to a Previous State](#use-a-backup-to-restore-a-postgresql-instance-to-a-previous-state)
+- [Visualize the Logs of the PostgreSQL Instance](#visualize-the-logs-of-the-postgresql-instance)
+- [Visualize the Metrics of the PostgreSQL Instance](#visualize-the-metrics-of-the-postgresql-instance)
+
+## Provision a PostgreSQL Instance
 
 To provision a PostgreSQL instance, you have to `kubectl apply` a yaml manifest that describes
 an API object of the `PostgreSQL` custom kind (which gets installed as part of a8s).
@@ -52,7 +50,7 @@ To delete the PostgreSQL instance, you can run:
 kubectl delete --filename examples/postgresql-instance.yaml
 ```
 
-### Bind an Application to the PostgreSQL Instance
+## Bind an Application to the PostgreSQL Instance
 
 To make an application running in a Kubernetes Pod use a provisioned PostgreSQL instance, you first
 have to create a `ServiceBinding` custom API object (another a8s custom API type).
@@ -164,7 +162,7 @@ When you want to delete a service binding, just run:
 kubectl delete servicebinding <service-binding name>
 ```
 
-### Take a Backup of the PostgreSQL Instance
+## Take a Backup of the PostgreSQL Instance
 
 To backup a data service instance, you have to create a custom API object of kind `Backup` (a
 custom kind which is part of a8s). In its fields, a `Backup` API object points to the data service
@@ -195,7 +193,7 @@ When you want to delete a `Backup`, run:
 kubectl delete backup <backup-name>
 ```
 
-### Use a Backup to Restore a PostgreSQL Instance to a Previous State
+## Use a Backup to Restore a PostgreSQL Instance to a Previous State
 
 If you want to restore a data service instance to a previous state it had, you can restore it from
 a previously taken backup (as shown in section
@@ -228,7 +226,7 @@ When you want to delete a `Recovery`, run:
 kubectl delete recovery <recovery-name>
 ```
 
-### Visualize the Logs of the PostgreSQL Instance
+## Visualize the Logs of the PostgreSQL Instance
 
 Application developers should be aware that all pods with the label field `app`
 will be adjusted within OpenSearch to have the label `app.kubernetes.io/name`.
@@ -287,7 +285,7 @@ The logs will be available to interact using your new filter.
 
 ![OpenSearchDashboards8](/pics/opensearchdashboards/8.png)
 
-### Visualize the Metrics of the PostgreSQL Instance
+## Visualize the Metrics of the PostgreSQL Instance
 
 When installing the a8s platform, the platform operator had the option to install components to
 scrape and visualize the metrics of the data service instances (as shown in section
