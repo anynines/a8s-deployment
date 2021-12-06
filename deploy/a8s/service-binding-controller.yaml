@@ -318,7 +318,7 @@ spec:
         - /manager
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: "c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/service-binding-controller:0.2.0"
+        image: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:v0.4.0"
         livenessProbe:
           httpGet:
             path: /healthz
