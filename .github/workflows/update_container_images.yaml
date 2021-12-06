@@ -1,0 +1,8 @@
+name: Update container images
+
+on:
+  schedule:
+    # Update the container images every morning at 05:00 (or 04:00, depending on whether daylight
+    # savings time is effective or not) CEST; skip Saturdays and Sundays. The hour in the expression
+    # below is 03 because the timezone is in UTC.
+    - cron: '0 3 * * 1-5'
