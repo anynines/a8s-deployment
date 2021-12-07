@@ -1,8 +1,44 @@
 name: Update container images
 
+# TODO: Add ID to each action.
+# TODO: Double check for correctness.
+# TODO: Add comments.
+# TODO: Document general build process and its limitations.
+
 on:
   schedule:
     # Update the container images every morning at 05:00 (or 04:00, depending on whether daylight
     # savings time is effective or not) CEST; skip Saturdays and Sundays. The hour in the expression
     # below is 03 because the timezone is in UTC.
     - cron: '0 3 * * 1-5'
+
+jobs:
+  update-container-images:
+    runs-on: ubuntu-latest
+    steps:
+      #! REMOVE following step before opening PR.
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.A8S_ECR_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.A8S_ECR_AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+      - name: Store most recent version tag for each image
+        env:
+          REPO_NAMESPACE: a9s-ds-for-k8s/dev
+          IMAGES: "postgresql-operator service-binding-controller backup-manager backup-agent fluentd opensearch-dashboards"
+        run: |
+          VERSIONED_IMAGES=""
+          for IMG in ${IMAGES[*]}
+          do
+            read NEW_VERSION <<< $(aws ecr-public describe-images \
+              --repository-name $REPO_NAMESPACE/$IMG \
+              --query 'sort_by(imageDetails, &imagePushedAt)[-1].imageTags[?@ != `latest`]' \
+              --output text \
+              --region us-east-1)
+              VERSIONED_IMAGES+="$IMG:$NEW_VERSION "
+          done
+          echo "VERSIONED_IMAGES=$VERSIONED_IMAGES" >> $GITHUB_ENV
+        # TODO: Add checks on the image tags being what we expect.
