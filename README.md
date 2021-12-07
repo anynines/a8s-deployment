@@ -28,3 +28,4 @@ APIs can change at any time. For known issues and limitations please consult
 - [Technical Requirements](docs/technical_requirements.md)
 - [Platform Operator Documentation](docs/platform_operators.md)
 - [Application Developer Documentation](docs/application_developers.md)
+- [API Documentation](docs/api_documentation.md)
