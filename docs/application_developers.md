@@ -4,7 +4,7 @@ This file contains documentation specifically meant for application developers.
 It's an overview of how you (an application developer) can use a8s to provision
 a PostgreSQL instance, bind an application to it and use it.
 
-The following subsections assume, besides the [General Prerequisites](/docs/platform_operators.md#general-prerequisistes),
+The following subsections assume, besides the [Technical Requirements](/docs/technical_requirements.md),
 that you or a platform operator have installed a8s on the Kubernetes cluster following the
 instructions in the section [Install the a8s Control Plane](/docs/platform_operators.md#install-the-a8s-control-plane).
 
