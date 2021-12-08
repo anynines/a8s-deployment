@@ -4,6 +4,7 @@ name: Update container images
 # TODO: Double check for correctness.
 # TODO: Add comments.
 # TODO: Document general build process and its limitations.
+# TODO: Factor to use a script.
 
 on:
   schedule:
@@ -41,4 +42,20 @@ jobs:
               VERSIONED_IMAGES+="$IMG:$NEW_VERSION "
           done
           echo "VERSIONED_IMAGES=$VERSIONED_IMAGES" >> $GITHUB_ENV
-        # TODO: Add checks on the image tags being what we expect.
+          # TODO: Add checks on the image tags being what we expect.
+      - name: Store current date to use it as a prefix for the name of the branch to update images
+        id: get-date
+        run: echo "::set-output name=date::$(date +'%d_%m_%Y')"
+      - name: Create branch to host commits that update container images
+        uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
+      - name: Checkout branch where to commit image updates
+        uses: actions/checkout@v2
+        with:
+          ref: 'update_container_images_${{ steps.get-date.outputs.date }}'
+        # TODO: For each image name; grep corresponding deployment manifest; find latest version, if they don't match update image and commit.
+        # TODO: If new branch has at least one commit, push it and open a PR.
+        # TODO: If new branch has no new commits, delete it.
