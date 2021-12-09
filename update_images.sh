@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: Switch to "sed" when copying inside github action
+
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -11,7 +13,6 @@ do
     IMG=$(echo $VERSIONED_IMG | cut -d ':' -f 1)
     NEW_VERSION=$(echo $VERSIONED_IMG | cut -d ':' -f 2)
 
-    # TODO: Switch to "sed" when copying inside github action
     # This regex could be stricter. For example, it doesn't check that in the semver version there are no leading zeros
     # if the semver number has more than one digit (e.g. v01.1.1 would pass). But right now it's enough and it's much
     # more readable this way than in "stricter" formats.
