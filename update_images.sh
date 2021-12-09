@@ -14,7 +14,7 @@ do
     NEW_VERSION=$(echo $VERSIONED_IMG | cut -d ':' -f 2)
 
     GET_IMG_FIELD_REGEXP="s/^[[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$IMG:\(v[\.[:digit:]]\{1,\}\)\"\{0,1\}$/\1/p"
-    UPDATE_IMG_FIELD_REGEXP="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$IMG:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/p"
+    UPDATE_IMG_FIELD_REGEXP="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$IMG:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
 
     # This regex could be stricter. For example, it doesn't check that in the semver version there are no leading zeros
     # if the semver number has more than one digit (e.g. v01.1.1 would pass). But right now it's enough and it's much
