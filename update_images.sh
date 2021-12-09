@@ -6,6 +6,26 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+update_fluentd_img_and_commit () {
+    local NEW_VERSION=$1
+    local MANIFEST="deploy/logging/collection-infrastructure/fluentd-aggregator.yaml"
+
+    local GET_VERSION_SED_CMD="s/^[[:space:]]\{1,\}image:[[:space:]].\{1,\}\/fluentd:\(v[\.-[:digit:]]\{1,\}\)\"\{0,1\}$/\1/p"
+    local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
+
+    if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
+    then
+        local UPDATE_VERSION_SED_CMD="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
+        gsed -i "$UPDATE_VERSION_SED_CMD" "$MANIFEST"
+        # TODO: Uncomment before pushing real version.
+        echo "Bump fluentd-aggregator to $NEW_VERSION"
+        # git add "$MANIFEST"
+        # git commit -m "Bump fluentd-aggregator to $NEW_VERSION"
+    else
+        echo "fluentd-aggregator current version is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
+    fi
+}
+
 # Right now the core components are the PostgreSQL Operator, the Backup Manager and the Service
 # Binding Controller.
 update_core_component_img_and_commit () {
@@ -41,7 +61,7 @@ main () {
         # individually to easily pinpoint which update broke things in case tests fail.
         if [[ "$IMG" == "fluentd" ]]
         then
-            echo "fluentd"
+            update_fluentd_img_and_commit $NEW_VERSION
         elif [[ "$IMG" == "opensearch-dashboards" ]]
         then
             echo "opensearch-dashboards"
