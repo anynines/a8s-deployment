@@ -5,19 +5,16 @@ set -o nounset
 set -o pipefail
 
 new_version_is_newer () {
-    local NEW_VERSION=$1
-    local CURRENT_VERSION=$2
-
     # Replace "." and "-" with " " from the versions so that it becomes easier to compare each
     # version token from the new version to the corresponding one from the current version.
-    NEW_VERSION=$(sed "s/[\.v-]/ /g" <<< $NEW_VERSION)
-    CURRENT_VERSION=$(sed "s/[\.v-]/ /g" <<< $CURRENT_VERSION)
+    local NEW_VERSION=$(sed "s/[\.v-]/ /g" <<< $1)
+    local CURRENT_VERSION=$(sed "s/[\.v-]/ /g" <<< $2)
 
     # From a string containing all the tokens of a version to an array where each item represents
     # a single token (in descending order of priority), to ease comparison between new and current
     # version.
-    NEW_VERSION_TOKENS=( $NEW_VERSION )
-    CURRENT_VERSION_TOKENS=( $CURRENT_VERSION )
+    local NEW_VERSION_TOKENS=( $NEW_VERSION )
+    local CURRENT_VERSION_TOKENS=( $CURRENT_VERSION )
 
     # Now, compare each token between new and current version in descending order of priority, to
     # establish which version is newer.
@@ -26,6 +23,10 @@ new_version_is_newer () {
         if [ ${NEW_VERSION_TOKENS[$i]} -gt ${CURRENT_VERSION_TOKENS[$i]} ]
         then
             return 0
+        fi
+        if [ ${NEW_VERSION_TOKENS[$i]} -lt ${CURRENT_VERSION_TOKENS[$i]} ]
+        then
+            return 1
         fi
     done
 
