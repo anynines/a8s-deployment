@@ -50,7 +50,7 @@ update_core_component_img_and_commit () {
 }
 
 main () {
-    local VERSIONED_IMGS="postgresql-operator:v0.9.0 backup-manager:v0.7.0 service-binding-controller:v0.5.0 fluentd:v0.12.3-1.0-1.1.0"
+    local VERSIONED_IMGS="postgresql-operator:v0.9.0 backup-manager:v0.7.0 service-binding-controller:v0.5.0 fluentd:v1.12.3-1.0-1.1.1"
     for VERSIONED_IMG in $VERSIONED_IMGS
     do
         # Extract image name and version as separate variables
