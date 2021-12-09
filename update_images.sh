@@ -14,9 +14,9 @@ update_core_component_img_and_commit () {
     local MANIFEST="deploy/a8s/$COMPONENT.yaml"
 
     local get_version_sed_cmd="s/^[[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]]\{1,\}\)\"\{0,1\}$/\1/p"
-    local current_version=$(gsed -n $get_version_sed_cmd $MANIFEST)
+    local CURRENT_VERSION=$(gsed -n $get_version_sed_cmd $MANIFEST)
 
-    if [[ "$NEW_VERSION" > "$current_version" ]]
+    if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
     then
         local update_version_sed_cmd="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
         gsed -i "$update_version_sed_cmd" "$MANIFEST"
@@ -25,7 +25,7 @@ update_core_component_img_and_commit () {
         # git add "$MANIFEST"
         # git commit -m "Bump $COMPONENT to $NEW_VERSION"
     else
-        echo "$COMPONENT current version is $current_version, most recent version found is $NEW_VERSION, no update needed"
+        echo "$COMPONENT current version is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
     fi
 }
 
