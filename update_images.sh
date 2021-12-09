@@ -1,71 +1,40 @@
 #!/bin/bash
 
-# TODO: Switch to "sed" when copying inside github action
-
 set -o errexit
 set -o nounset
 set -o pipefail
 
-update_fluentd_img_and_commit () {
-    local NEW_VERSION=$1
-    local MANIFEST="deploy/logging/collection-infrastructure/fluentd-aggregator.yaml"
-
-    local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/fluentd:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
-    local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
-
-    if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
-    then
-        local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/fluentd:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
-        gsed -i "$UPDATE_VERSION_SED_CMD" "$MANIFEST"
-        # TODO: Uncomment before pushing real version.
-        echo "Bump fluentd-aggregator to $NEW_VERSION"
-        # git add "$MANIFEST"
-        # git commit -m "Bump fluentd-aggregator to $NEW_VERSION"
-    else
-        echo "fluentd-aggregator current version is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
-    fi
-}
-
-update_opensearch_dashboards_img_and_commit () {
-    local NEW_VERSION=$1
-    local MANIFEST="deploy/logging/dashboard/opensearch-dashboards.yaml"
-
-    local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/opensearch-dashboards:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
-    local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
-
-    if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
-    then
-        local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/opensearch-dashboards:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
-        gsed -i "$UPDATE_VERSION_SED_CMD" "$MANIFEST"
-        # TODO: Uncomment before pushing real version.
-        echo "Bump opensearch-dashboards to $NEW_VERSION"
-        # git add "$MANIFEST"
-        # git commit -m "Bump opensearch-dashboards to $NEW_VERSION"
-    else
-        echo "opensearch-dashboards current version is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
-    fi 
-}
-
-# Right now the core components are the PostgreSQL Operator, the Backup Manager and the Service
-# Binding Controller.
-update_core_component_img_and_commit () {
+ensure_image_is_fresh_and_commit () {
     local COMPONENT=$1
     local NEW_VERSION=$2
-    local MANIFEST="deploy/a8s/$COMPONENT.yaml"
+    local MANIFEST=$3
 
-    local GET_VERSION_SED_CMD="s/^[[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]]\{1,\}\)\"\{0,1\}$/\1/p"
+    # Prepare sed expression to extract the current version of the component from its yaml manifest.
+    # The regexp isn't strict: it matches the image version, but it'll match also incorrect
+    # formats. I started with an extremely precise regexp but it was overly long and complex, so I
+    # opted for allowing some incorrect formats for simplicity's sake. Since we control the parsed
+    # manifests we can have strong guarantees that the versions will be in the right formats, so
+    # there should be no issues.
+    local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
     local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
 
     if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
     then
-        local UPDATE_VERSION_SED_CMD="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
-        gsed -i "$UPDATE_VERSION_SED_CMD" "$MANIFEST"
+        # Prepare sed expression to update the version of the image in its yaml manifest. The regexp
+        # isn't strict: it matches the image version, but it'll match also incorrect formats. I
+        # started with an extremely precise regexp but it was overly long and complex, so I opted
+        # for allowing some incorrect formats for simplicity's sake. Since we control the parsed
+        # manifests we can have strong guarantees that the versions will be in the right formats, so
+        # there should be no issues.
+        # TODO: Switch to "sed" when copying inside github action
+        local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
+        gsed -i $UPDATE_VERSION_SED_CMD $MANIFEST
         # TODO: Uncomment before pushing real version.
         echo "Bump $COMPONENT to $NEW_VERSION"
         # git add "$MANIFEST"
         # git commit -m "Bump $COMPONENT to $NEW_VERSION"
     else
-        echo "$COMPONENT current version is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
+        echo "Current version of $COMPONENT is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
     fi
 }
 
@@ -77,17 +46,22 @@ main () {
         local IMG=$(echo $VERSIONED_IMG | cut -d ':' -f 1)
         local NEW_VERSION=$(echo $VERSIONED_IMG | cut -d ':' -f 2)
 
-        # If needed, update the image version in the yaml manifests and commit each update
-        # individually to easily pinpoint which update broke things in case tests fail.
+        # Each image needs to be updated in a yaml manifest with an ad-hoc name (i.e. there's no
+        # regular pattern), so we have to branch and manually build the manifest name differently
+        # for each component.
         if [[ "$IMG" == "fluentd" ]]
         then
-            update_fluentd_img_and_commit $NEW_VERSION
+            local MANIFEST="deploy/logging/collection-infrastructure/fluentd-aggregator.yaml"
         elif [[ "$IMG" == "opensearch-dashboards" ]]
         then
-            update_opensearch_dashboards_img_and_commit $NEW_VERSION
+            local MANIFEST="deploy/logging/dashboard/opensearch-dashboards.yaml"
         else
-            update_core_component_img_and_commit $IMG $NEW_VERSION
+            local MANIFEST="deploy/a8s/$IMG.yaml"
         fi
+
+        # If needed, update the image version in the relevant yaml manifests and commit each update
+        # individually to easily pinpoint which update broke things in case tests fail.
+        ensure_image_is_fresh_and_commit $IMG $NEW_VERSION $MANIFEST
     done
 }
 
