@@ -4,6 +4,34 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+new_version_is_newer () {
+    local NEW_VERSION=$1
+    local CURRENT_VERSION=$2
+
+    # Replace "." and "-" with " " from the versions so that it becomes easier to compare each
+    # version token from the new version to the corresponding one from the current version.
+    NEW_VERSION=$(sed "s/[\.v-]/ /g" <<< $NEW_VERSION)
+    CURRENT_VERSION=$(sed "s/[\.v-]/ /g" <<< $CURRENT_VERSION)
+
+    # From a string containing all the tokens of a version to an array where each item represents
+    # a single token (in descending order of priority), to ease comparison between new and current
+    # version.
+    NEW_VERSION_TOKENS=( $NEW_VERSION )
+    CURRENT_VERSION_TOKENS=( $CURRENT_VERSION )
+
+    # Now, compare each token between new and current version in descending order of priority, to
+    # establish which version is newer.
+    for i in "${!NEW_VERSION_TOKENS[@]}"
+    do
+        if [ ${NEW_VERSION_TOKENS[$i]} -gt ${CURRENT_VERSION_TOKENS[$i]} ]
+        then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 ensure_image_is_fresh_and_commit () {
     local COMPONENT=$1
     local NEW_VERSION=$2
@@ -18,7 +46,7 @@ ensure_image_is_fresh_and_commit () {
     local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
     local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
 
-    if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
+    if new_version_is_newer "$NEW_VERSION" "$CURRENT_VERSION"
     then
         # Prepare sed expression to update the version of the image in its yaml manifest. The regexp
         # isn't strict: it matches the image version, but it'll match also incorrect formats. I
@@ -39,7 +67,7 @@ ensure_image_is_fresh_and_commit () {
 }
 
 main () {
-    local VERSIONED_IMGS="postgresql-operator:v0.9.0 backup-manager:v0.7.0 service-binding-controller:v0.5.0 fluentd:v1.12.3-1.0-1.1.1 opensearch-dashboards:v1.1.1-1.0.0"
+    local VERSIONED_IMGS="postgresql-operator:v0.8.1 backup-manager:v1.2.0 service-binding-controller:v0.3.0 fluentd:v1.12.0-1.0-3.3.0 opensearch-dashboards:v1.0.1-1.0.0"
     for VERSIONED_IMG in $VERSIONED_IMGS
     do
         # Extract image name and version as separate variables
