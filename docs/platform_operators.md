@@ -4,13 +4,15 @@ This file contains platform operator specific documentation on how the Kubernete
 to be configured. We assume that the requirements from
 [Technical Requirements](/docs/technical_requirements.md) are met.
 
-- [Install the a8s Control Plane](#install-the-a8s-control-plane-for-platform-operators)
-  - [Prerequisites](#prerequisites)
+- [Platform Operators Documentation](#platform-operators-documentation)
   - [Install the a8s Control Plane](#install-the-a8s-control-plane)
-  - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
-  - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
-  - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
-  - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
+    - [Prerequisites](#prerequisites)
+    - [RBAC](#rbac)
+    - [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
+    - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
+    - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
+    - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
+    - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
 
 ## Install the a8s Control Plane
 
@@ -48,6 +50,14 @@ Then, use an editor to open `deploy/a8s/backup-store-config.yaml` and replace th
 All the created files are gitignored so you don't have to worry about committing them by mistake
 (since they contain private data).
 
+### RBAC
+
+The a8s framework requires multiple ClusterRoles as well as multiple ClusterRoleBindings per
+component in order to function properly. These Kubernetes resources are part of the individual
+manifests of the a8s framework components (e.g. `postgresql-operator.yaml`) and are automatically
+created when the framework is deployed using kustomize. Nevertheless the ClusterRole and
+ClusterRoleBinding can be updated based on your specific environmental requirements.
+
 ### Install the a8s Control Plane
 
 Just run:
@@ -61,7 +71,31 @@ order.
 
 More precisely, it will:
 
-1. Create a namespace...
+1. Create two namespaces called `a8s-system` and `postgresql-system`.
+   The `postgresql-system` namespace is used for the `postgresql-controller-manager`, the rest of
+   the a8s framework components (`a8s-backup-controller-manager` and
+   `service-binding-controller-manager`) are running in `a8s-system`.
+2. Register multiple CustomResourceDefinitions (CRDs)
+3. Create three deployments, one for each a8s framework component
+4. Create multiple ClusterRoles and ClusterRoleBindings:
+- <component_name>-manager-role and <component_name>-manager-rolebinding:  
+  provides the a8s framework components access to Kubernetes resources
+- <component_name>-metrics-reader:  
+  provide access to the metrics endpoint
+- <component_name>-proxy-role and <component_name>-proxy-rolebinding:  
+  used for access authentication to secure the access to metrics
+- postgresql-spilo-role:  
+  gives spilo the required permissions to access Kubernetes resources
+
+5. Create one Role and RoleBinding:
+- <component_name>-leader-election-role and <component_name>-leader-election-rolebinding:  
+  used for communication between multiple controllers of the same type.  
+  **Note** The a8s framework is not HA ready, therefore this ClusterRole is currently
+  not actively used.
+
+6. Generate and apply multiple Configmaps (e.g. `a8s-backup-cloud-credentials` and
+   `backup-store-config`) and Secrets that are necessary for the a8s framework in order to function  
+   properly.
 
 It might take some time for the a8s control plane to get up and running. To know when that happens
 you can run the two following commands and wait until both of them show that all deployments
