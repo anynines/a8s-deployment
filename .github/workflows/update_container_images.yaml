@@ -1,11 +1,5 @@
 name: Update container images
 
-# TODO: Add ID to each action.
-# TODO: Double check for correctness.
-# TODO: Add comments.
-# TODO: Document general build process and its limitations.
-# TODO: Factor to use a script.
-
 on:
   schedule:
     # Update the container images every morning at 05:00 (or 04:00, depending on whether daylight
@@ -29,7 +23,7 @@ jobs:
       - name: Store most recent version tag for each image
         env:
           REPO_NAMESPACE: a9s-ds-for-k8s/dev
-          IMAGES: "postgresql-operator service-binding-controller backup-manager backup-agent fluentd opensearch-dashboards"
+          IMAGES: "postgresql-operator service-binding-controller backup-manager fluentd opensearch-dashboards"
         run: |
           VERSIONED_IMAGES=""
           for IMG in ${IMAGES[*]}
@@ -42,20 +36,25 @@ jobs:
               VERSIONED_IMAGES+="$IMG:$NEW_VERSION "
           done
           echo "VERSIONED_IMAGES=$VERSIONED_IMAGES" >> $GITHUB_ENV
-          # TODO: Add checks on the image tags being what we expect.
       - name: Store current date to use it as a prefix for the name of the branch to update images
         id: get-date
         run: echo "::set-output name=date::$(date +'%d_%m_%Y')"
-      - name: Create branch to host commits that update container images
-        uses: peterjgrainger/action-create-branch@v2.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: checkout this repo
+        uses: actions/checkout@v2
+      - name: Update images if needed
+        run: echo a > mol-test-file && sed -i 's/a/b/' mol-test-file && git config --global user.email "molivi@anynines.com" && git add . && git commit -m "test-commit"
+      - name: Create pull request if at least one image was updated
+        uses: peter-evans/create-pull-request@v3
         with:
           branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
-      - name: Checkout branch where to commit image updates
-        uses: actions/checkout@v2
-        with:
-          ref: 'update_container_images_${{ steps.get-date.outputs.date }}'
-        # TODO: For each image name; grep corresponding deployment manifest; find latest version, if they don't match update image and commit.
-        # TODO: If new branch has at least one commit, push it and open a PR.
-        # TODO: If new branch has no new commits, delete it.
+          title: 'Update Container Images'
+          body: |
+            Automated update of container images to new available versions.
+            
+            For the a8s core components (postgresql operator, backup manager, service binding
+            controller), please check that a github release with the same name as the new version
+            exists in the repo of the relevant component. If that's not the case, it's likely
+            because the new image was pushed spuriusly during testing by a developer who forgot to
+            delete it, so it's not a legitimate image and should NOT be used; remove the
+            corresponding commit and delete the image from ECR.
+
