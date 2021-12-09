@@ -10,22 +10,22 @@ set -o pipefail
 # Binding Controller.
 update_core_component_img_and_commit () {
     local COMPONENT=$1
-    local new_version=$2
+    local NEW_VERSION=$2
     local manifest="deploy/a8s/$COMPONENT.yaml"
 
     local get_version_sed_cmd="s/^[[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]]\{1,\}\)\"\{0,1\}$/\1/p"
     local current_version=$(gsed -n $get_version_sed_cmd $manifest)
 
-    if [[ "$new_version" > "$current_version" ]]
+    if [[ "$NEW_VERSION" > "$current_version" ]]
     then
-        local update_version_sed_cmd="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$new_version\2/"
+        local update_version_sed_cmd="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
         gsed -i "$update_version_sed_cmd" "$manifest"
         # TODO: Uncomment before pushing real version.
-        echo "Bump $COMPONENT to $new_version"
+        echo "Bump $COMPONENT to $NEW_VERSION"
         # git add "$manifest"
-        # git commit -m "Bump $component to $new_version"
+        # git commit -m "Bump $COMPONENT to $NEW_VERSION"
     else
-        echo "$COMPONENT current version is $current_version, most recent version found is $new_version, no update needed"
+        echo "$COMPONENT current version is $current_version, most recent version found is $NEW_VERSION, no update needed"
     fi
 }
 
