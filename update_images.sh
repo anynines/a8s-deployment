@@ -26,6 +26,26 @@ update_fluentd_img_and_commit () {
     fi
 }
 
+update_opensearch_dashboards_img_and_commit () {
+    local NEW_VERSION=$1
+    local MANIFEST="deploy/logging/dashboard/opensearch-dashboards.yaml"
+
+    local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/opensearch-dashboards:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
+    local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
+
+    if [[ "$NEW_VERSION" > "$CURRENT_VERSION" ]]
+    then
+        local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/opensearch-dashboards:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
+        gsed -i "$UPDATE_VERSION_SED_CMD" "$MANIFEST"
+        # TODO: Uncomment before pushing real version.
+        echo "Bump opensearch-dashboards to $NEW_VERSION"
+        # git add "$MANIFEST"
+        # git commit -m "Bump opensearch-dashboards to $NEW_VERSION"
+    else
+        echo "opensearch-dashboards current version is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
+    fi 
+}
+
 # Right now the core components are the PostgreSQL Operator, the Backup Manager and the Service
 # Binding Controller.
 update_core_component_img_and_commit () {
@@ -50,7 +70,7 @@ update_core_component_img_and_commit () {
 }
 
 main () {
-    local VERSIONED_IMGS="postgresql-operator:v0.9.0 backup-manager:v0.7.0 service-binding-controller:v0.5.0 fluentd:v1.12.3-1.0-1.1.1"
+    local VERSIONED_IMGS="postgresql-operator:v0.9.0 backup-manager:v0.7.0 service-binding-controller:v0.5.0 fluentd:v1.12.3-1.0-1.1.1 opensearch-dashboards:v1.0.1-1.0.0"
     for VERSIONED_IMG in $VERSIONED_IMGS
     do
         # Extract image name and version as separate variables
@@ -64,7 +84,7 @@ main () {
             update_fluentd_img_and_commit $NEW_VERSION
         elif [[ "$IMG" == "opensearch-dashboards" ]]
         then
-            echo "opensearch-dashboards"
+            update_opensearch_dashboards_img_and_commit $NEW_VERSION
         else
             update_core_component_img_and_commit $IMG $NEW_VERSION
         fi
@@ -72,6 +92,3 @@ main () {
 }
 
 main
-
-# TODO: Handle logging
-# TODO: Handle opensearch-dashboards
