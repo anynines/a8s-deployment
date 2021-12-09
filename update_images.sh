@@ -11,18 +11,18 @@ set -o pipefail
 update_core_component_img_and_commit () {
     local COMPONENT=$1
     local NEW_VERSION=$2
-    local manifest="deploy/a8s/$COMPONENT.yaml"
+    local MANIFEST="deploy/a8s/$COMPONENT.yaml"
 
     local get_version_sed_cmd="s/^[[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]]\{1,\}\)\"\{0,1\}$/\1/p"
-    local current_version=$(gsed -n $get_version_sed_cmd $manifest)
+    local current_version=$(gsed -n $get_version_sed_cmd $MANIFEST)
 
     if [[ "$NEW_VERSION" > "$current_version" ]]
     then
         local update_version_sed_cmd="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
-        gsed -i "$update_version_sed_cmd" "$manifest"
+        gsed -i "$update_version_sed_cmd" "$MANIFEST"
         # TODO: Uncomment before pushing real version.
         echo "Bump $COMPONENT to $NEW_VERSION"
-        # git add "$manifest"
+        # git add "$MANIFEST"
         # git commit -m "Bump $COMPONENT to $NEW_VERSION"
     else
         echo "$COMPONENT current version is $current_version, most recent version found is $NEW_VERSION, no update needed"
