@@ -2,7 +2,6 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 IMGS="postgresql-operator backup-manager service-binding-controller"
 for IMG in $IMGS
@@ -18,7 +17,7 @@ do
     then
         UPDATE_IMG_FIELD_REGEXP="s/^\([[:space:]]\{1,\}image:[[:space:]].\{1,\}\/$IMG:v\)[[:digit:]]\{1,\}.[[:digit:]]\{1,\}.[[:digit:]]\{1,\}\(\"\{0,1\}\)/\1$NEW_VERSION\2/"
         gsed -i $UPDATE_IMG_FIELD_REGEXP "deploy/a8s/$IMG.yaml"
-        echo "Updated $IMG from v$CURRENT_VERSION to v$NEW_VERSION"
+        git commit -m "Bump $IMG to v$NEW_VERSION"
     else
         echo "$IMG current version in a8s is v$CURRENT_VERSION, most recent version found is v$NEW_VERSION, no update needed"
     fi
