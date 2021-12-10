@@ -7,6 +7,8 @@ on:
     # below is 03 because the timezone is in UTC.
     - cron: '0 3 * * 1-5'
 
+# TODO: Create PR only conditionally if another PR with the same name doesn't exist.
+
 jobs:
   update-container-images:
     runs-on: ubuntu-latest
@@ -42,6 +44,7 @@ jobs:
       - name: checkout this repo
         uses: actions/checkout@v2
       - name: Update images if needed
+        #! Remove setting of email when done with testing.
         run: echo a > mol-test-file && sed -i 's/a/b/' mol-test-file && git config --global user.email "molivi@anynines.com" && git add . && git commit -m "test-commit"
       - name: Create pull request if at least one image was updated
         uses: peter-evans/create-pull-request@v3
