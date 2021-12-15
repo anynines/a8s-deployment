@@ -7,11 +7,26 @@ on:
     # below is 03 because the timezone is in UTC.
     - cron: '0 3 * * 1-5'
 
-# TODO: Create PR only conditionally if another PR with the same name doesn't exist.
-
 jobs:
+  get-branches-to-update-container-images:
+    runs-on: ubuntu-latest
+    outputs:
+      branches: ${{ steps.get-branches-to-update-container-images.outputs.branches }}
+    steps:
+    - name: checkout this repo
+      uses: actions/checkout@v2
+    - name: Get branches to update container images
+      id: get-branches-to-update-container-images
+      run: |
+        branches_to_update_container_images=$(git -P branch --list 'update_container_images_*') && \
+        echo "::set-output name=branches::${branches_to_update_container_images}"
+
   update-container-images:
     runs-on: ubuntu-latest
+    needs: get-branches-to-update-container-images
+    # Proceed to create a new branch and a PR to update container images (if there are any updates)
+    # if and only if there aren't already open branches to do that.
+    if: ${{ needs.get-branches-to-update-container-images.outputs.branches == '' }}
     steps:
       #! REMOVE following step before opening PR.
       - id: install-aws-cli
@@ -72,4 +87,3 @@ jobs:
             because the new image was pushed spuriusly during testing by a developer who forgot to
             delete it, so it's not a legitimate image and should NOT be used; remove the
             corresponding commit from this PR and delete the image from ECR.
-
