@@ -60,7 +60,7 @@ jobs:
           branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
           base: 'develop'
           delete-branch: true
-          #add-paths: deploy/
+          add-paths: deploy/
           title: 'Update Container Images'
           body: |
             Automated update of container images to new available versions.
