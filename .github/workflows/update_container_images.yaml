@@ -58,7 +58,8 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
-          base: 'develop'
+          #! Remove or uncomment when done testing.
+          #base: 'develop'
           delete-branch: true
           add-paths: deploy/
           title: 'Update Container Images'
