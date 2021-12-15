@@ -8,8 +8,6 @@ on:
     - cron: '0 3 * * 1-5'
 
 # TODO: Create PR only conditionally if another PR with the same name doesn't exist.
-# TODO: If we dont use the github agent we porbably don't need to check that the image tag
-# that we get is not latest.
 
 jobs:
   update-container-images:
@@ -59,6 +57,7 @@ jobs:
           branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
           base: 'develop'
           delete-branch: true
+          author: 'github-actions <github-actions@github.com>'
           title: 'Update Container Images'
           body: |
             Automated update of container images to new available versions.
