@@ -52,6 +52,8 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
+          base: 'develop'
+          delete-branch: true
           title: 'Update Container Images'
           body: |
             Automated update of container images to new available versions.
