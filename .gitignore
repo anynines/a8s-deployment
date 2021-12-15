@@ -1,3 +1,9 @@
 access-key-id
 secret-access-key
 backup-store-config.yaml
+
+# Ignore files under workflow/ dir created by https://github.com/nektos/act (act) , the tool that we
+# use to test github actions locally. Needed because in this repo we have github actions that commit
+# changes and open PRs, and we don't want the files created by act when testing locally to be
+# committed.
+workflow/
