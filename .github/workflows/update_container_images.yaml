@@ -48,11 +48,11 @@ jobs:
       - name: Update images if needed
         #! Remove setting of email when done with testing.
         run: |
-          echo a > mol-test-file && \
-          sed -i 's/a/b/' mol-test-file && \
+          echo a > deploy/mol-test-file && \
+          sed -i 's/a/b/' deploy/mol-test-file && \
           git config user.name github-actions && \
           git config user.email github-actions@github.com && \
-          git add mol-test-file && \
+          git add deploy/mol-test-file && \
           git commit -m "test-commit"
       - name: Create pull request if at least one image was updated
         uses: peter-evans/create-pull-request@v3
