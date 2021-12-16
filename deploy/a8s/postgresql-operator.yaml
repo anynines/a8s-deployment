@@ -522,8 +522,8 @@ spec:
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
         command:
-        - /manager
-        image: "c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/postgresql-controller:0.4.0"
+        - postgresql-operator
+        image: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.10.0"
         livenessProbe:
           httpGet:
             path: /healthz

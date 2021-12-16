@@ -5,7 +5,7 @@ metadata:
 spec:
   replicas: 3
   image: "registry.opensource.zalan.do/acid/spilo-13:2.0-p2"
-  backupAgentImage: "c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/backup-agent:0.3.0"
+  backupAgentImage: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:ca8b816c0b600f7e4b99c9612fe34cbe60fe452e"
   resources:
     requests:
       cpu: 100m
