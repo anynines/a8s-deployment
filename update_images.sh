@@ -45,7 +45,7 @@ ensure_image_is_fresh_and_commit () {
     # manifests we can have strong guarantees that the versions will be in the right formats, so
     # there should be no issues.
     local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
-    local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
+    local CURRENT_VERSION=$(sed -n $GET_VERSION_SED_CMD $MANIFEST)
 
     if new_version_is_newer "$NEW_VERSION" "$CURRENT_VERSION"
     then
@@ -57,11 +57,11 @@ ensure_image_is_fresh_and_commit () {
         # there should be no issues.
         # TODO: Switch to "sed" when copying inside github action
         local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$COMPONENT:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
-        gsed -i $UPDATE_VERSION_SED_CMD $MANIFEST
+        sed -i $UPDATE_VERSION_SED_CMD $MANIFEST
         # TODO: Uncomment before pushing real version.
-        echo "Bump $COMPONENT to $NEW_VERSION"
-        # git add "$MANIFEST"
-        # git commit -m "Bump $COMPONENT to $NEW_VERSION"
+        #echo "Bump $COMPONENT to $NEW_VERSION"
+        git add "$MANIFEST"
+        git commit -m "Bump $COMPONENT to $NEW_VERSION"
     else
         echo "Current version of $COMPONENT is $CURRENT_VERSION, most recent version found is $NEW_VERSION, no update needed"
     fi
