@@ -3,8 +3,8 @@ name: Update container images
 on:
   schedule:
     # Update the container images every morning at 05:00 (or 04:00, depending on whether daylight
-    # savings time is effective or not) CEST; skip Saturdays and Sundays. The hour in the expression
-    # below is 03 because the timezone is in UTC.
+    # savings time is on or not) CEST; skip Saturdays and Sundays. The hour in the expression below
+    # is 03 because the timezone is in UTC.
     - cron: '0 3 * * 1-5'
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
     outputs:
       branches: ${{ steps.get-branches-to-update-container-images.outputs.branches }}
     steps:
-    - name: checkout this repo
+    - name: Checkout this repo
       uses: actions/checkout@v2
     - name: Get branches to update container images
       id: get-branches-to-update-container-images
@@ -25,7 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: get-branches-to-update-container-images
     # Proceed to create a new branch and a PR to update container images (if there are any updates)
-    # if and only if there aren't already open branches to do that.
+    # if and only if there aren't already open branches to do that. The idea is that if there's an
+    # already open branch it should be merged first, for example to avoid cumulating branches during
+    # holidays, when no one will merge the PRs from said branches.
     if: ${{ needs.get-branches-to-update-container-images.outputs.branches == '' }}
     steps:
       #! REMOVE following step before opening PR.
@@ -53,10 +55,10 @@ jobs:
               VERSIONED_IMAGES+="$IMG:$NEW_VERSION "
           done
           echo "VERSIONED_IMAGES=$VERSIONED_IMAGES" >> $GITHUB_ENV
-      - name: Store current date to use it as a prefix for the name of the branch to update images
+      - name: Store current date to use it as a suffix for the name of the branch to update images
         id: get-date
         run: echo "::set-output name=date::$(date +'%d_%m_%Y')"
-      - name: checkout this repo
+      - name: Checkout this repo
         uses: actions/checkout@v2
       - name: Update images if needed
         run: chmod +x update_images.sh && ./update_images.sh
@@ -69,13 +71,13 @@ jobs:
       - name: Create pull request if at least one image was updated
         uses: peter-evans/create-pull-request@v3
         with:
+          delete-branch: true
           branch: 'update_container_images_${{ steps.get-date.outputs.date }}'
           # Strictly speaking this is not needed since 'develop' is picked as the base branch by
           # default when the action runs in github. But when testing the action locally on a
           # different branch that branch is picked instead, while we still want 'develop' as base.
           # So we set the parameter explicitly to ease local testing.
           base: 'develop'
-          delete-branch: true
           author: 'github-actions <github-actions@github.com>'
           title: 'Update Container Images'
           body: |
