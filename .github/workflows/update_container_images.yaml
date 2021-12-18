@@ -61,13 +61,11 @@ jobs:
       - name: Checkout this repo
         uses: actions/checkout@v2
       - name: Update images if needed
-        run: chmod +x update_images.sh && ./update_images.sh
-          # echo a > deploy/mol-test-file && \
-          # sed -i 's/a/b/' deploy/mol-test-file && \
-          # git config user.name github-actions && \
-          # git config user.email github-actions@github.com && \
-          # git add deploy/mol-test-file && \
-          # git commit -m "test-commit"
+        run: |
+          git config user.name github-actions && \
+          git config user.email github-actions@github.com && \
+          chmod +x update_images.sh && \
+           ./update_images.sh
       - name: Create pull request if at least one image was updated
         uses: peter-evans/create-pull-request@v3
         with:
