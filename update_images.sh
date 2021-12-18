@@ -4,9 +4,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# new_version_is_newer assumes that the two versions that it receives as an argument are in the
+# same format, and will fail (in some cases, silently) if that's not the case.
 new_version_is_newer () {
-    # Replace "." and "-" with " " from the versions so that it becomes easier to compare each
-    # version token from the new version to the corresponding one from the current version.
+    # Replace ".", "-" and "v" with " " in the versions so that it becomes easier to compare each
+    # version token from the new version to the corresponding token from the current version. What
+    # do I mean by token? For example I see a semver 2 version as:
+    # v<major-token>.<minor-token>.<patch-token>.
     local NEW_VERSION=$(sed "s/[\.v-]/ /g" <<< $1)
     local CURRENT_VERSION=$(sed "s/[\.v-]/ /g" <<< $2)
 
@@ -56,12 +60,11 @@ ensure_image_is_fresh_and_commit () {
         # started with an extremely precise regexp but it was overly long and complex, so I opted
         # for allowing some incorrect formats for simplicity's sake. Since we control the parsed
         # manifests we can have strong guarantees that the versions will be in the right formats, so
-        # there should be no issues.
-        # TODO: Switch to "sed" when copying inside github action
+        # there should be no issues. Notice that the group that captures the version matches more
+        # than just semver 2 versions, because we have some images (fluentd and
+        # opensearch-dashboards) that don't follow semver 2.
         local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$IMG:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
         sed -i $UPDATE_VERSION_SED_CMD $MANIFEST
-        # TODO: Uncomment before pushing real version.
-        #echo "Bump $IMG to $NEW_VERSION"
         git add "$MANIFEST"
         git commit -m "Bump $IMG to $NEW_VERSION"
     else
