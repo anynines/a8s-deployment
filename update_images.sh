@@ -11,8 +11,8 @@ new_version_is_newer () {
     # version token from the new version to the corresponding token from the current version. What
     # do I mean by token? For example I see a semver 2 version as:
     # v<major-token>.<minor-token>.<patch-token>.
-    local NEW_VERSION=$(sed "s/[\.v-]/ /g" <<< $1)
-    local CURRENT_VERSION=$(sed "s/[\.v-]/ /g" <<< $2)
+    local NEW_VERSION=$(gsed "s/[\.v-]/ /g" <<< $1)
+    local CURRENT_VERSION=$(gsed "s/[\.v-]/ /g" <<< $2)
 
     # From a string containing all the tokens of a version to an array where each item represents
     # a single token (in descending order of priority), to ease comparison between new and current
@@ -51,7 +51,7 @@ ensure_image_is_fresh_and_commit () {
     # just semver 2 versions, because we have some images (fluentd and opensearch-dashboards) that
     # don't follow semver 2.
     local GET_VERSION_SED_CMD="s/^[[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$IMG:\(v[\.[:digit:]-]\{1,\}\)\"\{0,1\}$/\1/p"
-    local CURRENT_VERSION=$(sed -n $GET_VERSION_SED_CMD $MANIFEST)
+    local CURRENT_VERSION=$(gsed -n $GET_VERSION_SED_CMD $MANIFEST)
 
     if new_version_is_newer "$NEW_VERSION" "$CURRENT_VERSION"
     then
@@ -64,7 +64,7 @@ ensure_image_is_fresh_and_commit () {
         # than just semver 2 versions, because we have some images (fluentd and
         # opensearch-dashboards) that don't follow semver 2.
         local UPDATE_VERSION_SED_CMD="s/^\([[:space:]-]\{1,\}image:[[:space:]].\{1,\}\/$IMG:\)v[\.[:digit:]-]\{1,\}\(\"\{0,1\}\)$/\1$NEW_VERSION\2/"
-        sed -i $UPDATE_VERSION_SED_CMD $MANIFEST
+        gsed -i $UPDATE_VERSION_SED_CMD $MANIFEST
         git add "$MANIFEST"
         git commit -m "Bump $IMG to $NEW_VERSION"
     else
@@ -73,7 +73,11 @@ ensure_image_is_fresh_and_commit () {
 }
 
 main () {
-    local VERSIONED_IMGS="postgresql-operator:v0.8.1 backup-manager:v1.2.0 service-binding-controller:v0.3.0 fluentd:v1.12.0-1.0-3.3.0 opensearch-dashboards:v1.0.1-1.0.0"
+    local VERSIONED_IMGS="$1"
+
+    #! REMOVE WHEN DONE TESTING
+    echo $VERSIONED_IMGS
+
     for VERSIONED_IMG in $VERSIONED_IMGS
     do
         # Extract image name and version as separate variables
@@ -99,4 +103,4 @@ main () {
     done
 }
 
-main
+main "$1"
