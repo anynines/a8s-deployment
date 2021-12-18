@@ -64,8 +64,8 @@ jobs:
         run: |
           git config user.name github-actions && \
           git config user.email github-actions@github.com && \
-          chmod +x update_images.sh && \
-           ./update_images.sh "${{ env.VERSIONED_IMAGES }}"
+          chmod +x automation-scripts/update-images.sh && \
+          automation-scripts/update-images.sh "${{ env.VERSIONED_IMAGES }}"
       - name: Create pull request if at least one image was updated
         uses: peter-evans/create-pull-request@v3
         with:
