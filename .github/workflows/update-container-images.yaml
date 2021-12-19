@@ -75,7 +75,8 @@ jobs:
           # default when the action runs in github. But when testing the action locally on a
           # different branch that branch is picked instead, while we still want 'develop' as base.
           # So we set the parameter explicitly to ease local testing.
-          base: 'develop'
+          #!Uncomment when done testing.
+          #base: 'develop'
           author: 'github-actions <github-actions@github.com>'
           title: 'Update Container Images'
           body: |
