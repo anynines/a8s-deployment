@@ -451,7 +451,7 @@ spec:
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
         command:
-        - /manager
+        - a8s-backup-manager
         image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.6.0
         env:
         - name: systemNamespace
