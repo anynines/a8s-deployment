@@ -452,12 +452,14 @@ spec:
         - --leader-elect
         command:
         - a8s-backup-manager
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.6.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.10.0
         env:
         - name: systemNamespace
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: BACKUP_CREDENTIAL_PATH
+          value: /etc/backup-store-secrets
         livenessProbe:
           httpGet:
             path: /healthz
@@ -483,6 +485,8 @@ spec:
         volumeMounts:
         - mountPath: /etc/config
           name: backup-store-config-volume
+        - mountPath: /etc/backup-store-secrets
+          name: secret-volume
       securityContext:
         runAsUser: 65532
       terminationGracePeriodSeconds: 10
@@ -493,3 +497,6 @@ spec:
           - key: backup-store-config.yaml
             path: config.yaml
         name: backup-store-config-volume
+      - name: secret-volume
+        secret:
+          secretName: a8s-backup-storage-credentials
