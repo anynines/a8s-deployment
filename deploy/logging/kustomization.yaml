@@ -29,7 +29,6 @@ generatorOptions:
   disableNameSuffixHash: true
   labels:
     app.kubernetes.io/part-of: a8s-logging
-    release: a8s
     a8s.anynines/logging: "true"
 
 # Generate parser configMap that holds the parser configuration for fluentbit
@@ -42,5 +41,4 @@ generatorOptions:
   disableNameSuffixHash: true
   labels:
     app.kubernetes.io/part-of: a8s-logging
-    release: a8s
     a8s.anynines/logging: "true"
