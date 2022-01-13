@@ -97,7 +97,7 @@ spec:
               resource: limits.cpu
         - name: OPENSEARCH_JAVA_OPTS
           value: -Xms512m -Xmx512m
-        image: opensearchproject/opensearch:1.0.1
+        image: opensearchproject/opensearch:1.2.3
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

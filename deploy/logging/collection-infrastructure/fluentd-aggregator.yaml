@@ -51,7 +51,7 @@ spec:
         a8s.anynines/logging: "true"
     spec:
       containers:
-      - image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/fluentd:v1.12.3-1.0-1.1.0
+      - image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/fluentd:v1.14.4-1.0-1.0.0
         imagePullPolicy: IfNotPresent
         name: fluentd-aggregator
         ports:
