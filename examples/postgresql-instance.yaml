@@ -4,8 +4,10 @@ metadata:
   name: sample-pg-cluster
 spec:
   replicas: 3
-  image: "registry.opensource.zalan.do/acid/spilo-13:2.0-p2"
-  backupAgentImage: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:ca8b816c0b600f7e4b99c9612fe34cbe60fe452e"
+  image: "registry.opensource.zalan.do/acid/spilo-14:2.1-p3"
+  backupAgentImage: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:e7fd2a58ee974f0ed14c87408d5cf70e7161c637"
+  volumeSizeGiB: 1
+  version: 14
   resources:
     requests:
       cpu: 100m
