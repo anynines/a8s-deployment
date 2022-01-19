@@ -39,15 +39,6 @@ spec:
           spec:
             description: PostgresqlSpec defines the desired state of Postgresql
             properties:
-              backupAgentImage:
-                description: BackupAgentImage is the name of the container image to
-                  use for the backup agent sidecar container.
-                type: string
-              image:
-                default: registry.opensource.zalan.do/acid/spilo-14:2.1-p3
-                description: Image is the name of the container image to use for the
-                  data service containers.
-                type: string
               postgresConfiguration:
                 properties:
                   archiveTimeoutSeconds:
@@ -292,8 +283,6 @@ spec:
                 minimum: 1
                 type: integer
             required:
-            - backupAgentImage
-            - image
             - version
             type: object
           status:
@@ -603,7 +592,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.15.0"
+        image: "public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.16.0"
         livenessProbe:
           httpGet:
             path: /healthz
@@ -620,12 +609,16 @@ spec:
         resources:
           limits:
             cpu: 100m
-            memory: 30Mi
-          requests:
-            cpu: 100m
-            memory: 20Mi
+            memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
+        volumeMounts:
+        - mountPath: /config/images
+          name: image-config
       securityContext:
         runAsUser: 65532
       terminationGracePeriodSeconds: 10
+      volumes:
+      - configMap:
+          name: postgresql-images
+        name: image-config

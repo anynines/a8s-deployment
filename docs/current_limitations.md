@@ -11,12 +11,11 @@
 ## PostgreSQL Instances
 
 - The PostgreSQL server port is hardcoded to `5432`.
-- Only PostgreSQL version 13 is supported.
+- Only PostgreSQL version 13 and 14 are supported.
 - Horizontal down scaling is not supported, i.e. you can not scale down the
   number of replicas.
 - Each instance stores its data in a dedicated PersistentVolumeClaim of the
-  default StorageClass; Currently this PersistentVolumeClaim can't be configured
-  (e.g. the size of the storage volume for the PostgreSQL).
+  default StorageClass; Currently only this PersistentVolumeClaims size can be configured
 - Instance names have to be smaller then 63 characters, otherwise the creation
   will fail.
 - Currently a8s doesn't enforce any multi-tenancy/access control regarding the 
