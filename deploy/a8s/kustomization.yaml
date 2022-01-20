@@ -15,7 +15,7 @@ generatorOptions:
 
 # Generate the secret that holds the credentials of the S3 bucket where backups will be stored.
 secretGenerator:
-- name: a8s-backup-cloud-credentials
+- name: a8s-backup-storage-credentials
   namespace: a8s-system
   files: 
   - ./access-key-id
