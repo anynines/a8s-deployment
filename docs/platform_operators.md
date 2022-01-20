@@ -93,7 +93,8 @@ More precisely, it will:
   **Note** The a8s framework is not HA ready, therefore this ClusterRole is currently
   not actively used.
 
-6. Generate and apply multiple Configmaps (e.g. `a8s-backup-store-config`) and Secrets (e.g. `a8s-backup-storage-credentials`) that are necessary for the a8s framework in order to function 
+6. Generate and apply multiple Configmaps (e.g. `a8s-backup-store-config`) and Secrets (e.g. 
+`a8s-backup-storage-credentials`) that are necessary for the a8s framework in order to function
   properly.
 
 It might take some time for the a8s control plane to get up and running. To know when that happens
