@@ -19,24 +19,27 @@ will use to interact with the bucket.
 After you've created the access key and secret key, you must place the information about the S3
 bucket in some files as shown in the following commands. When you'll execute the commands to install
 a8s, the content of such files will be used to populate configmaps and secrets that the a8s control
-plane will read to be able to upload and download backups from S3. You MUST use the file names shown
-in the commands.
+plane will read to be able to upload and download backups from S3. In order to encrypt the backups 
+you also have to configure an encryption password. You can do so by inserting your desired 
+encryption key into the `deploy/a8s/encryption-password` file. You MUST use the file names shown in
+the subsequent commands.
+
+You should also configure an encryption password for the backups.
 
 ```shell
 echo <bucket-access-key-id> > deploy/a8s/access-key-id # create file that stores the ID of the key
 
 echo <bucket-secret-access-key> > deploy/a8s/secret-access-key # create file that stores the secret value of the key
 
-cp deploy/a8s/backup-store-config.yaml.template deploy/a8s/backup-store-config.yaml # create file with other information about the bucket
+echo <encryption password> > deploy/a8s/encryption-password # create file that stores password for backup encryption
+
+cp deploy/a8s/backup-store-config.yaml.template config/backup-store-config.yaml # create file with other information about the bucket
 ```
 
 Then, use an editor to open `deploy/a8s/backup-store-config.yaml` and replace the value:
 
 - of the `container` field with the name of the S3 bucket
 - of the `region` field with the name of the region where the bucket is located
-- of the `password` field, which is the password with which your Backups will be
-  encrypted. *Disclaimer*: This password will for now be part of a configmap and
-  therefore will be stored in clear text.
 
 All the created files are gitignored so you don't have to worry about committing them by mistake
 (since they contain private data).

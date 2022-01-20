@@ -3,5 +3,3 @@ config:
     provider: "AWS"
     container: a8s-shared-backups
     region: eu-central-1
-  encryption:
-    password: "password"

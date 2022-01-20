@@ -1,5 +1,6 @@
 access-key-id
 secret-access-key
+encryption-password
 backup-store-config.yaml
 
 # Ignore files under workflow/ dir created by https://github.com/nektos/act (act) , the tool that we
