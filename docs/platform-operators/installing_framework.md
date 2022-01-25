@@ -1,20 +1,11 @@
-# Platform Operators Documentation
-
-This file contains platform operator specific documentation on how the Kubernetes cluster needs
-to be configured. We assume that the requirements from
-[Technical Requirements](/docs/technical_requirements.md) are met.
-
-- [Platform Operators Documentation](#platform-operators-documentation)
-  - [Install the a8s Control Plane](#install-the-a8s-control-plane)
-    - [Prerequisites](#prerequisites)
-    - [RBAC](#rbac)
-    - [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
-    - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
-    - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
-    - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
-    - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
-
 ## Install the a8s Control Plane
+ - [Prerequisites](#prerequisites)
+ - [RBAC](#rbac)
+ - [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
+ - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
+ - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
+ - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
+ - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
 
 ### Prerequisites
 
@@ -207,7 +198,3 @@ kubectl delete --recursive --filename deploy/metrics/
 ```
 
 [s3-bucket-creation]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html
-[mount-secret-in-env-vars]: https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-environment-variables
-[mount-secret-in-volume]: https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets-as-files-from-a-pod
-[kubernetes-ingress]: https://kubernetes.io/docs/concepts/services-networking/ingress/
-[kubernetes-port-forwarding]: https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
