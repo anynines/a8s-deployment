@@ -41,6 +41,22 @@ Then, use an editor to open `deploy/a8s/backup-store-config.yaml` and replace th
 All the created files are gitignored so you don't have to worry about committing them by mistake
 (since they contain private data).
 
+### Configure Images
+The images the frameworks uses to create the Data Service Instances can be configured. A ConfigMap
+with the default values is provided at `deploy/a8s/postgresql-images.yaml`. If you need to use different
+images, or want to mirror them to an internal repository, you can edit the config, or overwrite it
+via Kustomize.
+
+Currently the following images can be configured:
+
+| Key              | Description                                                                |
+|------------------|----------------------------------------------------------------------------|
+| spiloImage       | Image of spilo, which provides PostgreSQL and patroni for HA               |
+| backupAgentImage | Image of the a9s backup agent, which performs logical backups and restores |
+
+Please note: the images will change over time, as we upgrade our framework components. If the 
+defaults have been changed, they should be updated when we update the images.
+
 ### RBAC
 
 The a8s framework requires multiple ClusterRoles as well as multiple ClusterRoleBindings per
