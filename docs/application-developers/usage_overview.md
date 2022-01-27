@@ -321,17 +321,9 @@ Prometheus instance.
 
 ![Grafana1](/pics/grafana/1.png)
 
-Go to the Dashboards section in the left menu.
+Go to the Create section in the left menu and select Import.
 
 ![Grafana2](/pics/grafana/2.png)
-
-Then go to the Manage page.
-
-![Grafana3](/pics/grafana/3.png)
-
-Click on Import on the right hand side.
-
-![Grafana4](/pics/grafana/4.png)
  
 Then Insert `8588` as the Dashboard ID and click on Load.
 
