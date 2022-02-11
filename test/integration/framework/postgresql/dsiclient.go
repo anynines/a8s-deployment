@@ -15,9 +15,8 @@ const (
 
 	hostname = "localhost"
 
-	dbAdminUsernameKey = "username"
-	dbAdminPasswordKey = "password"
-	databaseKey        = "database"
+	DbAdminUsernameKey = "username"
+	DbAdminPasswordKey = "password"
 )
 
 func NewClient(credentials map[string]string, port string) Client {
@@ -78,6 +77,23 @@ func (c Client) Read(ctx context.Context, tableName string) (string, error) {
 		table = append(table, row)
 	}
 	return strings.Join(table, "\n"), nil
+}
+
+func (c Client) UserExists(ctx context.Context, username, password string) bool {
+	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	if err != nil {
+		return false
+	}
+
+	var success int
+	err = dbConn.QueryRow(ctx,
+		"SELECT 1 FROM pg_roles WHERE rolname=$1",
+		username).Scan(&success)
+	if err != nil {
+		return false
+	}
+
+	return success == 1
 }
 
 func (c Client) Delete(ctx context.Context, entity, data string) error {
@@ -141,8 +157,8 @@ func endTransaction(ctx context.Context, tx pgx.Tx, err error) error {
 }
 
 func dbURL(credentials map[string]string, port string) string {
-	user := credentials[dbAdminUsernameKey]
-	password := credentials[dbAdminPasswordKey]
-	database := credentials[databaseKey]
+	user := string(credentials[DbAdminUsernameKey])
+	password := string(credentials[DbAdminPasswordKey])
+	database := credentials["database"]
 	return protocol + "://" + user + ":" + password + "@" + hostname + ":" + port + "/" + database
 }

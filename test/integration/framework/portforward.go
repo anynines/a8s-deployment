@@ -27,7 +27,7 @@ import (
 const (
 	minPort             = 1024
 	maxPort             = 65535
-	asyncOpsTimeoutMins = time.Minute * 5
+	AsyncOpsTimeoutMins = time.Minute * 5
 )
 
 // TODO: This portforward logic contains some data service specific implementation details such as the
@@ -196,7 +196,7 @@ func getPrimaryPodUsingServiceSelector(ctx context.Context,
 		}
 		primaryPod = &primaryPodList.Items[0]
 		return nil
-	}, asyncOpsTimeoutMins, 1*time.Second).
+	}, AsyncOpsTimeoutMins, 1*time.Second).
 		Should(
 			BeNil(),
 			"timeout reached to get primary pod using service selector for dsi %s/%s",

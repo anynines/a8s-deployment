@@ -9,6 +9,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const pgAdminSecretPrefix = "postgres.credentials."
+
 type SecretData map[string]string
 
 func parseRawSecretData(raw map[string][]byte) SecretData {
@@ -31,5 +33,25 @@ func Data(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service binding secret %w", err)
 	}
+	return parseRawSecretData(s.Data), nil
+}
+
+func AdminSecretData(
+	ctx context.Context,
+	k8sClient client.Client,
+	dsiName, dsiNamespace string,
+) (SecretData, error) {
+
+	namespacedName := types.NamespacedName{
+		Name:      pgAdminSecretPrefix + dsiName,
+		Namespace: dsiNamespace}
+
+	var s corev1.Secret
+	err := k8sClient.Get(ctx, namespacedName, &s)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get service binding secret %s",
+			namespacedName)
+	}
+
 	return parseRawSecretData(s.Data), nil
 }
