@@ -3,6 +3,7 @@
 a8s is a Kubernetes-native platform for lifecycle automation of data services.
 
 This repo contains:
+
 - a list of the current major limitations of a8s.
 - the requirements and prerequisites for the deployment of a8s.
 - instructions and YAML manifests that platform operators can use to install and update the a8s
