@@ -95,3 +95,19 @@ func NewEmpty() Postgresql {
 		},
 	}}
 }
+
+func MasterService(instanceName string) string {
+	return fmt.Sprintf("%s-%s", instanceName, "master")
+}
+
+func AdminRoleSecretName(instanceName string) string {
+	return fmt.Sprintf("%s.%s", "postgres.credentials", instanceName)
+}
+
+func StandbyRoleSecretName(instanceName string) string {
+	return fmt.Sprintf("%s.%s", "standby.credentials", instanceName)
+}
+
+func PvcName(instanceName string, index int) string {
+	return fmt.Sprintf("%s-%s-%d", "pgdata", instanceName, index)
+}

@@ -80,16 +80,31 @@ func (c Client) Read(ctx context.Context, tableName string) (string, error) {
 	return strings.Join(table, "\n"), nil
 }
 
-func (c Client) UserExists(ctx context.Context, username, password string) bool {
+func (c Client) UserExists(ctx context.Context, username string) bool {
 	dbConn, err := connectToDB(ctx, c.credentials, c.port)
 	if err != nil {
 		return false
 	}
 
 	var success int
-	err = dbConn.QueryRow(ctx,
-		"SELECT 1 FROM pg_roles WHERE rolname=$1",
-		username).Scan(&success)
+	err = dbConn.QueryRow(ctx, "SELECT 1 FROM pg_roles WHERE rolname=$1", username).
+		Scan(&success)
+	if err != nil {
+		return false
+	}
+
+	return success == 1
+}
+
+func (c Client) CollectionExists(ctx context.Context, collection string) bool {
+	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	if err != nil {
+		return false
+	}
+
+	var success int
+	err = dbConn.QueryRow(ctx, "SELECT 1 FROM pg_database WHERE datname=$1", collection).
+		Scan(&success)
 	if err != nil {
 		return false
 	}
