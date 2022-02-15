@@ -1,4 +1,4 @@
-package backup
+package servicebinding
 
 import (
 	"context"
@@ -19,13 +19,14 @@ var (
 	cancel                                                            context.CancelFunc
 	err                                                               error
 	testingNamespace, kubeconfigPath, dataservice, instanceNamePrefix string
+	localPort                                                         int
 
 	k8sClient runtimeClient.Client
 )
 
 func TestBackup(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Backup Suite")
+	RunSpecs(t, "Servicebinding Suite")
 }
 
 var _ = BeforeSuite(func() {
@@ -34,6 +35,7 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
+
 	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
 		framework.ConfigToVars(config)
 
@@ -49,5 +51,6 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	Expect(namespace.DeleteIfAllowed(ctx, testingNamespace, k8sClient)).
 		To(Succeed(), "failed to delete testing namespace")
+
 	cancel()
 })

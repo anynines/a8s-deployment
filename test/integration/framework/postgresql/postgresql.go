@@ -17,9 +17,8 @@ import (
 )
 
 const (
-	// TODO: Make these defaults that are configurable using functional options.
-	resourceCPU  = "100m"
-	resourceMem  = "100Mi"
+	resourceCPU  = "500m"
+	resourceMem  = "500Mi"
 	volumeSizeGB = 1
 	version      = 14
 
