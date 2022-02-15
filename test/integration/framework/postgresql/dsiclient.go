@@ -17,6 +17,7 @@ const (
 
 	DbAdminUsernameKey = "username"
 	DbAdminPasswordKey = "password"
+	DatabaseKey        = "database"
 )
 
 func NewClient(credentials map[string]string, port string) Client {
@@ -157,8 +158,8 @@ func endTransaction(ctx context.Context, tx pgx.Tx, err error) error {
 }
 
 func dbURL(credentials map[string]string, port string) string {
-	user := string(credentials[DbAdminUsernameKey])
-	password := string(credentials[DbAdminPasswordKey])
-	database := credentials["database"]
+	user := credentials[DbAdminUsernameKey]
+	password := credentials[DbAdminPasswordKey]
+	database := credentials[DatabaseKey]
 	return protocol + "://" + user + ":" + password + "@" + hostname + ":" + port + "/" + database
 }
