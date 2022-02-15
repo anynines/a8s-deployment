@@ -9,6 +9,36 @@
 
 ### Prerequisites
 
+#### Installing the Cert-Manager
+
+The a8s framework relies on the [certificate manager][cert-manager] to generate
+TLS certificates, therefore you will first have to install it on your cluster.
+
+> Note that when following this guide make sure to check the [cloud
+> compatibility page][cert-manager-compatibility] on configuration needs of your
+> cluster. 
+
+In general there are a multitude of [installation
+options](https://cert-manager.io/docs/installation/) supported by the
+cert-manager, for this guide we will only describe how to setup a basic
+deployment, since that suffices for the framework. For a production grade
+deployment please consult the [documentation][cert-manager].
+
+To setup a basic deployment, use:
+```bash
+kubectl apply -k deploy/cert-manager
+``` 
+
+This will install all necessary CRDs and additionally create a simple deployment
+of the cert-manager components. After that you are done with the setup for the
+a8s framework, since we currently only use self signed certificates. 
+
+If you want to use certificates for your components in production, you might
+want to check out the [configuration pages][cert-manager-config], where you can
+for example find instructions on how to setup a CA.
+
+#### Configuring Backups
+
 a8s supports taking backups of data service instances (DSIs). Currently, the backups are stored in
 an AWS S3 bucket, so before installing a8s **you must create an AWS S3 bucket that a8s will use to
 store backups** ([here][s3-bucket-creation] is the official S3 documentation).
@@ -216,4 +246,11 @@ Run:
 kubectl delete --recursive --filename deploy/metrics/
 ```
 
-[s3-bucket-creation]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html
+[s3-bucket-creation]:
+    https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html
+[cert-manager]: 
+    https://cert-manager.io/docs/
+[cert-manager-compatibility]:
+    https://cert-manager.io/docs/installation/compatibility/
+[cert-manager-config]:
+    https://cert-manager.io/docs/configuration/
