@@ -15,6 +15,7 @@ type DSIClient interface {
 	DSIWriter
 	DSIAccountValidator
 	DSICollectionValidator
+	DSIConfigurationValidator
 }
 
 type DSIReader interface {
@@ -35,6 +36,10 @@ type DSIAccountValidator interface {
 
 type DSICollectionValidator interface {
 	CollectionExists(ctx context.Context, collection string) bool
+}
+
+type DSIConfigurationValidator interface {
+	CheckParameter(ctx context.Context, parameter, value string) error
 }
 
 func NewClient(ds, port string, sbData map[string]string) (DSIClient, error) {
