@@ -80,20 +80,20 @@ func (c Client) Read(ctx context.Context, tableName string) (string, error) {
 	return strings.Join(table, "\n"), nil
 }
 
-func (c Client) UserExists(ctx context.Context, username string) bool {
+func (c Client) UserExists(ctx context.Context, username string) (bool, error) {
 	dbConn, err := connectToDB(ctx, c.credentials, c.port)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("failed to connect to the database: %w", err)
 	}
 
 	var success int
 	err = dbConn.QueryRow(ctx, "SELECT 1 FROM pg_roles WHERE rolname=$1", username).
 		Scan(&success)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("failed to query users from database: %w", err)
 	}
 
-	return success == 1
+	return success == 1, nil
 }
 
 func (c Client) CollectionExists(ctx context.Context, collection string) bool {
