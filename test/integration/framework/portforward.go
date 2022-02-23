@@ -66,7 +66,7 @@ func PortForward(ctx context.Context,
 		panic(err)
 	}
 
-	pod, err := getPrimaryPodUsingServiceSelector(ctx, dsi, c)
+	pod, err := GetPrimaryPodUsingServiceSelector(ctx, dsi, c)
 	if err != nil {
 		return nil, -1, err
 	}
@@ -169,10 +169,10 @@ func pickPort() int {
 
 // TODO: Wait for primary pod explicitly in test setup rather than here. Asynchronous assertions
 // are better exposed at the top level of the setup than hidden within the port forward logic itself.
-// getPrimaryPodUsingServiceSelector requires an eventually assertion since Patroni only applies the master
+// GetPrimaryPodUsingServiceSelector requires an eventually assertion since Patroni only applies the master
 // label once quorum has been achieved. We must wait for this before we can know which pod to
 // portforward to using the service selector.
-func getPrimaryPodUsingServiceSelector(ctx context.Context,
+func GetPrimaryPodUsingServiceSelector(ctx context.Context,
 	dsi runtimeClient.Object,
 	c runtimeClient.Client) (*corev1.Pod, error) {
 

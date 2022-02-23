@@ -91,8 +91,7 @@ var _ = Describe("service binding", func() {
 
 		By("Creating a user in the Database", func() {
 			exists := dsiAdminClient.UserExists(ctx,
-				serviceBindingData[DbAdminUsernameKey],
-				serviceBindingData[DbAdminPasswordKey])
+				serviceBindingData[DbAdminUsernameKey])
 
 			Expect(exists).To(BeTrue(), "unable to get DSI users")
 		})
@@ -105,8 +104,7 @@ var _ = Describe("service binding", func() {
 		By("Deleting the user in the Database", func() {
 			EventuallyWithOffset(1, func() bool {
 				exists := dsiAdminClient.UserExists(ctx,
-					serviceBindingData[DbAdminUsernameKey],
-					serviceBindingData[DbAdminPasswordKey])
+					serviceBindingData[DbAdminUsernameKey])
 				return exists
 			}, framework.AsyncOpsTimeoutMins, 1*time.Second).
 				Should(BeFalse(),

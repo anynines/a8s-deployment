@@ -8,6 +8,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -107,6 +108,29 @@ func WaitForDeletion(ctx context.Context, instance runtimeClient.Object, c runti
 		fmt.Sprintf("timeout reached waiting for instance %s/%s deletion: %s",
 			instance.GetNamespace(),
 			instance.GetName(),
+			err,
+		),
+	)
+}
+
+func WaitForPodDeletion(ctx context.Context, pod *corev1.Pod, c runtimeClient.Client) {
+	var err error
+	EventuallyWithOffset(1, func() bool {
+		podCreated := &corev1.Pod{}
+		if err = c.Get(
+			ctx,
+			types.NamespacedName{
+				Name: pod.GetName(), Namespace: pod.GetNamespace()},
+			podCreated,
+		); err != nil {
+			log.Println("failed to wait for pod to be deleted")
+			return false
+		}
+		return podCreated.DeletionTimestamp == nil
+	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+		fmt.Sprintf("timeout reached waiting for pod %s/%s deletion: %s",
+			pod.GetNamespace(),
+			pod.GetName(),
 			err,
 		),
 	)
