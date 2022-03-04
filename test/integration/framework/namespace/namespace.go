@@ -10,7 +10,7 @@ import (
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateIfNotExists(ctx context.Context,
+func Create(ctx context.Context,
 	testingNamespace string,
 	c runtimeClient.Client) error {
 
@@ -29,7 +29,7 @@ func CreateIfNotExists(ctx context.Context,
 	return err
 }
 
-func DeleteIfAllowed(ctx context.Context,
+func Delete(ctx context.Context,
 	testingNamespace string,
 	c runtimeClient.Client) error {
 

@@ -39,17 +39,22 @@ var _ = BeforeSuite(func() {
 	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
 		framework.ConfigToVars(config)
 
+	// testingNamespace needs to be unique so that all test suites can be run without deleting
+	// the namespace before the new suite begins. In this case the testingNamespace could be
+	// terminating while the next suite starts causing the tests to fail.
+	testingNamespace = framework.UniqueName(testingNamespace, suffixLength)
+
 	// Create kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
 	Expect(err).To(BeNil(),
 		fmt.Sprintf("error creating Kubernetes client for dataservice %s", dataservice))
 
-	Expect(namespace.CreateIfNotExists(ctx, testingNamespace, k8sClient)).
+	Expect(namespace.Create(ctx, testingNamespace, k8sClient)).
 		To(Succeed(), "failed to create testing namespace")
 })
 
 var _ = AfterSuite(func() {
-	Expect(namespace.DeleteIfAllowed(ctx, testingNamespace, k8sClient)).
+	Expect(namespace.Delete(ctx, testingNamespace, k8sClient)).
 		To(Succeed(), "failed to delete testing namespace")
 
 	cancel()
