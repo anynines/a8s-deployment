@@ -13,7 +13,7 @@ const pgAdminSecretPrefix = "postgres.credentials."
 
 type SecretData map[string]string
 
-func parseRawSecretData(raw map[string][]byte) SecretData {
+func ParseRawSecretData(raw map[string][]byte) SecretData {
 	s := make(SecretData, len(raw))
 	for key, bytes := range raw {
 		s[key] = string(bytes)
@@ -26,14 +26,28 @@ func Data(ctx context.Context,
 	secretName,
 	secretNamespace string) (SecretData, error) {
 
+	s, err := Get(ctx, k8sClient, secretName, secretNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseRawSecretData(s.Data), nil
+}
+
+func Get(ctx context.Context,
+	k8sClient client.Client,
+	secretName,
+	secretNamespace string) (corev1.Secret, error) {
+
 	var s corev1.Secret
 	err := k8sClient.Get(ctx, types.NamespacedName{
 		Name:      secretName,
 		Namespace: secretNamespace}, &s)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get service binding secret %w", err)
+		return s, fmt.Errorf("failed to get service binding secret %w", err)
 	}
-	return parseRawSecretData(s.Data), nil
+
+	return s, nil
 }
 
 func AdminSecretData(
@@ -53,5 +67,5 @@ func AdminSecretData(
 			namespacedName)
 	}
 
-	return parseRawSecretData(s.Data), nil
+	return ParseRawSecretData(s.Data), nil
 }

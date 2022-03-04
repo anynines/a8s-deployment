@@ -30,7 +30,7 @@ type DSIDeleter interface {
 }
 
 type DSIAccountValidator interface {
-	UserExists(ctx context.Context, username string) bool
+	UserExists(ctx context.Context, username string) (bool, error)
 }
 
 type DSICollectionValidator interface {
