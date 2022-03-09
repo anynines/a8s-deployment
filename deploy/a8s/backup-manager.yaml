@@ -452,7 +452,7 @@ spec:
         - --leader-elect
         command:
         - a8s-backup-manager
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.11.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.13.0
         env:
         - name: systemNamespace
           valueFrom:
