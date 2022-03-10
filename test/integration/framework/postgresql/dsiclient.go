@@ -112,6 +112,29 @@ func (c Client) CollectionExists(ctx context.Context, collection string) bool {
 	return success == 1
 }
 
+func (c Client) CheckParameter(ctx context.Context, parameter, expectedValue string) error {
+	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	if err != nil {
+		return err
+	}
+
+	var retrievedValue string
+	query := fmt.Sprintf("SHOW %s", parameter)
+	err = dbConn.QueryRow(ctx, query).Scan(&retrievedValue)
+	if err != nil {
+		return fmt.Errorf("failed to check configured parameter with query %s: %w",
+			query, err)
+	}
+
+	if retrievedValue != expectedValue {
+		return fmt.Errorf("parameter %s is set to %s and not the expected %s",
+			parameter,
+			retrievedValue,
+			expectedValue)
+	}
+	return nil
+}
+
 func (c Client) Delete(ctx context.Context, entity, data string) error {
 	return errors.New("not implemented")
 }
