@@ -98,8 +98,8 @@ github.com/anynines/a8s-backup-manager v0.9.0/go.mod h1:ZM/ssZO1oZOF4IVUT18va2Q4
 github.com/anynines/a8s-service-binding-controller v0.5.0 h1:QW4N780PD3eKmvGzOyMb55OlLT6LABDaMXlR61zeFHs=
 github.com/anynines/a8s-service-binding-controller v0.5.0/go.mod h1:cOcmisySJImhT/5jrmM6kAbq+SggUXuqx8WuZ/cSV+k=
 github.com/anynines/postgresql-operator v0.1.1-0.20210323134119-bd41b8b179df/go.mod h1:TqyTKviLcGh3GMPOUy7b4nhPtXaYt4akAHWzNQJue+U=
-github.com/anynines/postgresql-operator v0.18.0 h1:+8+9KG7Vn41YNAsNq2euVjJops/F4+Lw47F+j/qtL6o=
-github.com/anynines/postgresql-operator v0.18.0/go.mod h1:YyYglmgbq1nGXuusom4iXu0rZYW5nQH61PB2BW39V2U=
+github.com/anynines/postgresql-operator v0.22.0 h1:4haWBbO5SK4I6/UlY+gcrupD/ktu/29uKZ+jeOsxFSw=
+github.com/anynines/postgresql-operator v0.22.0/go.mod h1:YyYglmgbq1nGXuusom4iXu0rZYW5nQH61PB2BW39V2U=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
@@ -288,6 +288,7 @@ github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef/go.mod h1:cIg4er
 github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
+github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/mock v1.1.1/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
 github.com/golang/mock v1.2.0/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
@@ -772,6 +773,7 @@ go.uber.org/atomic v1.9.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/goleak v1.1.10/go.mod h1:8a7PlsEVH3e/a/GLqe5IIrQx6GzcnRmZEufDUTk4A7A=
 go.uber.org/goleak v1.1.11-0.20210813005559-691160354723/go.mod h1:cwTWslyiVhfpKIDGSZEM2HlOvcqm+tG4zioyIeLoqMQ=
 go.uber.org/goleak v1.1.11/go.mod h1:cwTWslyiVhfpKIDGSZEM2HlOvcqm+tG4zioyIeLoqMQ=
+go.uber.org/goleak v1.1.12 h1:gZAh5/EyT/HQwlpkCy6wTpqfH9H8Lz8zbm3dZh+OyzA=
 go.uber.org/goleak v1.1.12/go.mod h1:cwTWslyiVhfpKIDGSZEM2HlOvcqm+tG4zioyIeLoqMQ=
 go.uber.org/multierr v1.1.0/go.mod h1:wR5kodmAFQ0UK8QlbwjlSNy0Z68gJhDJUG5sjR94q/0=
 go.uber.org/multierr v1.5.0/go.mod h1:FeouvMocqHpRaaGuG9EjoKcStLC43Zu/fmqdUMPcKYU=
@@ -1345,6 +1347,7 @@ k8s.io/code-generator v0.23.3/go.mod h1:S0Q1JVA+kSzTI1oUvbKAxZY/DYbA/ZUb4Uknog12
 k8s.io/component-base v0.19.2/go.mod h1:g5LrsiTiabMLZ40AR6Hl45f088DevyGY+cCE2agEIVo=
 k8s.io/component-base v0.23.0/go.mod h1:DHH5uiFvLC1edCpvcTDV++NKULdYYU6pR9Tt3HIKMKI=
 k8s.io/component-base v0.23.1/go.mod h1:6llmap8QtJIXGDd4uIWJhAq0Op8AtQo6bDW2RrNMTeo=
+k8s.io/component-base v0.23.3 h1:q+epprVdylgecijVGVdf4MbizEL2feW4ssd7cdo6LVY=
 k8s.io/component-base v0.23.3/go.mod h1:1Smc4C60rWG7d3HjSYpIwEbySQ3YWg0uzH5a2AtaTLg=
 k8s.io/gengo v0.0.0-20200413195148-3a45101e95ac/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/gengo v0.0.0-20200428234225-8167cfdcfc14/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=

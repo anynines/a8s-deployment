@@ -280,10 +280,21 @@ spec:
                 maximum: 14
                 minimum: 13
                 type: integer
-              volumeSizeGiB:
-                default: 1
-                minimum: 1
-                type: integer
+              volumeSize:
+                anyOf:
+                - type: integer
+                - type: string
+                default: 1Gi
+                description: 'VolumeSize sets the size of the persistent volume of
+                  the PostgreSQL instance, the minimum size is 0.5Gi. The size is
+                  to be specified as a plain integer or as a fixed-point number using
+                  one of these suffixes: E, P, T, G, M, K, corresponding to kilo-,
+                  mega-, gigabytes, etc. You can also use the power-of-two equivalents:
+                  Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes,
+                  etc. For example  a value of "0.5Gi" corresponds to an instance
+                  with a persistent volume of 0.5 gibibytes.'
+                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                x-kubernetes-int-or-string: true
             required:
             - version
             type: object
@@ -609,7 +620,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.21.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.22.0
         livenessProbe:
           httpGet:
             path: /healthz
@@ -625,6 +636,7 @@ spec:
           httpGet:
             path: /readyz
             port: 8081
+            scheme: HTTP
           initialDelaySeconds: 5
           periodSeconds: 10
         resources:
@@ -648,6 +660,7 @@ spec:
           defaultMode: 420
           secretName: webhook-server-cert
       - configMap:
+          defaultMode: 420
           name: postgresql-images
         name: image-config
 ---
@@ -696,6 +709,7 @@ webhooks:
     - v1alpha1
     operations:
     - CREATE
+    - UPDATE
     resources:
     - postgresqls
   sideEffects: None
