@@ -17,10 +17,10 @@ import (
 )
 
 const (
-	resourceCPU  = "500m"
-	resourceMem  = "500Mi"
-	volumeSizeGB = 1
-	version      = 14
+	resourceCPU = "500m"
+	resourceMem = "500Mi"
+	volumeSize  = "1G"
+	version     = 14
 
 	kind = "Postgresql"
 )
@@ -70,9 +70,9 @@ func New(namespace, name string, replicas int32) *Postgresql {
 			APIVersion: pgv1alpha1.GroupVersion.String(),
 		},
 		Spec: pgv1alpha1.PostgresqlSpec{
-			Replicas:      pointer.Int32Ptr(replicas),
-			VolumeSizeGiB: volumeSizeGB,
-			Version:       version,
+			Replicas:   pointer.Int32Ptr(replicas),
+			VolumeSize: k8sresource.MustParse(volumeSize),
+			Version:    version,
 			Resources: &corev1.ResourceRequirements{
 				Limits: map[corev1.ResourceName]k8sresource.Quantity{
 					corev1.ResourceCPU:    k8sresource.MustParse(resourceCPU),

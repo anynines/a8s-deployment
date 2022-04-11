@@ -4,7 +4,7 @@ metadata:
   name: sample-pg-cluster
 spec:
   replicas: 3
-  volumeSizeGiB: 1
+  volumeSize: 1Gi
   version: 14
   resources:
     requests:
