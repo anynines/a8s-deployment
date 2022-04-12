@@ -276,7 +276,9 @@ spec:
                     type: object
                 type: object
               version:
-                default: 13
+                description: Version specifies the PostgreSQL version that the instance
+                  should use. It is required to pick a version and it cannot be changed
+                  afterwards, since major version upgrades are  currently unsupported.
                 maximum: 14
                 minimum: 13
                 type: integer
@@ -620,7 +622,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.22.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.23.0
         livenessProbe:
           httpGet:
             path: /healthz
