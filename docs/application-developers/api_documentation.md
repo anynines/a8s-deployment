@@ -75,9 +75,9 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `replicas` _integer_ | Replicas is the number of replicas of the data service in the cluster. Replicas of the PostgreSQL resource will constitute a streaming replication cluster. This value should be an odd number (with the exception of the value 0) to ensure the resultant cluster can establish quorum. Only scaling up is supported and not scaling down of replicas. |
-| `version` _integer_ |  |
+| `version` _integer_ | Version specifies the PostgreSQL version that the instance should use. It is required to pick a version and it cannot be changed afterwards, since major version upgrades are currently unsupported. |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#resourcerequirements-v1-core)_ | Resources is the desired compute resource requirements of PostgreSQL container within a pod in the cluster. Updating resources causes the replicas of the PostgreSQL cluster to be killed and recreated one at a time, which could potentially lead to downtime if something goes wrong during the update. |
-| `volumeSize` _Quantity_ | VolumeSize sets the size of the persistent volume of the PostgreSQL instance, the minimum size is 0.5Gi. The size is to be specified as a plain integer or as a fixed-point number using one of these suffixes: E, P, T, G, M, K, corresponding to kilo-, mega-, gigabytes, etc. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes, etc. For example  a value of "0.5Gi" corresponds to an instance with a persistent volume of 0.5 gibibytes. |
+| `volumeSize` _Quantity_ | VolumeSize sets the size of the persistent volume of the PostgreSQL instance, the minimum size is 0.5Gi. The size is to be specified as a plain integer or as a fixed-point number using one of these suffixes: E, P, T, G, M, K, corresponding to kilo-, mega-, gigabytes, etc. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes, etc. For example a value of "0.5Gi" corresponds to an instance with a persistent volume of 0.5 gibibytes. |
 | `postgresConfiguration` _[PostgresConfiguration](#postgresconfiguration)_ |  |
 
 #### PostgresqlStatus
