@@ -65,6 +65,15 @@ PostgresqlList contains a list of Postgresql
 | `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `items` _[Postgresql](#postgresql) array_ |  |
 
+#### PostgresqlSchedulingConstraints
+
+_Appears in:_
+- [PostgresqlSpec](#postgresqlspec)
+
+| Field | Description |
+| --- | --- |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#toleration-v1-core) array_ | Tolerations is the list of tolerations that the Pods of the PostgreSQL instance will have with respect to the taints of the Kubernetes cluster nodes. It can be used to affect scheduling of the Pods of the PostgreSQL instance on the Kubernetes cluster nodes. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ and https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#toleration-v1-core . If you don't know what are the specific taints on the nodes of the Kubernetes cluster you're using, you should ask your cluster administrator. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
+
 #### PostgresqlSpec
 
 PostgresqlSpec defines the desired state of Postgresql
@@ -79,6 +88,7 @@ _Appears in:_
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#resourcerequirements-v1-core)_ | Resources is the desired compute resource requirements of PostgreSQL container within a pod in the cluster. Updating resources causes the replicas of the PostgreSQL cluster to be killed and recreated one at a time, which could potentially lead to downtime if something goes wrong during the update. |
 | `volumeSize` _Quantity_ | VolumeSize sets the size of the persistent volume of the PostgreSQL instance, the minimum size is 0.5Gi. The size is to be specified as a plain integer or as a fixed-point number using one of these suffixes: E, P, T, G, M, K, corresponding to kilo-, mega-, gigabytes, etc. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes, etc. For example a value of "0.5Gi" corresponds to an instance with a persistent volume of 0.5 gibibytes. |
 | `postgresConfiguration` _[PostgresConfiguration](#postgresconfiguration)_ |  |
+| `schedulingConstraints` _[PostgresqlSchedulingConstraints](#postgresqlschedulingconstraints)_ | SchedulingConstraints contains subfields that affect how the Pods of the Postgresql instance will be scheduled onto Kubernetes cluster nodes. The subfields map directly to Kubernetes API primitives such as node taints, tolerations, affinity and (anti)affinity. See the documentation of each subfield for more details. Together, the subfields of SchedulingConstraints allow you to express constraints such as "Pods of this Postgresql instance MUST be scheduled to different availability zones", or "Pods of this Postgresql instance SHOULD preferrably (but not mandatorily) be scheduled to nodes that have a SSD", and many more. As a warning, the subfields of SchedulingConstraints can interfere with each other, so when you set one of them you should consider how it will interact with the values that you set for other subfields. |
 
 #### PostgresqlStatus
 
