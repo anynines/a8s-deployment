@@ -64,7 +64,7 @@ echo <bucket-secret-access-key> > deploy/a8s/secret-access-key # create file tha
 
 echo <encryption password> > deploy/a8s/encryption-password # create file that stores password for backup encryption
 
-cp deploy/a8s/backup-store-config.yaml.template config/backup-store-config.yaml # create file with other information about the bucket
+cp deploy/a8s/backup-store-config.yaml.template deploy/a8s/backup-store-config.yaml # create file with other information about the bucket
 ```
 
 Then, use an editor to open `deploy/a8s/backup-store-config.yaml` and replace the value:
