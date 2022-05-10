@@ -1,13 +1,6 @@
-resources:
-- postgresql-operator.yaml
-- a8s-system-namespace.yaml
-- service-binding-controller.yaml
-- backup-manager.yaml
-- postgresql-images.yaml
-
 # Generate the configmap that holds the coordinates of the S3 bucket where backups will be stored.
 configMapGenerator:
-- name: backup-store-config
+- name: a8s-backup-store-config
   namespace: a8s-system
   files:
   - ./backup-store-config.yaml

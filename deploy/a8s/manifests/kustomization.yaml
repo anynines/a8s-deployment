@@ -1,0 +1,7 @@
+resources:
+  - postgresql-operator.yaml
+  - a8s-system-namespace.yaml
+  - service-binding-controller.yaml
+  - backup-manager.yaml
+  - postgresql-images.yaml
+  - ../backup-config
