@@ -8,6 +8,6 @@ spec:
   version: 14
   resources:
     requests:
-      cpu: 100m
+      cpu: 500m
     limits:
-      memory: 100Mi
+      memory: 500Mi
