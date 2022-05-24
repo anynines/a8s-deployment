@@ -38,7 +38,7 @@ metadata:
   labels:
     app.kubernetes.io/name: opensearch-dashboards
     app.kubernetes.io/instance: opensearch-dashboards-0
-    app.kubernetes.io/version: "1.2.0"
+    app.kubernetes.io/version: "1.3.2"
     app.kubernetes.io/part-of: a8s-logging
     app.kubernetes.io/component: dashboard
     a8s.anynines/logging: "true"
@@ -65,14 +65,14 @@ spec:
       labels:
         app.kubernetes.io/name: opensearch-dashboards
         app.kubernetes.io/instance: opensearch-dashboards-0
-        app.kubernetes.io/version: "1.2.0"
+        app.kubernetes.io/version: "1.3.2"
         app.kubernetes.io/part-of: a8s-logging
         app.kubernetes.io/component: dashboard
         a8s.anynines/logging: "true"
     spec:
       containers:
       - name: a8s-opensearch-dashboards
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/opensearch-dashboards:v1.2.0-1.0.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/opensearch-dashboards:v1.3.2-1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5601

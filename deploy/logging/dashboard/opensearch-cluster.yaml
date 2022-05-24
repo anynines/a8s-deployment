@@ -37,7 +37,7 @@ metadata:
   labels:
     app.kubernetes.io/name: opensearch
     app.kubernetes.io/instance: opensearch-logcluster-0
-    app.kubernetes.io/version: "1.2.4"
+    app.kubernetes.io/version: "1.3.2"
     app.kubernetes.io/part-of: a8s-logging
     app.kubernetes.io/component: database
     a8s.anynines/logging: "true"
@@ -51,7 +51,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: opensearch
       app.kubernetes.io/instance: opensearch-logcluster-0
-      app.kubernetes.io/version: "1.2.4"
+      app.kubernetes.io/version: "1.3.2"
       app.kubernetes.io/part-of: a8s-logging
       app.kubernetes.io/component: database
       a8s.anynines/logging: "true"
@@ -61,19 +61,15 @@ spec:
       labels:
         app.kubernetes.io/name: opensearch
         app.kubernetes.io/instance: opensearch-logcluster-0
-        app.kubernetes.io/version: "1.2.4"
+        app.kubernetes.io/version: "1.3.2"
         app.kubernetes.io/part-of: a8s-logging
         app.kubernetes.io/component: database
         a8s.anynines/logging: "true"
     spec:
       containers:
       - env:
-        - name: node.data
-          value: "true"
-        - name: node.ingest
-          value: "true"
-        - name: node.master
-          value: "true"
+        - name: node.roles
+          value: "data,master,ingest"
         - name: node.name
           valueFrom:
             fieldRef:
@@ -93,7 +89,7 @@ spec:
               resource: limits.cpu
         - name: OPENSEARCH_JAVA_OPTS
           value: -Xms512m -Xmx512m
-        image: opensearchproject/opensearch:1.2.4
+        image: opensearchproject/opensearch:1.3.2
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
