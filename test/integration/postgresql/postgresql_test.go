@@ -199,12 +199,11 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				Expect(k8sClient.Get(
 					ctx,
 					types.NamespacedName{
-						Name: postgresql.AdminRoleSecretName(
+						Name: postgresql.StandbyRoleSecretName(
 							instance.GetName()),
 						Namespace: instance.GetNamespace()},
 					standbyRoleSecret,
-				)).To(Succeed(),
-					fmt.Sprintf("failed to get standby role secret: %s", err))
+				)).To(Succeed(), "failed to get standby role secret")
 
 				Expect(standbyRoleSecret.Data).To(HaveKey("password"))
 				Expect(standbyRoleSecret.Data["password"]).NotTo(BeEmpty())
