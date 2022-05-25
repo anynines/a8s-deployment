@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -142,22 +141,15 @@ func primarySvcSelector(ctx context.Context,
 
 	svcName := fmt.Sprintf("%s-master", dsi.GetName())
 	var svc corev1.Service
-	err := c.Get(ctx, types.NamespacedName{
-		Name:      svcName,
-		Namespace: dsi.GetNamespace(),
-	}, &svc)
+	err := c.Get(ctx, types.NamespacedName{Name: svcName, Namespace: dsi.GetNamespace()}, &svc)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get primary service: %w", err)
 	}
 
-	selector := labels.NewSelector()
-	for key, val := range svc.Spec.Selector {
-		newRequirement, err := labels.NewRequirement(key, selection.Equals, []string{val})
-		if err != nil {
-			return nil, fmt.Errorf("unable to create requirement from label %s=%s: %w",
-				key, val, err)
-		}
-		selector = selector.Add(*newRequirement)
+	selector, err := labels.ValidatedSelectorFromSet(svc.Spec.Selector)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create selector for primary pod from primary service's "+
+			"spec.selector %s: %w", svc.Spec.Selector, err)
 	}
 	return &selector, nil
 }
