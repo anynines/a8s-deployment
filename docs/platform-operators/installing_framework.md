@@ -245,7 +245,7 @@ deliberately by a user. You can delete the CRDs using:
 kubectl delete crd recoveries.backups.anynines.com\
     backups.backups.anynines.com\
     postgresqls.postgresql.anynines.com\
-    servicebindings.servicebindings.anynines.com\    
+    servicebindings.servicebindings.anynines.com
 ```
 
 ## (Optional) Install the Logging Infrastructure

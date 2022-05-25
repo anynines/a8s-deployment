@@ -8,7 +8,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
+	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/anynines/a8s-deployment/test/integration/framework"
 	"github.com/anynines/a8s-deployment/test/integration/framework/dsi"
@@ -341,7 +344,7 @@ var _ = Describe("Patroni Integration Tests", func() {
 					// parameter in the table driven tests below for the sake
 					// of verbosity.
 					probeErr := client.CheckParameter(ctx, ArchiveTimeout,
-						strconv.Itoa(pg.Spec.PostgresConfiguration.ArchiveTimeoutSeconds) + "s")
+						strconv.Itoa(pg.Spec.PostgresConfiguration.ArchiveTimeoutSeconds)+"s")
 
 					if probeErr != nil {
 						close(portForwardStopCh)
@@ -349,8 +352,8 @@ var _ = Describe("Patroni Integration Tests", func() {
 					}
 					return probeErr
 				}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(Succeed(),
-						fmt.Sprintf("unable to wait for PostgreSQL process restart for %s/%s",
-							instance.GetNamespace(), instance.GetName()))
+					fmt.Sprintf("unable to wait for PostgreSQL process restart for %s/%s",
+						instance.GetNamespace(), instance.GetName()))
 			})
 
 			By("checking that the custom config is set correctly", func() {
@@ -392,6 +395,32 @@ var _ = Describe("Patroni Integration Tests", func() {
 							instance.GetNamespace(), instance.GetName()))
 
 				}
+			})
+
+			By("emitting an event about the configuration update", func() {
+				events := &corev1.EventList{}
+				Expect(k8sClient.List(ctx, events, &ctrlruntimeclient.ListOptions{
+					FieldSelector: fields.AndSelectors(
+						fields.OneTermEqualSelector("reason", "Updated"),
+						fields.OneTermEqualSelector("involvedObject.uid",
+							string(instance.GetUID()))),
+				})).To(Succeed(), "failed to list events emitted for the config update of the DSI")
+
+				Expect(len(events.Items)).To(Equal(1), "exactly one event should be emitted for "+
+					"the config update of a DSI, found more than one")
+
+				event := events.Items[0]
+				Expect(event.Message).To(Equal("Successfully updated the PostgreSQL configuration"),
+					"wrong event message")
+				Expect(event.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
+				Expect(event.Count).To(Equal(int32(1)), "wrong event count")
+				Expect(event.Source.Component).To(Equal("postgresql-controller"),
+					"wrong event source.component")
+				Expect(event.InvolvedObject.Kind).To(Equal("Postgresql"),
+					"wrong event involvedObject.kind")
+				Expect(event.InvolvedObject.APIVersion).
+					To(Equal("postgresql.anynines.com/v1alpha1"),
+						"wrong event involvedObject.apiVersion")
 			})
 		})
 	})

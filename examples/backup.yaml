@@ -4,5 +4,6 @@ metadata:
   name: backup-sample
 spec:
   serviceInstance:
-    name: "sample-pg-cluster"
+    apiGroup: "postgresql.anynines.com"
     kind: "PostgreSQL"
+    name: "sample-pg-cluster"

@@ -117,7 +117,7 @@ We use a custom image which adds some useful plugins to the base Fluentd image.
 One of which is the fluent-plugin-label-router so that we can route Fluentd
 records based on their Kubernetes metadata. This allows us to specify labels or
 some other Kubernetes metadata which can then be used to route specific records
-to a different destination. So we have all the `cluster-name:sample-pg-cluster`
+to a different destination. So we have all the `a8s.a9s/dsi-name:sample-pg-cluster`
 labeled pods (an instance of a PostgreSQL cluster) directed to stdout, this
 could be any destination. Additionally, we used the copy input plugin to
 duplicate the records so that we could have all logs in the cluster sent to a

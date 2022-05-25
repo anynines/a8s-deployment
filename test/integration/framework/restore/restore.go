@@ -29,6 +29,7 @@ type Option func(*v1alpha1.Recovery)
 
 func SetInstanceRef(dsi runtimeClient.Object) Option {
 	return func(rcv *v1alpha1.Recovery) {
+		rcv.Spec.ServiceInstance.APIGroup = dsi.GetObjectKind().GroupVersionKind().Group
 		rcv.Spec.ServiceInstance.Kind = dsi.GetObjectKind().GroupVersionKind().Kind
 		rcv.Spec.ServiceInstance.Name = dsi.GetName()
 	}

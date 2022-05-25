@@ -3,10 +3,10 @@ module github.com/anynines/a8s-deployment/test
 go 1.17
 
 require (
-	github.com/anynines/a8s-backup-manager v0.9.0
-	github.com/anynines/a8s-service-binding-controller v0.5.0
-	github.com/anynines/postgresql-operator v0.24.0
-	github.com/jackc/pgx/v4 v4.10.1
+	github.com/anynines/a8s-backup-manager v0.17.0
+	github.com/anynines/a8s-service-binding-controller v0.19.0
+	github.com/anynines/postgresql-operator v0.31.0
+	github.com/jackc/pgx/v4 v4.14.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	k8s.io/api v0.23.3
@@ -14,7 +14,7 @@ require (
 	k8s.io/cli-runtime v0.23.1
 	k8s.io/client-go v0.23.3
 	k8s.io/utils v0.0.0-20220127004650-9b3446523e65
-	sigs.k8s.io/controller-runtime v0.11.0
+	sigs.k8s.io/controller-runtime v0.11.1
 )
 
 require (
@@ -43,12 +43,12 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.8.0 // indirect
+	github.com/jackc/pgconn v1.10.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.0.6 // indirect
+	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
-	github.com/jackc/pgtype v1.6.2 // indirect
+	github.com/jackc/pgtype v1.9.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect

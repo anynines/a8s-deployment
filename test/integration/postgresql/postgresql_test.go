@@ -3,6 +3,7 @@ package postgresql
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"time"
 
@@ -13,8 +14,10 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/pointer"
+	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/anynines/a8s-deployment/test/integration/framework"
 	"github.com/anynines/a8s-deployment/test/integration/framework/dsi"
@@ -30,9 +33,6 @@ const (
 	replicas     = 1
 	suffixLength = 5
 
-	roleKey            = "spilo-role"
-	primaryRoleValue   = "master"
-	secondaryRoleValue = "replica"
 	databaseKey        = "database"
 	DbAdminUsernameKey = "username"
 	DbAdminPasswordKey = "password"
@@ -100,27 +100,23 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 
 				// Labels and Annotations are tested since other a8s framework
 				// components rely on them.
+				Expect(sts.Spec.Template.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+				// TODO: find a way to avoid hardcoding
 				Expect(sts.Spec.Template.Labels).
-					To(HaveKeyWithValue("application", "spilo"))
+					To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
 				Expect(sts.Spec.Template.Labels).
-					To(HaveKeyWithValue("cluster-name", pg.Name))
-				Expect(sts.Spec.Template.Labels).
-					To(HaveKeyWithValue("dsi-group", "postgresql.anynines.com"))
-				Expect(sts.Spec.Template.Labels).
-					To(HaveKeyWithValue("dsi-kind", "Postgresql"))
+					To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				Expect(len(sts.Spec.Template.Labels)).To(Equal(3))
 
 				Expect(sts.Spec.Template.Annotations).
 					To(HaveKeyWithValue("prometheus.io/port", "9187"))
 				Expect(sts.Spec.Template.Annotations).
 					To(HaveKeyWithValue("prometheus.io/scrape", "true"))
 
-				Expect(sts.Spec.Template.Spec.Containers[0].Name).
-					To(Equal("postgres"))
-				Expect(sts.Spec.Template.Spec.Containers[1].Name).
-					To(Equal("backup-agent"))
+				Expect(sts.Spec.Template.Spec.Containers[0].Name).To(Equal("postgres"))
+				Expect(sts.Spec.Template.Spec.Containers[1].Name).To(Equal("backup-agent"))
 
-				Expect(sts.Spec.Template.Spec.ServiceAccountName).
-					To(Equal(pg.Name))
+				Expect(sts.Spec.Template.Spec.ServiceAccountName).To(Equal(pg.Name))
 			})
 
 			By("creating a Service that points to the primary for writes", func() {
@@ -132,10 +128,12 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 						Namespace: instance.GetNamespace()},
 					svc)).To(Succeed())
 
+				Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
 				Expect(svc.Spec.Selector).
-					To(HaveKeyWithValue("cluster-name", instance.GetName()))
-				Expect(svc.Spec.Selector).
-					To(HaveKeyWithValue("spilo-role", "master"))
+					To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+				Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
+				Expect(len(svc.Spec.Selector)).To(Equal(4))
 
 				Expect(svc.Spec.Type).To(Equal(corev1.ServiceTypeClusterIP))
 				Expect(svc.Spec.Ports[0].Name).To(Equal("postgresql"))
@@ -187,9 +185,12 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				Expect(adminRoleSecret.Data["username"]).NotTo(BeEmpty())
 
 				Expect(adminRoleSecret.Labels).
-					To(HaveKeyWithValue("application", "spilo"))
+					To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
 				Expect(adminRoleSecret.Labels).
-					To(HaveKeyWithValue("cluster-name", instance.GetName()))
+					To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+				Expect(adminRoleSecret.Labels).
+					To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				Expect(len(adminRoleSecret.Labels)).To(Equal(3))
 			})
 
 			By("creating a Secret with the credentials of the Standby role for streaming replication", func() {
@@ -210,9 +211,12 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				Expect(standbyRoleSecret.Data["username"]).NotTo(BeEmpty())
 
 				Expect(standbyRoleSecret.Labels).
-					To(HaveKeyWithValue("application", "spilo"))
+					To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
 				Expect(standbyRoleSecret.Labels).
-					To(HaveKeyWithValue("cluster-name", instance.GetName()))
+					To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+				Expect(standbyRoleSecret.Labels).
+					To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				Expect(len(standbyRoleSecret.Labels)).To(Equal(3))
 			})
 
 			By("creating PersistentVolumeClaims for each of the replicas", func() {
@@ -228,6 +232,129 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 
 					Expect(pvc.Status.Phase).To(Equal(corev1.ClaimBound))
 				}
+			})
+
+			// TODO: test that events are emitted in failure cases
+			// TODO: after the switch to ginkgo v2 (or the decision to get rid of gingko), find a
+			// way to handle the flakiness of the checks on events. Test on events are flaky because
+			// events creation is best-effort by design. If we stay with ginkgo we wait until the
+			// switch to v2 because there are new decorators that explicitly handle flaky tests:
+			// https://pkg.go.dev/github.com/onsi/ginkgo/v2#FlakeAttempts .
+			By("emitting exactly one event for each secondary API object that is directly "+
+				"created by the operator, and no more", func() {
+
+				instanceEvents := &corev1.EventList{}
+				Expect(k8sClient.List(ctx, instanceEvents, &ctrlruntimeclient.ListOptions{
+					FieldSelector: ctrlruntimeclient.MatchingFieldsSelector{
+						Selector: fields.OneTermEqualSelector("involvedObject.uid",
+							string(instance.GetUID())),
+					},
+				})).To(Succeed(), "failed to list events emitted for test DSI")
+
+				Expect(len(instanceEvents.Items)).To(Equal(5), "found more events than expected, "+
+					"there should be one for every secondary API object that the Operator "+
+					"directly creates (ServiceAccount, RoleBinding, master Service, StatefulSet, "+
+					"two Secrets that result in just one event)")
+
+				// Sort events by message so that we know for which secondary API object each event
+				// is created w/o having to inspect the event first. *This is a hack that makes the
+				// tests brittle*, but doing otherwise would require more code and more logic, which
+				// results in less readable (and potentially buggy) tests.
+				sort.Slice(instanceEvents.Items, func(i, j int) bool {
+					return instanceEvents.Items[i].Message <= instanceEvents.Items[j].Message
+				})
+				masterSvcEvent := instanceEvents.Items[0]
+				roleBindingEvent := instanceEvents.Items[1]
+				// The PG operator creates two, independent secrets, but because of a bug it emits
+				// two identical events upon creation of those secrets - so said events are merged
+				// into a single one and we have only one event with a count of 2 for both secrets.
+				// TODO: As soon as the bug is fixed in the PG Operator, fix this by checking the
+				// two distinct events that are emitted, one for each secret.
+				secretsEvent := instanceEvents.Items[2]
+				svcAccountEvent := instanceEvents.Items[3]
+				ssetEvent := instanceEvents.Items[4]
+
+				By("emitting an event for the creation of the master service", func() {
+					Expect(masterSvcEvent.Message).To(Equal("Successfully created master service"),
+						"wrong event message")
+					Expect(masterSvcEvent.Type).To(Equal(corev1.EventTypeNormal),
+						"wrong event type")
+					Expect(masterSvcEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(masterSvcEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(masterSvcEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(masterSvcEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(masterSvcEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1alpha1"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the roleBinding", func() {
+					Expect(roleBindingEvent.Message).To(Equal("Successfully created roleBinding"),
+						"wrong event message")
+					Expect(roleBindingEvent.Type).To(Equal(corev1.EventTypeNormal),
+						"wrong event type")
+					Expect(roleBindingEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(roleBindingEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(roleBindingEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(roleBindingEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(roleBindingEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1alpha1"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the secret(s)", func() {
+					Expect(secretsEvent.Message).To(Equal("Successfully created secret"),
+						"wrong event message")
+					Expect(secretsEvent.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
+					Expect(secretsEvent.Reason).To(Equal("Created"), "wrong event reason")
+					// We expect a count of 2 because the pg operator emits the same event for the
+					// two separate secrets that are created for a PG instance (which is a bug).
+					// TODO: Fix this assertion as soon as we fix the aforementioned bug in the pg
+					// operator.
+					Expect(secretsEvent.Count).To(Equal(int32(2)), "wrong event count")
+					Expect(secretsEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(secretsEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(secretsEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1alpha1"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the serviceAcccount", func() {
+					Expect(svcAccountEvent.Message).To(Equal("Successfully created serviceAccount"),
+						"wrong event message")
+					Expect(svcAccountEvent.Type).To(Equal(corev1.EventTypeNormal),
+						"wrong event type")
+					Expect(svcAccountEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(svcAccountEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(svcAccountEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(svcAccountEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(svcAccountEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1alpha1"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the statefulSet", func() {
+					Expect(ssetEvent.Message).To(Equal("Successfully created statefulSet"),
+						"wrong event message")
+					Expect(ssetEvent.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
+					Expect(ssetEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(ssetEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(ssetEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(ssetEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(ssetEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1alpha1"),
+							"wrong event involvedObject.apiVersion")
+				})
 			})
 		})
 	})
@@ -439,6 +566,36 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 					return true
 				}, asyncOpsTimeoutMins).Should(BeTrue())
 			})
+
+			By("emitting an event about the instance deletion", func() {
+				events := &corev1.EventList{}
+				Expect(k8sClient.List(ctx, events, &ctrlruntimeclient.ListOptions{
+					FieldSelector: fields.AndSelectors(
+						fields.OneTermEqualSelector("reason", "Deleted"),
+						fields.OneTermEqualSelector("involvedObject.uid",
+							string(instance.GetUID()))),
+				})).To(Succeed(), "failed to list events emitted for deletion of the DSI")
+
+				Expect(len(events.Items)).To(Equal(1),
+					"exactly one event should be emitted for the deletion of a DSI")
+
+				event := events.Items[0]
+				Expect(event.Message).To(Equal("Successfully deleted Instance"),
+					"wrong event message")
+				Expect(event.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
+				// TODO: Fix this assertion as soon as the bug in the operator is fixed.
+				Expect(event.Count).NotTo(Equal(int32(1)), "this assertion succeeded only because "+
+					"of a bug (i.e. the assertion expects the bug) in the PostgreSQL Operator, "+
+					"if it now fails the bug has been fixed, so please fix the assertion "+
+					"accordingly by making it expect a value of 1 rather than something != 1")
+				Expect(event.Source.Component).To(Equal("postgresql-controller"),
+					"wrong event source.component")
+				Expect(event.InvolvedObject.Kind).To(Equal("Postgresql"),
+					"wrong event involvedObject.kind")
+				Expect(event.InvolvedObject.APIVersion).
+					To(Equal("postgresql.anynines.com/v1alpha1"),
+						"wrong event involvedObject.apiVersion")
+			})
 		})
 	})
 
@@ -642,7 +799,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				pod, err = framework.GetPrimaryPodUsingServiceSelector(
 					ctx, instance, k8sClient)
 				Expect(err).To(BeNil())
-				Expect(pod.Labels[roleKey]).To(Equal(primaryRoleValue))
+				Expect(pod.Labels["a8s.a9s/replication-role"]).To(Equal("master"))
 			})
 
 			By("inserting data", func() {
@@ -667,7 +824,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				newPod, err := framework.GetPrimaryPodUsingServiceSelector(
 					ctx, instance, k8sClient)
 				Expect(err).To(BeNil())
-				Expect(newPod.Labels[roleKey]).To(Equal(primaryRoleValue))
+				Expect(newPod.Labels["a8s.a9s/replication-role"]).To(Equal("master"))
 				Expect(newPod.GetUID()).ToNot(Equal(pod.GetUID()),
 					"pod UIDs should not be equal after fail over")
 				// Checking that the new pod and the deleted pod have different
