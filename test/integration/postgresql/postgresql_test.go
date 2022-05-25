@@ -510,8 +510,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 
 			By("ensuring data was written successfully", func() {
 				readData, err = client.Read(ctx, entity)
-				Expect(err).
-					To(Succeed(), fmt.Sprintf("failed to read data: %s ", err))
+				Expect(err).To(BeNil(), "failed to read data")
 				Expect(readData).To(Equal(testInput), "read data does not match test input")
 			})
 
@@ -543,8 +542,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 
 				// Ensure that newly read data matches our original test input
 				readData, err = client.Read(ctx, entity)
-				Expect(err).
-					To(Succeed(), fmt.Sprintf("failed to read data: %s ", err))
+				Expect(err).To(BeNil(), "failed to read data")
 				Expect(readData).To(Equal(testInput), "read data does not match test input")
 			})
 		})
@@ -654,8 +652,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 
 			By("ensuring that the data exists", func() {
 				readData, err = client.Read(ctx, entity)
-				Expect(err).To(Succeed(),
-					fmt.Sprintf("failed to read data: %s ", err))
+				Expect(err).To(BeNil(), "failed to read data")
 				Expect(readData).To(Equal(testInput), "read data does not match test input")
 			})
 
@@ -701,8 +698,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				// Ensure that the replicated data is equal to our previously read
 				// data
 				replicatedData, err := client.Read(ctx, entity)
-				Expect(err).To(Succeed(), fmt.Sprintf("failed to read data: %s ",
-					err))
+				Expect(err).To(BeNil(), "failed to read data")
 				Expect(readData).To(Equal(replicatedData),
 					"read data does not match data replicated in new primary")
 			})
