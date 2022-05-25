@@ -44,7 +44,8 @@ var _ = BeforeSuite(func() {
 	// https://pkg.go.dev/github.com/onsi/ginkgo/v2#AbortSuite
 	// Provides information on failure to help the user identify the issue. When we use
 	// AbortSuite we can simply write out the error as a message.
-	Expect(dataservice).To(Equal(expectedDataservice))
+	Expect(dataservice).To(Equal(expectedDataservice), "this suite can run only for dataservice "+
+		expectedDataservice)
 
 	// Create kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
