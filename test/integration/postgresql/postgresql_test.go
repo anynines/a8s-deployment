@@ -93,8 +93,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				Expect(k8sClient.Get(ctx,
 					types.NamespacedName{Name: instance.GetName(),
 						Namespace: instance.GetNamespace()},
-					sts)).To(Succeed())
-				Expect(err).To(BeNil(), fmt.Sprintf("got error: %s", err))
+					sts)).To(Succeed(), "failed to get statefulset")
 
 				Expect(*sts.Spec.Replicas).To(Equal(*pg.Spec.Replicas))
 				Expect(sts.Status.ReadyReplicas).To(Equal(*pg.Spec.Replicas))
@@ -150,7 +149,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 					types.NamespacedName{Name: instance.GetName(),
 						Namespace: instance.GetNamespace()},
 					&corev1.ServiceAccount{},
-				)).To(Succeed(), fmt.Sprintf("failed to get serviceaccount: %s", err))
+				)).To(Succeed(), "failed to get serviceaccount")
 			})
 
 			By("creating a RoleBinding between the PostgreSQL instance service account and the Spilo role", func() {
@@ -160,7 +159,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 					types.NamespacedName{Name: instance.GetName(),
 						Namespace: instance.GetNamespace()},
 					rolebinding,
-				)).To(Succeed(), fmt.Sprintf("failed to get rolebinding: %s", err))
+				)).To(Succeed(), "failed to get rolebinding")
 
 				Expect(rolebinding.RoleRef.Name).To(Equal("postgresql-spilo-role"))
 				Expect(rolebinding.RoleRef.Kind).To(Equal("ClusterRole"))
@@ -179,8 +178,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 						Name:      postgresql.AdminRoleSecretName(instance.GetName()),
 						Namespace: instance.GetNamespace()},
 					adminRoleSecret,
-				)).To(Succeed(),
-					fmt.Sprintf("failed to get admin role secret: %s", err))
+				)).To(Succeed(), "failed to get admin role secret")
 
 				Expect(adminRoleSecret.Data).To(HaveKey("password"))
 				Expect(adminRoleSecret.Data["password"]).NotTo(BeEmpty())
@@ -226,7 +224,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 							Name: postgresql.PvcName(
 								instance.GetName(), i),
 							Namespace: instance.GetNamespace()}, pvc,
-					)).To(Succeed(), fmt.Sprintf("failed to get pvc: %s", err))
+					)).To(Succeed(), "failed to get pvc")
 
 					Expect(pvc.Status.Phase).To(Equal(corev1.ClaimBound))
 				}
@@ -514,8 +512,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				readData, err = client.Read(ctx, entity)
 				Expect(err).
 					To(Succeed(), fmt.Sprintf("failed to read data: %s ", err))
-				Expect(readData).To(Equal(testInput),
-					fmt.Sprintf("read data does not match test input: %s", err))
+				Expect(readData).To(Equal(testInput), "read data does not match test input")
 			})
 
 			By("testing whether data persists after primary pod deletion", func() {
@@ -548,8 +545,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				readData, err = client.Read(ctx, entity)
 				Expect(err).
 					To(Succeed(), fmt.Sprintf("failed to read data: %s ", err))
-				Expect(readData).To(Equal(testInput),
-					fmt.Sprintf("read data does not match test input: %s", err))
+				Expect(readData).To(Equal(testInput), "read data does not match test input")
 			})
 		})
 
@@ -660,8 +656,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				readData, err = client.Read(ctx, entity)
 				Expect(err).To(Succeed(),
 					fmt.Sprintf("failed to read data: %s ", err))
-				Expect(readData).To(Equal(testInput),
-					fmt.Sprintf("read data does not match test input: %s", err))
+				Expect(readData).To(Equal(testInput), "read data does not match test input")
 			})
 
 			By("deleting the primary pod to prompt a fail over", func() {
@@ -709,8 +704,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				Expect(err).To(Succeed(), fmt.Sprintf("failed to read data: %s ",
 					err))
 				Expect(readData).To(Equal(replicatedData),
-					fmt.Sprintf("read data does not match data replicated in new primary: %s",
-						err))
+					"read data does not match data replicated in new primary")
 			})
 		})
 	})
