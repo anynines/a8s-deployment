@@ -24,9 +24,9 @@ var (
 	k8sClient runtimeClient.Client
 )
 
-func TestBackup(t *testing.T) {
+func TestServiceBinding(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Servicebinding Suite")
+	RunSpecs(t, "ServiceBinding Suite")
 }
 
 var _ = BeforeSuite(func() {

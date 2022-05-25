@@ -2,8 +2,8 @@ package patroni
 
 import (
 	"context"
-	"os"
 	"fmt"
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -26,7 +26,7 @@ var (
 
 const expectedDataservice = "PostgreSQL"
 
-func TestBackup(t *testing.T) {
+func TestPatroni(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Patroni Suite")
 }

@@ -23,9 +23,9 @@ var (
 	k8sClient runtimeClient.Client
 )
 
-func TestBackup(t *testing.T) {
+func TestDSILifecycle(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Backup Suite")
+	RunSpecs(t, "DSI Lifecycle Suite")
 }
 
 var _ = BeforeSuite(func() {
