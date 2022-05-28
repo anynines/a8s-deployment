@@ -2,7 +2,6 @@ package patroni
 
 import (
 	"context"
-	"os"
 	"fmt"
 	"testing"
 
@@ -26,7 +25,7 @@ var (
 
 const expectedDataservice = "PostgreSQL"
 
-func TestBackup(t *testing.T) {
+func TestPatroni(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Patroni Suite")
 }
@@ -43,12 +42,10 @@ var _ = BeforeSuite(func() {
 	// TODO: We could use AbortSuite to safely exit the test suite rather than the approach here.
 	// We may want to bump Ginkgo soon to keep it up to date and get new features.
 	// https://pkg.go.dev/github.com/onsi/ginkgo/v2#AbortSuite
-	if dataservice != expectedDataservice {
-		// Provides information on failure to help the user identify the issue. When we use
-		// AbortSuite we can simply write out the error as a message.
-		Expect(dataservice).To(Equal(expectedDataservice))
-		os.Exit(1)
-	}
+	// Provides information on failure to help the user identify the issue. When we use
+	// AbortSuite we can simply write out the error as a message.
+	Expect(dataservice).To(Equal(expectedDataservice), "this suite can run only for dataservice "+
+		expectedDataservice)
 
 	// Create kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
