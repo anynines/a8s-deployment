@@ -5,4 +5,4 @@ data:
 kind: ConfigMap
 metadata:
   name: postgresql-images
-  namespace: postgresql-system
+  namespace: a8s-system
