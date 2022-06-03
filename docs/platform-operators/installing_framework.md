@@ -282,6 +282,55 @@ a8s-opensearch-dashboards-648cb7d4f4-6xmq8   1/1     Running   0          6m20s
 fluent-bit-jqfgl                             1/1     Running   0          6m20s
 ```
 
+### Virtual Memory Usage
+
+OpenSearch (and ElasticSearch) heavily rely on [virtual
+memory](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
+usage (so `mmap`). When applying the logging framework, you might have to adjust
+the `mmap limit` on your nodes, otherwise the OpenSearch pods will fail, with
+the error message :
+
+```
+ERROR: [1] bootstrap checks failed [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
+
+If you are running the framework on something like `minikube` or `kind` using
+Docker, this does not apply. Otherwise, you can find out more on how to adjust
+the virtual memory in the
+[Elasticsearch](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
+and
+[OpenSearch](https://opensearch.org/docs/latest/opensearch/install/important-settings/)
+documentation on this topic.
+
+#### Disabling Virtual Memory Usage
+
+> **Important Note:**
+> The
+> [documentation](https://www.elastic.co/guide/en/cloud-on-k8s/current/k8s-virtual-memory.html)
+> explicitly warns you to not use this setup in production
+> grade workloads.
+
+If you just want to experiment with the framework, or you do not have privileged
+access to the nodes, to adjust the virtual memory, you can
+disable the usage in the OpenSearch configuration. For that set the `allow_mmap`
+flag in the OpenSearch configuration, located in
+`deploy/logging/dashboard/config/opensearch.yaml`, to false by appending:
+
+```yml
+node:
+  store:
+    allow_mmap: false
+```
+
+After applying the change and restarting the `a8s-opensearch-cluster-0` pod by
+using
+
+```shell
+kubectl delete pod a8s-opensearch-cluster-0 -n a8s-system
+```
+
+OpenSearch should now work without issues.
+
 ## Uninstall the Logging Infrastructure
 
 Run:
