@@ -1,11 +1,14 @@
 package postgresql
 
 import (
+	"context"
 	"fmt"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/pointer"
@@ -31,6 +34,27 @@ type Postgresql struct {
 
 func (pg Postgresql) ClusterStatus() string {
 	return pg.Status.ClusterStatus
+}
+
+// TODO: make the K8s client a field of pg rather than something to pass to its functions.
+func (pg Postgresql) StatefulSet(ctx context.Context,
+	k8sClient runtimeClient.Client) (*appsv1.StatefulSet, error) {
+
+	nsn := types.NamespacedName{Namespace: pg.Namespace, Name: pg.Name}
+	ss := &appsv1.StatefulSet{}
+
+	if err := k8sClient.Get(ctx, nsn, ss); err != nil {
+		return nil, fmt.Errorf("failed to get statefulset for instance %s: %w", nsn, err)
+	}
+
+	return ss, nil
+}
+
+func (pg Postgresql) SetTolerations(ts ...corev1.Toleration) {
+	if pg.Postgresql.Spec.SchedulingConstraints == nil {
+		pg.Postgresql.Spec.SchedulingConstraints = &pgv1alpha1.PostgresqlSchedulingConstraints{}
+	}
+	pg.Postgresql.Spec.SchedulingConstraints.Tolerations = ts
 }
 
 // GetClientObject exposes the embedded PostgreSQL object to methods/functions that expect that

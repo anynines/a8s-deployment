@@ -9,6 +9,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - max_locks_per_transaction PostgreSQL configuration property has been added
+- end-to-end tests on PostgreSQL tolerations to node taints.
 
 ### Fixed
 
