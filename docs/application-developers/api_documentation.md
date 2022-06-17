@@ -73,6 +73,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#toleration-v1-core) array_ | Tolerations is the list of tolerations that the Pods of the PostgreSQL instance will have with respect to the taints of the Kubernetes cluster nodes. It can be used to affect scheduling of the Pods of the PostgreSQL instance on the Kubernetes cluster nodes. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ and https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#toleration-v1-core . If you don't know what are the specific taints on the nodes of the Kubernetes cluster you're using, you should ask your cluster administrator. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#affinity-v1-core)_ | Affinity groups the fields that govern node affinity, Pod affinity, and Pod anti affinity. It has exactly the same syntax and semantics of the built-in Kubernetes affinity type: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#affinity-v1-core . It is copied as it is in the spec of the Pods of the PostgreSQL instance, and can be used to attract said Pods to specific Kubernetes cluster nodes based on those nodes' labels and on the labels of other Pods running on the nodes. In the latter case repulsion rules between Pods can also be configured via the PodAntiAffinity field. An important use case for repulsion rules would be HA: it can be ensured that the replicas of the same PostgreSQL instance repel each other and end up on different nodes or even availability zones. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity . To properly configure this field you might need to know which labels the DSI pods get. That's the union of the DSI's `metadata.labels`; the a8s-reserved labels "a8s.a9s/dsi-name": "<name of the instance>", "a8s.a9s/dsi-group": "postgresql.anynines.com", "a8s.a9s/dsi-kind": "Postgresql"; the label "a8s.a9s/replication-role", set to the value "master" for the primary pod and "replica" for the standby pods; the standard labels that Kubernetes adds to all pods managed via a statefulset. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
 
 #### PostgresqlSpec
 
@@ -316,7 +317,7 @@ _Appears in:_
 
 #### ServiceInstanceRef
 
-ServiceInstanceRef references a Data Service Instance to backup or restore. The referenced Data Service Instance is always assumed to be in the same Kubernetes API namespace as the parent Backup/Recovery API object, so there's no namespace field; we might reconsider this assumption in the future. The API Group to which the kind belongs must be inferred by implementers of the API.
+ServiceInstanceRef references a Data Service Instance to backup or restore. The referenced Data Service Instance is always assumed to be in the same Kubernetes API namespace as the parent Backup/Recovery API object, so there's no namespace field; we might reconsider this assumption in the future.
 
 _Appears in:_
 - [BackupSpec](#backupspec)
@@ -325,7 +326,9 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `name` _string_ | Name is the name of the Kubernetes API resource that represents the Data Service Instance to backup or restore. |
-| `kind` _string_ | Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to to backup or restore (e.g. PostgreSQL, Redis, etc...). |
+| `kind` _string_ | Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. Postgresql, Redis, etc...). |
+| `apiGroup` _string_ | APIGroup is the API group of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. postgresql.anynines.com, redis.anynines.com, etc...). |
+
 
 #### StatusCondition
 

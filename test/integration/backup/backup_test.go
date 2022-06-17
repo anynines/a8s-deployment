@@ -120,7 +120,7 @@ var _ = Describe("Backup", func() {
 		By("Taking a backup", func() {
 			backup = bkp.New(
 				bkp.SetNamespacedName(instance),
-				bkp.SetInstanceRef(dataservice, instance.GetName()),
+				bkp.SetInstanceRef(instance.GetClientObject()),
 			)
 			Expect(k8sClient.Create(ctx, backup)).To(Succeed(),
 				fmt.Sprintf("failed to create backup for DSI %s/%s",

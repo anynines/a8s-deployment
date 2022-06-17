@@ -37,11 +37,6 @@
 - Given an instance, there's no multi-tenancy: all service bindings to
   it will share the same database.
 - Instances cannot be used from outside the cluster.
-- At the moment there's no way to configure anti-affinity rules to ensure that
-  the different replicas of a HA instance run on different Kubernetes
-  cluster nodes (or availability zones). This means that it can happen that two
-  or more replicas of the same instance end up running on the same
-  Kubernetes cluster node.
 
 ## Backup and Restore
 

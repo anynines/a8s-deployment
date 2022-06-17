@@ -27,16 +27,11 @@ const (
 // read here: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
 type Option func(*v1alpha1.Backup)
 
-func SetInstanceRef(ds, name string) Option {
+func SetInstanceRef(dsi runtimeClient.Object) Option {
 	return func(b *v1alpha1.Backup) {
-		// We have to reference the dataservice and not the kind of the dataservice
-		// (PostgreSQL vs Postgresql). This is because the backup-manager controller
-		// inconsistently uses dataservice names rather than the actual kind to find
-		// instances that it intends to backup. This should be adjusted in the backup
-		// controller so that it more accurately use the kind and not the dataservice name
-		// the reference instance.
-		b.Spec.ServiceInstance.Kind = ds
-		b.Spec.ServiceInstance.Name = name
+		b.Spec.ServiceInstance.APIGroup = dsi.GetObjectKind().GroupVersionKind().Group
+		b.Spec.ServiceInstance.Kind = dsi.GetObjectKind().GroupVersionKind().Kind
+		b.Spec.ServiceInstance.Name = dsi.GetName()
 	}
 }
 
