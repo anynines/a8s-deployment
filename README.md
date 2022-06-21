@@ -26,6 +26,7 @@ PostgreSQL 13 and 14. **Don't use it for production workloads**. All features ar
 
 ## Index
 
+- [CHANGELOG](CHANGELOG.md)
 - [Technical Requirements](docs/technical_requirements.md)
 - [Platform Operator Documentation](docs/platform-operators/README.md)
   - [Install the a8s Control Plane](/docs/platform-operators/installing_framework.md#/install-the-a8s-control-plane)
