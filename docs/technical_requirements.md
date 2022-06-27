@@ -4,7 +4,7 @@
 
 To try out a8s you will need:
 
-- a running Kubernetes cluster (for the size we recommend considering the 
+- a running Kubernetes cluster (for the size we recommend considering the
   [estimated resource consumption](#resource-consumption-estimates) of a8s)
 - `kubectl` v1.14 or higher pointed to the Kubernetes cluster
 - one [StorageClass][storage-class] marked as `default` in the Kubernetes cluster

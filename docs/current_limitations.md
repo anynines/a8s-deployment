@@ -4,22 +4,30 @@
 
 - The a8s control plane components (PostgreSQL-Operator, a8s-Backup-Manager, a8s-
   Service-Binding-Controller) currently do not support HA setups.
-- Currently no component of a8s supports TLS encryption, this also
-  includes DSIs and the communication between nodes, Logging and Metrics
-  components.
+- Currently almost no component of a8s supports TLS. The only communication that uses TLS is the one
+  between the Kubernetes API server and an a8s [validating webhook][k8s-validating-webhook] that
+  performs basic syntactic validation on the PostgreSQL instances API objects.
+  Communication between:
+
+  - DSI replicas
+  - applications and DSIs
+  - DSIs and a8s control plane components
+  - a8s control plane components
+  - Kubernetes API servers and a8s control plane components
+
+  doesn't use TLS at the moment, with the exception mentioned above. We plan to add that very soon.
 
 ## PostgreSQL Instances
 
 - The PostgreSQL server port is hardcoded to `5432`.
-- Only PostgreSQL version 13 is supported.
+- Only PostgreSQL version 13 and 14 are supported.
 - Horizontal down scaling is not supported, i.e. you can not scale down the
   number of replicas.
 - Each instance stores its data in a dedicated PersistentVolumeClaim of the
-  default StorageClass; Currently this PersistentVolumeClaim can't be configured
-  (e.g. the size of the storage volume for the PostgreSQL).
-- Instance names have to be smaller then 63 characters, otherwise the creation
-  will fail.
-- Currently a8s doesn't enforce any multi-tenancy/access control regarding the 
+  default StorageClass; Currently only this PersistentVolumeClaims size can be configured
+- Instance names have to be shorter than 53 characters. That is, their maximum length is 52
+  characters. Attempts to create an instance with a longer name will fail immediately.
+- Currently a8s doesn't enforce any multi-tenancy/access control regarding the
   Instances it manages. This means that unless you or the Kubernetes cluster
   administrator explicitly set up [RBAC rules][k8s-rbac] and
   [Network Policies][k8s-network-policies] to prevent that, every user of the
@@ -29,11 +37,6 @@
 - Given an instance, there's no multi-tenancy: all service bindings to
   it will share the same database.
 - Instances cannot be used from outside the cluster.
-- At the moment there's no way to configure anti-affinity rules to ensure that
-  the different replicas of a HA instance run on different Kubernetes
-  cluster nodes (or availability zones). This means that it can happen that two
-  or more replicas of the same instance end up running on the same
-  Kubernetes cluster node.
 
 ## Backup and Restore
 
@@ -71,7 +74,7 @@
   can be accessed from anyone that can reach its URL.
 - We currently do not support multiple logging destinations or a separation of
   logs for different users. All logs will be shipped to a single instance
-  OpenSearch and are accessible from the dashboard. 
+  OpenSearch and are accessible from the dashboard.
 
 ## Metrics
 
@@ -81,3 +84,4 @@
 [k8s-secrets]:https://kubernetes.io/docs/concepts/configuration/secret/#restrictions
 [k8s-rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 [k8s-network-policies]: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+[k8s-validating-webhook]: https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook

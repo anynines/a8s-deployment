@@ -1,4 +1,4 @@
-# Application Developers Documentation
+# Usage Overview
 
 This file contains documentation specifically meant for application developers.
 It's an overview of how you (an application developer) can use a8s to provision
@@ -6,7 +6,7 @@ a PostgreSQL instance, bind an application to it and use it.
 
 The following subsections assume, besides the [Technical Requirements](/docs/technical_requirements.md),
 that you or a platform operator have installed a8s on the Kubernetes cluster following the
-instructions in the section [Install the a8s Control Plane](/docs/platform_operators.md#install-the-a8s-control-plane).
+instructions in the section [Install the a8s Control Plane](/docs/platform-operators/installing_framework.md#install-the-a8s-control-plane).
 
 ## Index
 
@@ -235,7 +235,7 @@ officially in the Kubernetes documentation.
 
 When installing the a8s platform, the platform operator had the option to install components to
 collect and visualize the logs of the data service instances (as shown in section
-[(Optional) Install the Logging Infrastructure](/docs/platform_operators.md#optional-install-the-logging-infrastructure)).
+[(Optional) Install the Logging Infrastructure](/docs/platform-operators/installing_framework.md#optional-install-the-logging-infrastructure)).
 Among them, there's an OpenSearch Dashboards (that runs in a Pod) that you can use to view the logs of the
 PostgreSQL instance that you previously deployed.
 
@@ -289,7 +289,7 @@ The logs will be available to interact using your new filter.
 
 When installing the a8s platform, the platform operator had the option to install components to
 scrape and visualize the metrics of the data service instances (as shown in section
-[(Optional) Install the Metrics Infrastructure](/docs/platform_operators.md#optional-install-the-metrics-infrastructure)).
+[(Optional) Install the Metrics Infrastructure](/docs/platform-operators/installing_framework.md#optional-install-the-metrics-infrastructure)).
 Among them, there's a Grafana dashboard (that runs in a Pod) and you can use to view the metrics
 of the PostgreSQL instance that you previously deployed.
 
@@ -321,17 +321,9 @@ Prometheus instance.
 
 ![Grafana1](/pics/grafana/1.png)
 
-Go to the Dashboards section in the left menu.
+Go to the Create section in the left menu and select Import.
 
 ![Grafana2](/pics/grafana/2.png)
-
-Then go to the Manage page.
-
-![Grafana3](/pics/grafana/3.png)
-
-Click on Import on the right hand side.
-
-![Grafana4](/pics/grafana/4.png)
  
 Then Insert `8588` as the Dashboard ID and click on Load.
 

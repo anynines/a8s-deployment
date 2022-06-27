@@ -1,0 +1,3 @@
+resources:
+  - ../backup-config
+  - olm-resources.yaml

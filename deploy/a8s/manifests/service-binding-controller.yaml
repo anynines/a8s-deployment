@@ -25,10 +25,14 @@ spec:
         description: ServiceBinding is the Schema for the servicebindings API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
@@ -36,13 +40,17 @@ spec:
             description: ServiceBindingSpec defines the desired state of the ServiceBinding
             properties:
               instance:
-                description: Instance identifies the Data Service Instance that the ServiceBinding binds to.
+                description: Instance identifies the Data Service Instance that the
+                  ServiceBinding binds to.
                 properties:
                   apiVersion:
-                    description: APIVersion is the <api_group>/<version> of the referenced Data Service Instance, e.g. "postgresql.anynines.com/v1alpha1" or "redis.anynines.com/v1alpha1".
+                    description: APIVersion is the <api_group>/<version> of the referenced
+                      Data Service Instance, e.g. "postgresql.anynines.com/v1alpha1"
+                      or "redis.anynines.com/v1alpha1".
                     type: string
                   kind:
-                    description: Kind is the Kubernetes API Kind of the referenced Data Service Instance.
+                    description: Kind is the Kubernetes API Kind of the referenced
+                      Data Service Instance.
                     type: string
                   name:
                     type: string
@@ -61,16 +69,23 @@ spec:
             description: ServiceBindingStatus defines the observed state of the ServiceBinding
             properties:
               error:
-                description: Error is a message explaing why the service binding could not be implemented if that's the case.
+                description: Error is a message explaining why the service binding
+                  could not be implemented if that's the case.
                 type: string
               implemented:
-                description: Implemented is `true` if and only if the service binding has been implemented by creating a user with the appropriate permissions in the bound Data Service Instance. Users can safely consume the service binding secret identified by `Secret` IF AND ONLY IF `Implemented` is true. In other words, even if the secret identified by `Secret` gets created before `Implemented` becomes true, users MUST NOT consume that secret before `Implemented` has become true.
+                description: Implemented is `true` if and only if the service binding
+                  has been implemented by creating a user with the appropriate permissions
+                  in the bound Data Service Instance. Users can safely consume the
+                  service binding secret identified by `Secret` IF AND ONLY IF `Implemented`
+                  is true. In other words, even if the secret identified by `Secret`
+                  gets created before `Implemented` becomes true, users MUST NOT consume
+                  that secret before `Implemented` has become true.
                 type: boolean
-              instanceUID:
-                description: InstanceUID is the UID of the Kubernetes API resource representing the bound Data Service Instance.
-                type: string
               secret:
-                description: Secret contains the namespace and name of the Kubernetes API secret that stores the credentials and information (e.g. URL) associated to the service binding to access the bound Data Service Instance.
+                description: Secret contains the namespace and name of the Kubernetes
+                  API secret that stores the credentials and information (e.g. URL)
+                  associated to the service binding to access the bound Data Service
+                  Instance.
                 properties:
                   name:
                     type: string
@@ -308,17 +323,17 @@ spec:
         app.kubernetes.io/part-of: a8s-service-binding
         app.kubernetes.io/component: controller-manager
       annotations:
-         prometheus.io/port: "8443"
-         prometheus.io/scrape: "true"
+        prometheus.io/port: "8443"
+        prometheus.io/scrape: "true"
     spec:
       containers:
       - args:
-        - --config=controller_manager_config.yaml
+        - --config=/config/controller_manager_config.yaml
         command:
-        - /manager
+        - a8s-service-binding-controller
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: "c4aeb71c-dd2a-4e6e-9385-1c3bb839307c.de.a9s.eu/a8s/service-binding-controller:0.2.0"
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:v0.23.0
         livenessProbe:
           httpGet:
             path: /healthz
@@ -335,22 +350,19 @@ spec:
         resources:
           limits:
             cpu: 100m
-            memory: 30Mi
-          requests:
-            cpu: 100m
-            memory: 20Mi
+            memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:
-        - mountPath: /controller_manager_config.yaml
+        - mountPath: /config/controller_manager_config.yaml
           name: manager-config
           subPath: controller_manager_config.yaml
       - args:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
-        - --v=10
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
+        - --v=7
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
