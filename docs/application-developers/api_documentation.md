@@ -2,15 +2,14 @@
 ## Packages
 
 - [postgresql.anynines.com/v1alpha1](#postgresqlanyninescomv1alpha1)
-- [backups.anynines.com/v1alpha1](#backupsanyninescomv1alpha1)
 - [servicebindings.anynines.com/v1alpha1](#servicebindingsanyninescomv1alpha1)
+- [backups.anynines.com/v1alpha1](#backupsanyninescomv1alpha1)
 
 ## postgresql.anynines.com/v1alpha1
 
 Package v1alpha1 contains API Schema definitions for the postgresql v1alpha1 API group
 
 ### Resource Types
-
 - [Postgresql](#postgresql)
 - [PostgresqlList](#postgresqllist)
 
@@ -25,6 +24,7 @@ _Appears in:_
 | `sharedBuffers` _integer_ | SharedBuffers sets the amount of memory (usually in 8KB) the database server uses for shared memory buffers. If this value is specified without units, it is taken as blocks, that is BLCKSZ bytes, typically 8kB. This setting must be at least 128 kilobytes. However, settings significantly higher than the minimum are usually needed for good performance. Updating SharedBuffers will trigger a restart of the PostgreSQL instance. |
 | `maxReplicationSlots` _integer_ | MaxReplicationSlots specifies the maximum number of replication slots that the server can support. Updating MaxReplicationSlots will trigger a restart of the PostgreSQL instance. |
 | `maxWALSenders` _integer_ | MaxWALSenders specifies the maximum number of concurrent connections from standby servers or streaming base backup clients (i.e., the maximum number of simultaneously running WAL sender processes). The value 0 means replication is disabled. Abrupt disconnection of a streaming client might leave an orphaned connection slot behind until a timeout is reached, so this parameter should be set slightly higher than the maximum number of expected clients so disconnected clients can immediately reconnect. Updating MaxWALSenders will trigger a restart of the PostgreSQL instance. |
+| `maxLocksPerTransaction` _integer_ | MaxLocksPerTransaction sets the maximum number of locks per transaction. The shared lock table tracks locks on max_locks_per_transaction * (max_connections + max_prepared_transactions) objects (e.g., tables); hence, no more than this many distinct objects can be locked at any one time. This parameter controls the average number of object locks allocated for each transaction; individual transactions can lock more objects as long as the locks of all transactions fit in the lock table. This is not the number of rows that can be locked; that value is unlimited. The default, 64, has historically proven sufficient, but you might need to raise this value if you have queries that touch many different tables in a single transaction, e.g., query of a parent table with many children. Updating MaxLocksPerTransaction will trigger a restart of the PostgreSQL instance. |
 | `statementTimeoutMillis` _integer_ | StatementTimeoutMillis is the timeout in milliseconds after which any statement that takes more than the specified number is aborted. The counter is started from the time the command arrives at the server from the client. If LogMinErrorStatement statement is set to ERROR or lower, the statement that timed out will also be logged. A value of zero (the default) turns this off. |
 | `sslCiphers` _string_ | SSLCiphers specifies the allowed SSL ciphers (https://www.postgresql.org/docs/13/runtime-config-connection.html#GUC-SSL-CIPHERS) |
 | `sslMinProtocolVersion` _string_ | SSLMinProtocolVersion sets the minimum SSL/TLS protocol version to use |
@@ -188,7 +188,6 @@ _Appears in:_
 | `implemented` _boolean_ | Implemented is `true` if and only if the service binding has been implemented by creating a user with the appropriate permissions in the bound Data Service Instance. Users can safely consume the service binding secret identified by `Secret` IF AND ONLY IF `Implemented` is true. In other words, even if the secret identified by `Secret` gets created before `Implemented` becomes true, users MUST NOT consume that secret before `Implemented` has become true. |
 | `error` _string_ | Error is a message explaining why the service binding could not be implemented if that's the case. |
 
-
 ## backups.anynines.com/v1alpha1
 
 Package v1alpha1 contains API Schema definitions for the backups v1alpha1 API group
@@ -328,7 +327,6 @@ _Appears in:_
 | `name` _string_ | Name is the name of the Kubernetes API resource that represents the Data Service Instance to backup or restore. |
 | `kind` _string_ | Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. Postgresql, Redis, etc...). |
 | `apiGroup` _string_ | APIGroup is the API group of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. postgresql.anynines.com, redis.anynines.com, etc...). |
-
 
 #### StatusCondition
 

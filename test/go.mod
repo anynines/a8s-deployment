@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/anynines/a8s-backup-manager v0.17.0
 	github.com/anynines/a8s-service-binding-controller v0.19.0
-	github.com/anynines/postgresql-operator v0.31.0
+	github.com/anynines/postgresql-operator v0.34.0
 	github.com/jackc/pgx/v4 v4.14.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0

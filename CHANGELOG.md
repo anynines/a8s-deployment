@@ -4,6 +4,20 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/). 
 
+## [Unreleased]
+
+### Added
+
+- max_locks_per_transaction PostgreSQL configuration property has been added
+
+### Fixed
+
+- **breaking change** Fix bug that caused the event for the successful deletion of
+  a DSI to be emitted multiple times and before the deletion had actually
+  completed successfully
+- **breaking change** Fix issue where only a single event was emitted for two secrets
+  of a PostgreSQL instance
+
 ## [0.1.0] - 2022-06-27
 
 ### Added

@@ -251,10 +251,10 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 					},
 				})).To(Succeed(), "failed to list events emitted for test DSI")
 
-				Expect(len(instanceEvents.Items)).To(Equal(5), "found more events than expected, "+
+				Expect(len(instanceEvents.Items)).To(Equal(6), "found more events than expected, "+
 					"there should be one for every secondary API object that the Operator "+
 					"directly creates (ServiceAccount, RoleBinding, master Service, StatefulSet, "+
-					"two Secrets that result in just one event)")
+					"two Secrets)")
 
 				// Sort events by message so that we know for which secondary API object each event
 				// is created w/o having to inspect the event first. *This is a hack that makes the
@@ -265,14 +265,10 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				})
 				masterSvcEvent := instanceEvents.Items[0]
 				roleBindingEvent := instanceEvents.Items[1]
-				// The PG operator creates two, independent secrets, but because of a bug it emits
-				// two identical events upon creation of those secrets - so said events are merged
-				// into a single one and we have only one event with a count of 2 for both secrets.
-				// TODO: As soon as the bug is fixed in the PG Operator, fix this by checking the
-				// two distinct events that are emitted, one for each secret.
-				secretsEvent := instanceEvents.Items[2]
-				svcAccountEvent := instanceEvents.Items[3]
-				ssetEvent := instanceEvents.Items[4]
+				adminSecretEvent := instanceEvents.Items[2]
+				standbySecretsEvent := instanceEvents.Items[3]
+				svcAccountEvent := instanceEvents.Items[4]
+				ssetEvent := instanceEvents.Items[5]
 
 				By("emitting an event for the creation of the master service", func() {
 					Expect(masterSvcEvent.Message).To(Equal("Successfully created master service"),
@@ -306,21 +302,42 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 							"wrong event involvedObject.apiVersion")
 				})
 
-				By("emitting an event for the creation of the secret(s)", func() {
-					Expect(secretsEvent.Message).To(Equal("Successfully created secret"),
-						"wrong event message")
-					Expect(secretsEvent.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
-					Expect(secretsEvent.Reason).To(Equal("Created"), "wrong event reason")
-					// We expect a count of 2 because the pg operator emits the same event for the
-					// two separate secrets that are created for a PG instance (which is a bug).
-					// TODO: Fix this assertion as soon as we fix the aforementioned bug in the pg
-					// operator.
-					Expect(secretsEvent.Count).To(Equal(int32(2)), "wrong event count")
-					Expect(secretsEvent.Source.Component).To(Equal("postgresql-controller"),
+				By("emitting an event for the creation of the admin secret", func() {
+					adminSecretNSN := types.NamespacedName{
+						Namespace: instance.GetNamespace(),
+						Name:      postgresql.AdminRoleSecretName(instance.GetName())}
+
+					Expect(adminSecretEvent.Message).
+						To(Equal(fmt.Sprintf("Successfully created secret %s", adminSecretNSN)),
+							"wrong event message")
+					Expect(adminSecretEvent.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
+					Expect(adminSecretEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(adminSecretEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(adminSecretEvent.Source.Component).To(Equal("postgresql-controller"),
 						"wrong event source.component")
-					Expect(secretsEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+					Expect(adminSecretEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
-					Expect(secretsEvent.InvolvedObject.APIVersion).
+					Expect(adminSecretEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1alpha1"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the standby secret", func() {
+					standbySecretNSN := types.NamespacedName{
+						Namespace: instance.GetNamespace(),
+						Name:      postgresql.StandbyRoleSecretName(instance.GetName())}
+
+					Expect(standbySecretsEvent.Message).
+						To(Equal(fmt.Sprintf("Successfully created secret %s", standbySecretNSN)),
+							"wrong event message")
+					Expect(standbySecretsEvent.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
+					Expect(standbySecretsEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(standbySecretsEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(standbySecretsEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(standbySecretsEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(standbySecretsEvent.InvolvedObject.APIVersion).
 						To(Equal("postgresql.anynines.com/v1alpha1"),
 							"wrong event involvedObject.apiVersion")
 				})
@@ -583,11 +600,7 @@ var _ = Describe("PostgreSQL Operator integration tests", func() {
 				Expect(event.Message).To(Equal("Successfully deleted Instance"),
 					"wrong event message")
 				Expect(event.Type).To(Equal(corev1.EventTypeNormal), "wrong event type")
-				// TODO: Fix this assertion as soon as the bug in the operator is fixed.
-				Expect(event.Count).NotTo(Equal(int32(1)), "this assertion succeeded only because "+
-					"of a bug (i.e. the assertion expects the bug) in the PostgreSQL Operator, "+
-					"if it now fails the bug has been fixed, so please fix the assertion "+
-					"accordingly by making it expect a value of 1 rather than something != 1")
+				Expect(event.Count).To(Equal(int32(1)), "wrong number of events")
 				Expect(event.Source.Component).To(Equal("postgresql-controller"),
 					"wrong event source.component")
 				Expect(event.InvolvedObject.Kind).To(Equal("Postgresql"),
