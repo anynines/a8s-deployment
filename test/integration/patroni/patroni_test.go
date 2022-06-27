@@ -43,9 +43,10 @@ const (
 	MaxConnections        = "max_connections"
 	// SharedBuffers is not being set or updated.
 	// https://github.com/anynines/postgresql-operator/issues/75
-	SharedBuffers       = "shared_buffers"
-	MaxReplicationSlots = "max_replication_slots"
-	MaxWALSenders       = "max_wal_senders"
+	SharedBuffers          = "shared_buffers"
+	MaxReplicationSlots    = "max_replication_slots"
+	MaxWALSenders          = "max_wal_senders"
+	MaxLocksPerTransaction = "max_locks_per_transaction"
 )
 
 var (
@@ -93,6 +94,7 @@ var _ = Describe("Patroni Integration Tests", func() {
 				defaultTempFileLimitKiloBytes = -1
 				defaultTrackIOTiming          = "off"
 				defaultWalWriterDelayMillis   = 200 // Needs ms
+				defaultMaxLocksPerTransaction = 64
 			)
 
 			By("creating a PostgreSQL instance with implicit defaults", func() {
@@ -156,6 +158,7 @@ var _ = Describe("Patroni Integration Tests", func() {
 					// {SharedBuffers, defaultSharedBuffers},
 					{MaxReplicationSlots, strconv.Itoa(defaultMaxReplicationSlots)},
 					{MaxWALSenders, strconv.Itoa(defaultMaxWALSenders)},
+					{MaxLocksPerTransaction, strconv.Itoa(defaultMaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -242,6 +245,7 @@ var _ = Describe("Patroni Integration Tests", func() {
 					// {SharedBuffers, "200MB"}, // 2024 is converted to 200MB
 					{MaxReplicationSlots, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxReplicationSlots)},
 					{MaxWALSenders, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxWALSenders)},
+					{MaxLocksPerTransaction, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -318,9 +322,9 @@ var _ = Describe("Patroni Integration Tests", func() {
 						instance.GetNamespace(), instance.GetName()))
 			})
 
-			// Parameters such as max_connections, shared_buffers, max_replication_slots
-			// and max_wal_senders will require Patroni to restart the PostgreSQL
-			// process. We need to ensure that PostgreSQL has been successfully
+			// Parameters such as max_connections, shared_buffers, max_replication_slots,
+			// max_locks_per_transaction and max_wal_senders will require Patroni to restart the
+			// PostgreSQL process. We need to ensure that PostgreSQL has been successfully
 			// restarted by Patroni before we continue with our assertions. If we are
 			// unlucky PostgreSQL can be down at the time we make our first parameter
 			// assertion. In this case the portforward will break and not recover.
@@ -379,6 +383,7 @@ var _ = Describe("Patroni Integration Tests", func() {
 					// {SharedBuffers, "200MB"}, // 2024 is converted to 200MB
 					{MaxReplicationSlots, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxReplicationSlots)},
 					{MaxWALSenders, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxWALSenders)},
+					{MaxLocksPerTransaction, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -428,6 +433,7 @@ var _ = Describe("Patroni Integration Tests", func() {
 
 func setCustomPostgresConfig(pg *v1alpha1.Postgresql) {
 	pg.Spec.PostgresConfiguration.MaxConnections = 101
+	pg.Spec.PostgresConfiguration.MaxLocksPerTransaction = 120
 	// SharedBuffers is not being set or updated.
 	// https://github.com/anynines/postgresql-operator/issues/75
 	pg.Spec.PostgresConfiguration.SharedBuffers = 200
