@@ -1,0 +1,42 @@
+apiVersion: postgresql.anynines.com/v1alpha1
+kind: Postgresql
+metadata:
+  name: ha-2-sample-pg-cluster
+spec:
+  replicas: 5
+  version: 14
+  resources:
+    requests:
+      cpu: 100m
+    limits:
+      memory: 100Mi
+  schedulingConstraints:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+            labelSelector:
+                matchExpressions:
+                - key: a8s.a9s/dsi-name
+                  operator: In
+                  values: 
+                  - ha-2-sample-pg-cluster
+                - key: a8s.a9s/dsi-kind
+                  operator: In
+                  values: 
+                  - Postgresql
+            topologyKey: kubernetes.io/hostname
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 10
+            podAffinityTerm:
+              labelSelector:
+                  matchExpressions:
+                  - key: a8s.a9s/dsi-name
+                    operator: In
+                    values: 
+                    - ha-2-sample-pg-cluster
+                  - key: a8s.a9s/dsi-kind
+                    operator: In
+                    values: 
+                    - Postgresql
+              topologyKey: topology.kubernetes.io/zone
