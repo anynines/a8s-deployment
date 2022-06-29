@@ -2,7 +2,9 @@
 
 This file contains documentation specifically meant for application developers.
 It's an overview of how you (an application developer) can use a8s to provision
-a PostgreSQL instance, bind an application to it and use it.
+a PostgreSQL instance, bind an application to it and use it. This guide only
+covers a basic usage scenario, for advanced usage examples see the [advanced
+configuration document](/docs/application-developers/advanced_configuration.md).
 
 The following subsections assume, besides the [Technical Requirements](/docs/technical_requirements.md),
 that you or a platform operator have installed a8s on the Kubernetes cluster following the
