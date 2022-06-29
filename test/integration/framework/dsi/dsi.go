@@ -8,6 +8,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,6 +30,14 @@ type Object interface {
 	ClusterStatus() string
 	runtimeClient.Object
 	GetClientObject() runtimeClient.Object
+}
+
+type TolerationsSetter interface {
+	SetTolerations(...corev1.Toleration)
+}
+
+type StatefulSetGetter interface {
+	StatefulSet(context.Context, runtimeClient.Client) (*appsv1.StatefulSet, error)
 }
 
 // This package does not use functional options like others in the framework since we need to
@@ -62,6 +71,9 @@ func newEmpty(ds string) (Object, error) {
 func supportedDataServices() string {
 	return "PostgreSQL"
 }
+
+// TODO: rather than having all these functions here, consider switching to an OOP approach where
+// each instance object exposes these functions for itself as methods.
 
 func WaitForReadiness(ctx context.Context, instance runtimeClient.Object, c runtimeClient.Client) {
 	var err error
