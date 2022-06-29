@@ -128,6 +128,25 @@ spec:
                       will trigger a restart of the PostgreSQL instance.
                     maximum: 262143
                     type: integer
+                  maxLocksPerTransaction:
+                    default: 64
+                    description: MaxLocksPerTransaction sets the maximum number of
+                      locks per transaction. The shared lock table tracks locks on
+                      max_locks_per_transaction * (max_connections + max_prepared_transactions)
+                      objects (e.g., tables); hence, no more than this many distinct
+                      objects can be locked at any one time. This parameter controls
+                      the average number of object locks allocated for each transaction;
+                      individual transactions can lock more objects as long as the
+                      locks of all transactions fit in the lock table. This is not
+                      the number of rows that can be locked; that value is unlimited.
+                      The default, 64, has historically proven sufficient, but you
+                      might need to raise this value if you have queries that touch
+                      many different tables in a single transaction, e.g., query of
+                      a parent table with many children. Updating MaxLocksPerTransaction
+                      will trigger a restart of the PostgreSQL instance.
+                    maximum: 2147483647
+                    minimum: 10
+                    type: integer
                   maxReplicationSlots:
                     default: 10
                     description: MaxReplicationSlots specifies the maximum number
@@ -1580,7 +1599,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.31.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.34.0
         livenessProbe:
           httpGet:
             path: /healthz
