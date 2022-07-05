@@ -14,6 +14,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/integration/framework"
 	"github.com/anynines/a8s-deployment/test/integration/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/integration/framework/namespace"
+	"github.com/anynines/a8s-deployment/test/integration/framework/node"
 )
 
 var (
@@ -22,7 +23,7 @@ var (
 	testingNamespace, kubeconfigPath, dataservice, instanceNamePrefix string
 
 	k8sClient runtimeClient.Client
-	tainter   nodesTainter
+	nodes     NodesTainter
 )
 
 func TestTopologyAwareness(t *testing.T) {
@@ -56,7 +57,10 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(BeNil(),
 		fmt.Sprintf("failed to create client for nodes tainter from config %v", c))
 
-	tainter = newNodesTainter(cv1Client.Nodes())
+	nodes = node.Client{
+		Nodes:            cv1Client.Nodes(),
+		MasterNodeTaints: node.MasterTaintKeys,
+	}
 })
 
 var _ = AfterSuite(func() {
