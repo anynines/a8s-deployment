@@ -18,6 +18,10 @@ const (
 	DbAdminUsernameKey = "username"
 	DbAdminPasswordKey = "password"
 	DatabaseKey        = "database"
+
+	// TODO: Make configurable at runtime when the need arises for tests with TLS. Warning:
+	// enabling SSLMODE breaks port forwarding.
+	sslmode = "disable"
 )
 
 func NewClient(credentials map[string]string, port string) Client {
@@ -199,5 +203,22 @@ func dbURL(credentials map[string]string, port string) string {
 	user := credentials[DbAdminUsernameKey]
 	password := credentials[DbAdminPasswordKey]
 	database := credentials[DatabaseKey]
-	return protocol + "://" + user + ":" + password + "@" + hostname + ":" + port + "/" + database
+	// In recent versions of client-go the functionality of port forwards was "fixed" to
+	// close connections and stop listening when port forwarding errors occur so that kubectl
+	// can exit. https://github.com/kubernetes/kubernetes/pull/103526
+	// Unfortunately for us the port forward would close when opening up a
+	// connection to PostgreSQL with SSLMODE enabled. This is likely due to PostgreSQL server
+	// sending a RST packet because it shutdown a subprocess that handles the connection without
+	// reading the SSL Shutdown packet sent from the client. The "fix" for the client-go
+	// and this PostgreSQL behaviour when SSLMODE is enabled causes the port forward to be
+	// closed when an RST packet is read from server side in the connection established via the
+	// port forward. https://github.com/kubernetes/kubectl/issues/1169#issuecomment-1165140134
+	// So for now we disable SSLMODE for our PostgreSQL client which fixes the port forward
+	// closing.
+	//
+	// TODO: We may want to perform tests involving SSL in future. Find alternative approach so
+	// that we can have SSLMODE enabled and reliable port forwards.
+	return strings.Join([]string{
+		protocol, "://", user, ":", password, "@", hostname, ":", port, "/", database, "?", "sslmode=", sslmode},
+	"")
 }
