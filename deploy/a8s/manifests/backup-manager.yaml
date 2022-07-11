@@ -399,6 +399,12 @@ rules:
   verbs:
   - create
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: a8s-backup-manager-account
+  namespace: a8s-system
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -410,7 +416,7 @@ roleRef:
   name: a8s-backup-leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: a8s-backup-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -423,7 +429,7 @@ roleRef:
   name: a8s-backup-manager-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: a8s-backup-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -436,7 +442,7 @@ roleRef:
   name: a8s-backup-proxy-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: a8s-backup-manager-account
   namespace: a8s-system
 ---
 apiVersion: v1
@@ -503,6 +509,7 @@ spec:
          prometheus.io/port: "8443"
          prometheus.io/scrape: "true"
     spec:
+      serviceAccountName: a8s-backup-manager-account
       containers:
       - args:
         - --secure-listen-address=0.0.0.0:8443
