@@ -30,6 +30,8 @@ const (
 	appsDefaultDB = "a9s_apps_default_db"
 
 	instancePort = 5432
+
+	taintingTimeout = 15 * time.Second
 )
 
 var _ = Describe("DSI tolerations to K8s nodes taints", func() {
@@ -58,7 +60,8 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 		AfterEach(func() {
 			close(portForwardStopCh)
 
-			Expect(nodes.UntaintAll(ctx, taints)).To(Succeed(), "failed to untaint nodes")
+			Eventually(func() error { return nodes.UntaintAll(ctx, taints) }, taintingTimeout).
+				Should(Succeed(), "failed to untaint nodes")
 
 			Expect(k8sClient.Delete(ctx, sb)).To(Succeed(),
 				"failed to delete DSI "+instanceNSN+"'s ServiceBinding")
@@ -85,7 +88,8 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 					},
 				}
 
-				Expect(nodes.TaintAll(ctx, taints)).To(Succeed(), "failed to taint nodes")
+				Eventually(func() error { return nodes.TaintAll(ctx, taints) }, taintingTimeout).
+					Should(Succeed(), "failed to taint nodes")
 			})
 
 			It("Implements a 1-replica DSI that tolerates the node taint", func() {
@@ -275,7 +279,8 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 					},
 				}
 
-				Expect(nodes.TaintAll(ctx, taints)).To(Succeed(), "failed to taint nodes")
+				Eventually(func() error { return nodes.TaintAll(ctx, taints) }, taintingTimeout).
+					Should(Succeed(), "failed to taint nodes")
 			})
 
 			It("Implements a 1-replica DSI that tolerates the node taints", func() {
