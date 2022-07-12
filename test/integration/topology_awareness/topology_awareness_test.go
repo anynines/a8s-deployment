@@ -58,7 +58,7 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 		AfterEach(func() {
 			close(portForwardStopCh)
 
-			Expect(tainter.untaintAllNodes(ctx, taints)).To(Succeed(), "failed to untaint nodes")
+			Expect(nodes.UntaintAll(ctx, taints)).To(Succeed(), "failed to untaint nodes")
 
 			Expect(k8sClient.Delete(ctx, sb)).To(Succeed(),
 				"failed to delete DSI "+instanceNSN+"'s ServiceBinding")
@@ -85,7 +85,7 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 					},
 				}
 
-				Expect(tainter.taintAllNodes(ctx, taints)).To(Succeed(), "failed to taint nodes")
+				Expect(nodes.TaintAll(ctx, taints)).To(Succeed(), "failed to taint nodes")
 			})
 
 			It("Implements a 1-replica DSI that tolerates the node taint", func() {
@@ -275,7 +275,7 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 					},
 				}
 
-				Expect(tainter.taintAllNodes(ctx, taints)).To(Succeed(), "failed to taint nodes")
+				Expect(nodes.TaintAll(ctx, taints)).To(Succeed(), "failed to taint nodes")
 			})
 
 			It("Implements a 1-replica DSI that tolerates the node taints", func() {
