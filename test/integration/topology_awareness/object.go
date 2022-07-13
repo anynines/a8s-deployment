@@ -9,6 +9,7 @@ import (
 type Object interface {
 	dsi.Object
 	dsi.StatefulSetGetter
+	dsi.PodsGetter
 	dsi.TolerationsSetter
 }
 
