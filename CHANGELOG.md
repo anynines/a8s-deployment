@@ -2,7 +2,7 @@
 
 All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
-Changelog](https://keepachangelog.com/en/1.0.0/). 
+Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
@@ -10,6 +10,10 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - max_locks_per_transaction PostgreSQL configuration property has been added
 - end-to-end tests on PostgreSQL tolerations to node taints.
+
+### Updated
+
+- Due to some internal code clean-up some error messages have changed in the logs
 
 ### Fixed
 

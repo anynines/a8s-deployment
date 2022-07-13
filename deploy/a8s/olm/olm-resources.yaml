@@ -29,7 +29,29 @@ metadata:
   name: a8s-postgresql
   namespace: a8s-system
 spec:
-  channel: stable
+  channel: develop
   name: postgresql-operator
+  sourceNamespace: a8s-system
+  source: a8s-catalog
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: a8s-backup-and-restore
+  namespace: a8s-system
+spec:
+  channel: develop
+  name: a8s-backup-and-restore
+  sourceNamespace: a8s-system
+  source: a8s-catalog
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: a8s-service-binding-controller
+  namespace: a8s-system
+spec:
+  channel: develop
+  name: a8s-service-binding-controller
   sourceNamespace: a8s-system
   source: a8s-catalog
