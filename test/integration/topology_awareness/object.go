@@ -11,6 +11,7 @@ type Object interface {
 	dsi.StatefulSetGetter
 	dsi.PodsGetter
 	dsi.TolerationsSetter
+	dsi.WithPodAntiAffinity
 }
 
 func newDSI(ds, namespace, name string, replicas int32) (Object, error) {

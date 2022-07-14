@@ -7,7 +7,9 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/errors"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -26,16 +28,88 @@ type Client struct {
 	MasterNodeTaints map[string]struct{}
 }
 
-func (c Client) TaintAll(ctx context.Context, t []v1.Taint) error {
-	nodes, err := c.Nodes.List(ctx, metav1.ListOptions{})
+func NewClientFromKubecfg(kubecfg string) (Client, error) {
+	cfg, err := clientcmd.BuildConfigFromFlags("", kubecfg)
 	if err != nil {
-		return fmt.Errorf("failed to list all K8s nodes to taint: %w", err)
+		return Client{}, fmt.Errorf("failed to create client config for K8s nodes client from "+
+			"kubeconig %s: %w", kubecfg, err)
 	}
 
-	for _, n := range nodes.Items {
+	cv1Client, err := corev1client.NewForConfig(cfg)
+	if err != nil {
+		return Client{},
+			fmt.Errorf("failed to create client for K8s cluster nodes from config %v: %w", cfg, err)
+	}
+
+	return Client{
+		Nodes:            cv1Client.Nodes(),
+		MasterNodeTaints: MasterTaintKeys,
+	}, nil
+}
+
+func (c Client) GetLabels(ctx context.Context, nodeName string) (map[string]string, error) {
+	node, err := c.Nodes.Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get labels for node %s: failed to get node: %w",
+			nodeName, err)
+	}
+
+	if node == nil {
+		return nil, nil
+	}
+
+	return node.Labels, nil
+}
+
+// ListAll returns a slice with all the nodes in the K8s cluster.
+// ListAll returns an empty slice and an error if a failure occurs.
+func (c Client) ListAll(ctx context.Context) ([]v1.Node, error) {
+	nodes, err := c.Nodes.List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list K8s cluster nodes: %w", err)
+	}
+	return nodes.Items, nil
+}
+
+// ListWorkers returns a slice with all the worker nodes in the K8s cluster.
+// Worker nodes are nodes that DO NOT have the taints with the keys contained in
+// `c.MasterNodeTaints`.
+// ListWorkers returns an empty slice and an error if a failure occurs.
+func (c Client) ListWorkers(ctx context.Context) ([]v1.Node, error) {
+	allNodes, err := c.ListAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	workerNodes := make([]v1.Node, 0, len(allNodes))
+	for _, n := range allNodes {
+		if !c.hasMasterNodeTaints(n.Spec.Taints) {
+			workerNodes = append(workerNodes, n)
+		}
+	}
+
+	return workerNodes, nil
+}
+
+// TaintWorkers adds the taints `t` to all the worker nodes in the K8s cluster.
+// Worker nodes are nodes that DO NOT have the taints with the keys contained in
+// `c.MasterNodeTaints`.
+// TaintWorkers is idempotent:
+//   - if a worker already has a subset of the taints in `t`, only the missing ones are added.
+//   - if a worker already has all the taints in `t`, it's left unchanged.
+// If a worker has one (or more) taint(s) with the same key as one of the taints in `t` but
+// different value or effect, TaintWorkers panics.
+// TaintWorkers returns an error if a failure occurs.
+func (c Client) TaintWorkers(ctx context.Context, t []v1.Taint) error {
+	workers, err := c.ListWorkers(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to taint K8s worker nodes: %w", err)
+	}
+
+	for _, w := range workers {
 		// TODO: consider moving on to taint other nodes when an error occurs here (while keeping
 		// the error).
-		if err := c.taint(ctx, n, t); err != nil {
+		if err := c.taint(ctx, w, t); err != nil {
 			return err
 		}
 	}
@@ -43,13 +117,20 @@ func (c Client) TaintAll(ctx context.Context, t []v1.Taint) error {
 	return nil
 }
 
+// UntaintAll removes the taints `t` from all the nodes (worker and master ones) in the K8s cluster.
+// UntaintAll is idempotent:
+//   - if a node has only a subset of the taints in `t`, only that subset is removed.
+//   - if a node doesn't have any of the taints in `t`, it's left unchanged.
+// If a node has one (or more) taint(s) with the same key as one of the taints in `t` but different
+// value or effect, UntaintAll panics.
+// UntaintAll returns an error if a failure occurs.
 func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
-	nodes, err := c.Nodes.List(ctx, metav1.ListOptions{})
+	nodes, err := c.ListAll(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to list all K8s nodes to untaint: %w", err)
+		return fmt.Errorf("failed to untaint K8s nodes: %w", err)
 	}
 
-	for _, n := range nodes.Items {
+	for _, n := range nodes {
 		// TODO: consider moving on to untaint other nodes when an error occurs here (while keeping
 		// the error).
 		if err := c.untaint(ctx, n, t); err != nil {
@@ -60,20 +141,45 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 	return nil
 }
 
-func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
-	if c.hasMasterNodeTaints(n.Spec.Taints) {
-		// TODO: stop relying on std logging library, and fix logging all over the code that
-		// supports tests (either use what Ginkgo recommends or what we use in controllers).
-		log.Printf("Warning: Did not taint node %s as it has a well known master taint", n.Name)
-		return nil
+// UnlabelAll removes the labels with the keys in `labelsKeys` from all the nodes (worker and master
+// ones) in the K8s cluster, regardless of the labels values.
+// UnlabelAll is idempotent:
+//   - if a node has only a subset of the labels in `labelsKeys`, only that subset is removed.
+//   - if a node doesn't have any of the labels in `labelsKeys`, it's left unchanged.
+// UnlabelAll returns an error if a failure occurs.
+func (c Client) UnlabelAll(ctx context.Context, labelsKeys []string) error {
+	nodes, err := c.ListAll(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to unlabel K8s nodes: %w", err)
 	}
 
+	// Here we don't fail fast. Rather than returning an error on the first failure, we try to
+	// unlabel as many nodes as possible, i.e., even if unlabeling a node fails we try to unlabel
+	// the remaining nodes. This is done because users of this library are e2e and integration tests
+	// that require unlabeling to succeed, and will retry it if it fails, so it's actually faster
+	// to always try to unlabel as many nodes as possible. This is safe because unlabeling is
+	// idempotent.
+	var errs []error
+	for _, n := range nodes {
+		if err := c.unlabel(ctx, n, labelsKeys); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("unlabeling all or some nodes failed: %v", errors.NewAggregate(errs))
+	}
+
+	return nil
+}
+
+func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 	if len(n.Spec.Taints) > 0 {
 		log.Printf("Warning: Node %s already is tainted with taints %v. This might break the "+
 			"tolerations tests", n.Name, n.Spec.Taints)
 	}
 
-	newTaints := union(n.Spec.Taints, t)
+	newTaints := taintsUnion(n.Spec.Taints, t)
 	if len(newTaints) == len(n.Spec.Taints) {
 		return nil
 	}
@@ -87,7 +193,7 @@ func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 }
 
 func (c Client) untaint(ctx context.Context, n v1.Node, t []v1.Taint) error {
-	newTaints := diff(n.Spec.Taints, t)
+	newTaints := taintsDiff(n.Spec.Taints, t)
 	if len(newTaints) == len(n.Spec.Taints) {
 		return nil
 	}
@@ -100,7 +206,42 @@ func (c Client) untaint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 	return nil
 }
 
-func union(x, y []v1.Taint) []v1.Taint {
+func (c Client) Label(ctx context.Context, n v1.Node, labels map[string]string) error {
+	newLabels := labelsUnion(n.Labels, labels)
+	if len(newLabels) == len(n.Labels) {
+		return nil
+	}
+
+	n.Labels = newLabels
+	if _, err := c.Nodes.Update(ctx, &n, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("update of node %s to add labels %v failed: %w", n.Name, labels, err)
+	}
+
+	return nil
+}
+
+func (c Client) unlabel(ctx context.Context, n v1.Node, labelsKeysToRemove []string) error {
+	labelsChanged := false
+	for _, key := range labelsKeysToRemove {
+		if _, found := n.Labels[key]; found {
+			delete(n.Labels, key)
+			labelsChanged = true
+		}
+	}
+
+	if !labelsChanged {
+		return nil
+	}
+
+	if _, err := c.Nodes.Update(ctx, &n, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("update of node %s to remove labels with keys %v failed: %w",
+			n.Name, labelsKeysToRemove, err)
+	}
+
+	return nil
+}
+
+func taintsUnion(x, y []v1.Taint) []v1.Taint {
 	taintKeyToTaint := make(map[string]v1.Taint, len(x)+len(y))
 
 	for _, t := range x {
@@ -126,7 +267,7 @@ func union(x, y []v1.Taint) []v1.Taint {
 	return union
 }
 
-func diff(x, y []v1.Taint) []v1.Taint {
+func taintsDiff(x, y []v1.Taint) []v1.Taint {
 	taintKeyToTaint := make(map[string]v1.Taint, len(x))
 
 	for _, t := range x {
@@ -150,6 +291,20 @@ func diff(x, y []v1.Taint) []v1.Taint {
 		diff = append(diff, t)
 	}
 	return diff
+}
+
+func labelsUnion(x, y map[string]string) map[string]string {
+	union := make(map[string]string, len(x)+len(y))
+
+	for key, val := range x {
+		union[key] = val
+	}
+
+	for key, val := range y {
+		union[key] = val
+	}
+
+	return union
 }
 
 func (c Client) hasMasterNodeTaints(taints []v1.Taint) bool {
