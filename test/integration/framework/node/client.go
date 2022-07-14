@@ -7,6 +7,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/errors"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
@@ -60,6 +61,58 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 	return nil
 }
 
+func (c Client) LabelAll(ctx context.Context, labels map[string]string) error {
+	nodes, err := c.Nodes.List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list all K8s nodes to label: %w", err)
+	}
+
+	// Here we don't fail fast. Rather than returning an error on the first failure, we try to
+	// label as many nodes as possible, i.e., even if labeling a node fails we try to label
+	// the remaining nodes. This is done because users of this library are e2e and integration tests
+	// that require labeling to succeed, and will retry it if it fails, so it's actually faster
+	// to always try to label as many nodes as possible. This is safe because labeling is
+	// idempotent.
+	var errs []error
+	for _, n := range nodes.Items {
+		if err := c.label(ctx, n, labels); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("labeling all or some nodes failed: %v", errors.NewAggregate(errs))
+	}
+
+	return nil
+}
+
+func (c Client) UnlabelAll(ctx context.Context, labels map[string]string) error {
+	nodes, err := c.Nodes.List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list all K8s nodes to unlabel: %w", err)
+	}
+
+	// Here we don't fail fast. Rather than returning an error on the first failure, we try to
+	// unlabel as many nodes as possible, i.e., even if unlabeling a node fails we try to unlabel
+	// the remaining nodes. This is done because users of this library are e2e and integration tests
+	// that require unlabeling to succeed, and will retry it if it fails, so it's actually faster
+	// to always try to unlabel as many nodes as possible. This is safe because unlabeling is
+	// idempotent.
+	var errs []error
+	for _, n := range nodes.Items {
+		if err := c.unlabel(ctx, n, labels); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("unlabeling all or some nodes failed: %v", errors.NewAggregate(errs))
+	}
+
+	return nil
+}
+
 func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 	if c.hasMasterNodeTaints(n.Spec.Taints) {
 		// TODO: stop relying on std logging library, and fix logging all over the code that
@@ -73,7 +126,7 @@ func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 			"tolerations tests", n.Name, n.Spec.Taints)
 	}
 
-	newTaints := union(n.Spec.Taints, t)
+	newTaints := taintsUnion(n.Spec.Taints, t)
 	if len(newTaints) == len(n.Spec.Taints) {
 		return nil
 	}
@@ -87,7 +140,7 @@ func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 }
 
 func (c Client) untaint(ctx context.Context, n v1.Node, t []v1.Taint) error {
-	newTaints := diff(n.Spec.Taints, t)
+	newTaints := taintsDiff(n.Spec.Taints, t)
 	if len(newTaints) == len(n.Spec.Taints) {
 		return nil
 	}
@@ -100,7 +153,42 @@ func (c Client) untaint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 	return nil
 }
 
-func union(x, y []v1.Taint) []v1.Taint {
+func (c Client) label(ctx context.Context, n v1.Node, labels map[string]string) error {
+	if c.hasMasterNodeTaints(n.Spec.Taints) {
+		// TODO: stop relying on std logging library, and fix logging all over the code that
+		// supports tests (either use what Ginkgo recommends or what we use in controllers).
+		log.Printf("Warning: did not label node %s as it has a well known master taint", n.Name)
+		return nil
+	}
+
+	newLabels := labelsUnion(n.Labels, labels)
+	if len(newLabels) == len(n.Labels) {
+		return nil
+	}
+
+	n.Labels = newLabels
+	if _, err := c.Nodes.Update(ctx, &n, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("update of node %s to add labels %v failed: %w", n.Name, labels, err)
+	}
+
+	return nil
+}
+
+func (c Client) unlabel(ctx context.Context, n v1.Node, labels map[string]string) error {
+	newLabels := labelsDiff(n.Labels, labels)
+	if len(newLabels) == len(n.Labels) {
+		return nil
+	}
+
+	n.Labels = newLabels
+	if _, err := c.Nodes.Update(ctx, &n, metav1.UpdateOptions{}); err != nil {
+		return fmt.Errorf("update of node %s to remove labels %v failed: %w", n.Name, labels, err)
+	}
+
+	return nil
+}
+
+func taintsUnion(x, y []v1.Taint) []v1.Taint {
 	taintKeyToTaint := make(map[string]v1.Taint, len(x)+len(y))
 
 	for _, t := range x {
@@ -126,7 +214,7 @@ func union(x, y []v1.Taint) []v1.Taint {
 	return union
 }
 
-func diff(x, y []v1.Taint) []v1.Taint {
+func taintsDiff(x, y []v1.Taint) []v1.Taint {
 	taintKeyToTaint := make(map[string]v1.Taint, len(x))
 
 	for _, t := range x {
@@ -149,6 +237,42 @@ func diff(x, y []v1.Taint) []v1.Taint {
 	for _, t := range taintKeyToTaint {
 		diff = append(diff, t)
 	}
+	return diff
+}
+
+func labelsUnion(x, y map[string]string) map[string]string {
+	union := make(map[string]string, len(x)+len(y))
+
+	for key, val := range x {
+		union[key] = val
+	}
+
+	for key, val := range y {
+		if oldVal, keyAlreadyPresent := union[key]; keyAlreadyPresent && oldVal != val {
+			panic(fmt.Sprintf("can't label node: found a8s test label with key %s and value %s, "+
+				"value for that key must be equal to %s", key, oldVal, val))
+		}
+		union[key] = val
+	}
+
+	return union
+}
+
+func labelsDiff(x, y map[string]string) map[string]string {
+	diff := make(map[string]string)
+
+	for key, xVal := range x {
+		yVal, foundKey := y[key]
+		if !foundKey {
+			diff[key] = xVal
+			continue
+		}
+		if xVal != yVal {
+			panic(fmt.Sprintf("can't unlabel node: found a8s test label with key %s and value %s, "+
+				"value for that key must be equal to %s", key, xVal, yVal))
+		}
+	}
+
 	return diff
 }
 
