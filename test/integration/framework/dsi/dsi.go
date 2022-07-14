@@ -40,6 +40,10 @@ type StatefulSetGetter interface {
 	StatefulSet(context.Context, runtimeClient.Client) (*appsv1.StatefulSet, error)
 }
 
+type PodsGetter interface {
+	Pods(context.Context, runtimeClient.Client) ([]corev1.Pod, error)
+}
+
 // This package does not use functional options like others in the framework since we need to
 // access the properties of structs. We would need to implement methods to expose these properties
 // which would negate some of the value of functional options.

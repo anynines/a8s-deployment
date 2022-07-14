@@ -8,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
@@ -48,6 +49,37 @@ func (pg Postgresql) StatefulSet(ctx context.Context,
 	}
 
 	return ss, nil
+}
+
+// Pods uses `k8sClient` to retrieve all the pods that belong to `pg`. The retrieval is based
+// entirely on metadata labels, and doesn't check whether the pods actually belong to `pg` or to an
+// older DSI with same namespace, name and kind.
+// TODO: Improve robustness by checking that the pods actually belong to DSI.
+func (pg Postgresql) Pods(ctx context.Context,
+	k8sClient runtimeClient.Client) ([]corev1.Pod, error) {
+
+	podsLabels := labels.Set{
+		pgv1alpha1.DSINameLabelKey:  pg.Name,
+		pgv1alpha1.DSIGroupLabelKey: "postgresql.anynines.com",
+		pgv1alpha1.DSIKindLabelKey:  "Postgresql",
+	}
+	podsSelector, err := podsLabels.AsValidatedSelector()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate label selector for pods of %#+v: %w",
+			pg.Postgresql, err)
+	}
+
+	listOpts := &runtimeClient.ListOptions{
+		LabelSelector: podsSelector,
+		Namespace:     pg.Namespace,
+	}
+
+	pods := &corev1.PodList{}
+	if err := k8sClient.List(ctx, pods, listOpts); err != nil {
+		return nil, fmt.Errorf("failed to list pods for %#+v: %w", pg.Postgresql, err)
+	}
+
+	return pods.Items, nil
 }
 
 func (pg Postgresql) SetTolerations(ts ...corev1.Toleration) {
