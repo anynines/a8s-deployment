@@ -88,8 +88,9 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 					},
 				}
 
-				Eventually(func() error { return nodes.TaintAll(ctx, taints) }, taintingTimeout).
-					Should(Succeed(), "failed to taint nodes")
+				Eventually(func() error {
+					return nodes.TaintWorkers(ctx, taints)
+				}, taintingTimeout).Should(Succeed())
 			})
 
 			It("Implements a 1-replica DSI that tolerates the node taint", func() {
@@ -279,8 +280,9 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 					},
 				}
 
-				Eventually(func() error { return nodes.TaintAll(ctx, taints) }, taintingTimeout).
-					Should(Succeed(), "failed to taint nodes")
+				Eventually(func() error {
+					return nodes.TaintWorkers(ctx, taints)
+				}, taintingTimeout).Should(Succeed())
 			})
 
 			It("Implements a 1-replica DSI that tolerates the node taints", func() {

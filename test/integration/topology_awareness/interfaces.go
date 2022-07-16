@@ -7,16 +7,22 @@ import (
 )
 
 type NodesClient interface {
+	NodesLister
 	NodesTainter
 	NodesLabeler
 }
 
+type NodesLister interface {
+	ListAll(context.Context) ([]corev1.Node, error)
+	ListWorkers(context.Context) ([]corev1.Node, error)
+}
+
 type NodesTainter interface {
-	TaintAll(context.Context, []corev1.Taint) error
+	TaintWorkers(context.Context, []corev1.Taint) error
 	UntaintAll(context.Context, []corev1.Taint) error
 }
 
 type NodesLabeler interface {
-	LabelAll(context.Context, map[string]string) error
+	LabelWorkers(context.Context, map[string]string) error
 	UnlabelAll(context.Context, map[string]string) error
 }

@@ -29,7 +29,283 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestLabelAllHappyPaths(t *testing.T) {
+func TestListAllHappyPaths(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		nodes []v1.Node
+	}{
+		"0_nodes_returned_when_there_are_0_nodes": {nodes: []v1.Node{}},
+
+		"1_node_is_returned_when_there_is_1_node": {nodes: []v1.Node{newNode(withName("n1"))}},
+
+		"3_nodes_are_returned_when_there_are_3_nodes": {nodes: []v1.Node{
+			newNode(withName("n1")),
+			newNode(withName("n2")),
+			newNode(withName("n3")),
+		}},
+
+		"nodes_with_master_taint_are_returned_together_with_worker_nodes": {nodes: []v1.Node{
+			newNode(withName("worker-node")),
+			newNode(
+				withName("master-node"),
+				withTaints([]v1.Taint{
+					{Key: "node-role.kubernetes.io/master", Effect: "NoSchedule"},
+				}),
+			),
+		}},
+
+		"nodes_with_control_plane_taint_are_returned_together_with_worker_nodes": {nodes: []v1.Node{
+			newNode(withName("worker-node")),
+			newNode(
+				withName("control-plane-node"),
+				withTaints([]v1.Taint{
+					{Key: "node-role.kubernetes.io/control-plane", Effect: "NoSchedule"},
+				}),
+			),
+		}},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Rebind tc into this lexical scope. Details on the why at
+			// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+			tc := tc
+
+			t.Parallel()
+
+			// Set up fake K8s client pre-populated with the nodes that exist in the test case.
+			k8sAPINodesClient := fake.
+				NewSimpleClientset(&v1.NodeList{Items: tc.nodes}).
+				CoreV1().
+				Nodes()
+
+			// Set up object under test with the fake K8s client.
+			nodes := node.Client{
+				Nodes:            k8sAPINodesClient,
+				MasterNodeTaints: node.MasterTaintKeys,
+			}
+
+			// Invoke the method under test.
+			gotNodes, err := nodes.ListAll(context.Background())
+
+			if err != nil {
+				t.Fatalf("Expected no error when invoking ListAll, got error: \"%v\"", err)
+			}
+
+			// Compare the expected nodes with the got ones to assess the test outcome.
+			if !equality.Semantic.DeepEqual(tc.nodes, gotNodes) {
+				t.Fatalf("Expected nodes don't match got ones\n\n\texpected: %#+v\n\n\tgot:"+
+					" %#+v\n\n", tc.nodes, gotNodes)
+			}
+		})
+	}
+}
+
+func TestListAllFails(t *testing.T) {
+	t.Parallel()
+
+	// Define a fake K8s client that is pre-populated with a test node.
+	testNode := newNode(withName("n1"))
+	k8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{testNode}})
+
+	// "Sabotage" the fake K8s client by adding to it a function that intercepts LIST API calls
+	// and makes them fail returning an error.
+	testErr := errors.New("dummy error")
+	listSabotager := func(k8stest.Action) (bool, runtime.Object, error) {
+		return true, nil, testErr
+	}
+	k8sClient.PrependReactor("list", "nodes", listSabotager)
+
+	// Set up the object under test with the sabotaged client that will make K8s LIST calls fail.
+	nodes := node.Client{
+		Nodes:            k8sClient.CoreV1().Nodes(),
+		MasterNodeTaints: node.MasterTaintKeys,
+	}
+
+	// Invoke the method under test
+	gotNodes, gotErr := nodes.ListAll(context.Background())
+
+	if gotErr == nil {
+		t.Fatal("got nil error, expected non-nil error")
+	}
+
+	if !strings.Contains(strings.ToLower(gotErr.Error()), "list") {
+		t.Fatalf("got error \"%v\" should contain the word \"list\" (in any case) but it doesn't",
+			gotErr)
+	}
+
+	if !strings.Contains(gotErr.Error(), testErr.Error()) {
+		t.Fatalf("got error \"%v\" should contain the error message \"%v\" returned by the "+
+			"K8s API but it doesn't", gotErr, testErr)
+	}
+
+	if len(gotNodes) != 0 {
+		t.Fatalf("no node should be returned on error, but got non-empty nodes list %#+v", gotNodes)
+	}
+}
+
+func TestListWorkersHappyPaths(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		inputNodes    []v1.Node
+		expectedNodes []v1.Node
+	}{
+		"0_workers_returned_when_there_are_0_nodes": {
+			inputNodes:    []v1.Node{},
+			expectedNodes: []v1.Node{},
+		},
+
+		"1_worker_is_returned_when_there_is_1_worker": {
+			inputNodes:    []v1.Node{newNode(withName("worker-1"))},
+			expectedNodes: []v1.Node{newNode(withName("worker-1"))},
+		},
+
+		"3_workers_are_returned_when_there_are_3_workers": {
+			inputNodes: []v1.Node{
+				newNode(withName("worker-1")),
+				newNode(withName("worker-2")),
+				newNode(withName("worker-3")),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("worker-1")),
+				newNode(withName("worker-2")),
+				newNode(withName("worker-3")),
+			},
+		},
+
+		"only_workers_are_returned_when_there_are_nodes_with_master_taint": {
+			inputNodes: []v1.Node{
+				newNode(withName("worker-node")),
+				newNode(
+					withName("master-node"),
+					withTaints([]v1.Taint{
+						{Key: "node-role.kubernetes.io/master", Effect: "NoSchedule"},
+					}),
+				),
+			},
+			expectedNodes: []v1.Node{newNode(withName("worker-node"))},
+		},
+
+		"only_workers_are_returned_when_there_are_nodes_with_control_plane_taint": {
+			inputNodes: []v1.Node{
+				newNode(withName("worker-node")),
+				newNode(
+					withName("control-plane-node"),
+					withTaints([]v1.Taint{
+						{Key: "node-role.kubernetes.io/control-plane", Effect: "NoSchedule"},
+					}),
+				),
+			},
+			expectedNodes: []v1.Node{newNode(withName("worker-node"))},
+		},
+
+		"no_node_is_returned_when_all_nodes_have_the_master_taint": {
+			inputNodes: []v1.Node{
+				newNode(
+					withName("master-node"),
+					withTaints([]v1.Taint{
+						{Key: "node-role.kubernetes.io/master", Effect: "NoSchedule"},
+					}),
+				),
+			},
+			expectedNodes: []v1.Node{},
+		},
+
+		"no_node_is_returned_when_all_nodes_have_the_control_plane_taint": {
+			inputNodes: []v1.Node{
+				newNode(
+					withName("control-plane-node"),
+					withTaints([]v1.Taint{
+						{Key: "node-role.kubernetes.io/control-plane", Effect: "NoSchedule"},
+					}),
+				),
+			},
+			expectedNodes: []v1.Node{},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Rebind tc into this lexical scope. Details on the why at
+			// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+			tc := tc
+
+			t.Parallel()
+
+			// Set up fake K8s client pre-populated with the nodes that exist in the test case.
+			k8sAPINodesClient := fake.
+				NewSimpleClientset(&v1.NodeList{Items: tc.inputNodes}).
+				CoreV1().
+				Nodes()
+
+			// Set up object under test with the fake K8s client.
+			nodes := node.Client{
+				Nodes:            k8sAPINodesClient,
+				MasterNodeTaints: node.MasterTaintKeys,
+			}
+
+			// Invoke the method under test.
+			gotNodes, err := nodes.ListWorkers(context.Background())
+
+			if err != nil {
+				t.Fatalf("Expected no error when invoking ListWorkers, got error: \"%v\"", err)
+			}
+
+			// Compare the expected nodes with the got ones to assess the test outcome.
+			if !equality.Semantic.DeepEqual(tc.expectedNodes, gotNodes) {
+				t.Fatalf("Expected nodes don't match got ones\n\n\texpected: %#+v\n\n\tgot:"+
+					" %#+v\n\n", tc.expectedNodes, gotNodes)
+			}
+		})
+	}
+}
+
+func TestListWorkersFails(t *testing.T) {
+	t.Parallel()
+
+	// Define a fake K8s client that is pre-populated with a test node.
+	testNode := newNode(withName("n1"))
+	k8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{testNode}})
+
+	// "Sabotage" the fake K8s client by adding to it a function that intercepts LIST API calls
+	// and makes them fail returning an error.
+	testErr := errors.New("dummy error")
+	listSabotager := func(k8stest.Action) (bool, runtime.Object, error) {
+		return true, nil, testErr
+	}
+	k8sClient.PrependReactor("list", "nodes", listSabotager)
+
+	// Set up the object under test with the sabotaged client that will make K8s LIST calls fail.
+	nodes := node.Client{
+		Nodes:            k8sClient.CoreV1().Nodes(),
+		MasterNodeTaints: node.MasterTaintKeys,
+	}
+
+	// Invoke the method under test
+	gotNodes, gotErr := nodes.ListWorkers(context.Background())
+
+	if gotErr == nil {
+		t.Fatal("got nil error, expected non-nil error")
+	}
+
+	if !strings.Contains(strings.ToLower(gotErr.Error()), "list") {
+		t.Fatalf("got error \"%v\" should contain the word \"list\" (in any case) but it doesn't",
+			gotErr)
+	}
+
+	if !strings.Contains(gotErr.Error(), testErr.Error()) {
+		t.Fatalf("got error \"%v\" should contain the error message \"%v\" returned by the "+
+			"K8s API but it doesn't", gotErr, testErr)
+	}
+
+	if len(gotNodes) != 0 {
+		t.Fatalf("no node should be returned on error, but got non-empty nodes list %#+v", gotNodes)
+	}
+}
+
+func TestLabelWorkersHappyPaths(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -396,8 +672,8 @@ func TestLabelAllHappyPaths(t *testing.T) {
 			}
 
 			// Invoke method under test
-			if err := nodes.LabelAll(context.Background(), tc.labelsToAdd); err != nil {
-				t.Fatal("Expected no error when invoking LabelAll, got:", err)
+			if err := nodes.LabelWorkers(context.Background(), tc.labelsToAdd); err != nil {
+				t.Fatal("Expected no error when invoking LabelWorkers, got:", err)
 			}
 
 			// Get the nodes after invoking the method under test
@@ -416,7 +692,7 @@ func TestLabelAllHappyPaths(t *testing.T) {
 	}
 }
 
-func TestLabelAllListFails(t *testing.T) {
+func TestLabelWorkersListFails(t *testing.T) {
 	t.Parallel()
 
 	labelsToAdd := map[string]string{"a8s.key1": "val1"}
@@ -436,10 +712,10 @@ func TestLabelAllListFails(t *testing.T) {
 	}
 
 	// Invoke the method under test
-	err := nodes.LabelAll(context.Background(), labelsToAdd)
+	err := nodes.LabelWorkers(context.Background(), labelsToAdd)
 
 	if err == nil {
-		t.Fatal("LabelAll returned <nil> error, expected non-nil error")
+		t.Fatal("LabelWorkers returned <nil> error, expected non-nil error")
 	}
 
 	if !strings.Contains(err.Error(), "dummy error") {
@@ -448,7 +724,7 @@ func TestLabelAllListFails(t *testing.T) {
 	}
 }
 
-func TestLabelAllUpdateFails(t *testing.T) {
+func TestLabelWorkersUpdateFails(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -526,10 +802,10 @@ func TestLabelAllUpdateFails(t *testing.T) {
 			}
 
 			// Invoke method under test
-			err := nodes.LabelAll(context.Background(), tc.labelsToAdd)
+			err := nodes.LabelWorkers(context.Background(), tc.labelsToAdd)
 
 			if err == nil {
-				t.Fatal("LabelAll returned <nil> error, expected non-nil error")
+				t.Fatal("LabelWorkers returned <nil> error, expected non-nil error")
 			}
 
 			// Verify that the error message of every update that failed is mentioned in the error
@@ -567,7 +843,7 @@ func TestLabelAllUpdateFails(t *testing.T) {
 	}
 }
 
-func TestLabelAllPanicsWhenLabelKeyMatchesAndValDoesNot(t *testing.T) {
+func TestLabelWorkersPanicsWhenLabelKeyMatchesAndValDoesNot(t *testing.T) {
 	t.Parallel()
 
 	// inputNode has a label with the same key but different value as the label to add, that must
@@ -623,8 +899,8 @@ func TestLabelAllPanicsWhenLabelKeyMatchesAndValDoesNot(t *testing.T) {
 	}()
 
 	// Invoke the method under test.
-	if err := nodes.LabelAll(context.Background(), labelsToAdd); err != nil {
-		t.Fatal("Expected panic when invoking LabelAll, got error instead:", err)
+	if err := nodes.LabelWorkers(context.Background(), labelsToAdd); err != nil {
+		t.Fatal("Expected panic when invoking LabelWorkers, got error instead:", err)
 	}
 }
 
@@ -1208,7 +1484,7 @@ func TestUnlabelAllPanicsWhenLabelKeyMatchesAndValDoesNot(t *testing.T) {
 	}
 }
 
-func TestTaintAllHappyPaths(t *testing.T) {
+func TestTaintWorkersHappyPaths(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
@@ -1626,8 +1902,8 @@ func TestTaintAllHappyPaths(t *testing.T) {
 			}
 
 			// Invoke method under test
-			if err := nodes.TaintAll(context.Background(), tc.taintsToAdd); err != nil {
-				t.Fatal("Expected no error when invoking TaintAll, got:", err)
+			if err := nodes.TaintWorkers(context.Background(), tc.taintsToAdd); err != nil {
+				t.Fatal("Expected no error when invoking TaintWorkers, got:", err)
 			}
 
 			// Get the nodes after invoking the method under test
