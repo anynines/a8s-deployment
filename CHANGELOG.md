@@ -23,6 +23,10 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - **breaking change** Fix issue where only a single event was emitted for two secrets
   of a PostgreSQL instance
 
+### Changed
+
+- backup-manager now uses a dedicated ServiceAccount, instead of the default one
+
 ## [0.1.0] - 2022-06-27
 
 ### Added
