@@ -40,7 +40,7 @@ const (
 	labelingTimeout = 15 * time.Second
 )
 
-var _ = Describe("DSI tolerations to K8s nodes taints", func() {
+var _ = Describe("DSIs topology awareness", func() {
 	var (
 		err error
 		ctx context.Context
@@ -454,7 +454,7 @@ var _ = Describe("DSI tolerations to K8s nodes taints", func() {
 		})
 	})
 
-	Context("Pod Anti-Affinity", func() {
+	Context("DSI pods have anti-affinity rules to repel each other", func() {
 		var k8sNodes []corev1.Node
 
 		const (
