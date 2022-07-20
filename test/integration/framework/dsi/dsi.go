@@ -36,6 +36,11 @@ type TolerationsSetter interface {
 	SetTolerations(...corev1.Toleration)
 }
 
+type WithPodAntiAffinity interface {
+	AddRequiredPodAntiAffinityTerm(antiAffinityTerm corev1.PodAffinityTerm)
+	AddPreferredPodAntiAffinityTerm(weight int, antiAffinityTerm corev1.PodAffinityTerm)
+}
+
 type StatefulSetGetter interface {
 	StatefulSet(context.Context, runtimeClient.Client) (*appsv1.StatefulSet, error)
 }

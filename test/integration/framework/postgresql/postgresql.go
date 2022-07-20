@@ -89,6 +89,36 @@ func (pg Postgresql) SetTolerations(ts ...corev1.Toleration) {
 	pg.Postgresql.Spec.SchedulingConstraints.Tolerations = ts
 }
 
+func (pg Postgresql) AddRequiredPodAntiAffinityTerm(at corev1.PodAffinityTerm) {
+	pg.initPodAntiAffinity()
+	paa := pg.Postgresql.Spec.SchedulingConstraints.Affinity.PodAntiAffinity
+	paa.RequiredDuringSchedulingIgnoredDuringExecution =
+		append(paa.RequiredDuringSchedulingIgnoredDuringExecution, at)
+}
+
+func (pg Postgresql) AddPreferredPodAntiAffinityTerm(weight int, at corev1.PodAffinityTerm) {
+	pg.initPodAntiAffinity()
+	paa := pg.Postgresql.Spec.SchedulingConstraints.Affinity.PodAntiAffinity
+	paa.PreferredDuringSchedulingIgnoredDuringExecution =
+		append(paa.PreferredDuringSchedulingIgnoredDuringExecution, corev1.WeightedPodAffinityTerm{
+			Weight:          int32(weight),
+			PodAffinityTerm: at,
+		})
+}
+
+func (pg Postgresql) initPodAntiAffinity() {
+	if pg.Postgresql.Spec.SchedulingConstraints == nil {
+		pg.Postgresql.Spec.SchedulingConstraints = &pgv1alpha1.PostgresqlSchedulingConstraints{}
+	}
+	if pg.Postgresql.Spec.SchedulingConstraints.Affinity == nil {
+		pg.Postgresql.Spec.SchedulingConstraints.Affinity = &corev1.Affinity{}
+	}
+	if pg.Postgresql.Spec.SchedulingConstraints.Affinity.PodAntiAffinity == nil {
+		pg.Postgresql.Spec.SchedulingConstraints.Affinity.
+			PodAntiAffinity = &corev1.PodAntiAffinity{}
+	}
+}
+
 // GetClientObject exposes the embedded PostgreSQL object to methods/functions that expect that
 // type. We also need to set the APIVersion and Kind since Kubernetes will remove these fields when
 // marshalling API objects.

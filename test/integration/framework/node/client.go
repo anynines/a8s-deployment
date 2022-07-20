@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -25,6 +26,39 @@ var (
 type Client struct {
 	Nodes            corev1client.NodeInterface
 	MasterNodeTaints map[string]struct{}
+}
+
+func NewClientFromKubecfg(kubecfg string) (Client, error) {
+	cfg, err := clientcmd.BuildConfigFromFlags("", kubecfg)
+	if err != nil {
+		return Client{}, fmt.Errorf("failed to create client config for K8s nodes client from "+
+			"kubeconig %s: %w", kubecfg, err)
+	}
+
+	cv1Client, err := corev1client.NewForConfig(cfg)
+	if err != nil {
+		return Client{},
+			fmt.Errorf("failed to create client for K8s cluster nodes from config %v: %w", cfg, err)
+	}
+
+	return Client{
+		Nodes:            cv1Client.Nodes(),
+		MasterNodeTaints: MasterTaintKeys,
+	}, nil
+}
+
+func (c Client) GetLabels(ctx context.Context, nodeName string) (map[string]string, error) {
+	node, err := c.Nodes.Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get labels for node %s: failed to get node: %w",
+			nodeName, err)
+	}
+
+	if node == nil {
+		return nil, nil
+	}
+
+	return node.Labels, nil
 }
 
 // ListAll returns a slice with all the nodes in the K8s cluster.
@@ -107,47 +141,13 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 	return nil
 }
 
-// LabelWorkers adds the labels in `labels` to all the worker nodes in the K8s cluster.
-// Worker nodes are nodes that DO NOT have the taints with the keys contained in
-// `c.MasterNodeTaints`.
-// LabelWorkers is idempotent:
-//   - if a worker already has a subset of the labels in `labels`, only the missing ones are added.
-//   - if a worker already has all the labels in `labels`, it's left unchanged.
-// LabelWorkers returns an error if a failure occurs.
-func (c Client) LabelWorkers(ctx context.Context, labels map[string]string) error {
-	workers, err := c.ListWorkers(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to label K8s worker nodes: %w", err)
-	}
-
-	// Here we don't fail fast. Rather than returning an error on the first failure, we try to
-	// label as many nodes as possible, i.e., even if labeling a node fails we try to label
-	// the remaining nodes. This is done because users of this library are e2e and integration tests
-	// that require labeling to succeed, and will retry it if it fails, so it's actually faster
-	// to always try to label as many nodes as possible. This is safe because labeling is
-	// idempotent.
-	var errs []error
-	for _, w := range workers {
-		if err := c.label(ctx, w, labels); err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) > 0 {
-		return fmt.Errorf("labeling all or some K8s worker nodes failed: %v",
-			errors.NewAggregate(errs))
-	}
-
-	return nil
-}
-
-// UnlabelAll removes the labels in `labels` from all the nodes (worker and master ones) in the K8s
-// cluster.
+// UnlabelAll removes the labels with the keys in `labelsKeys` from all the nodes (worker and master
+// ones) in the K8s cluster, regardless of the labels values.
 // UnlabelAll is idempotent:
-//   - if a node has only a subset of the labels in `labels`, only that subset is removed.
-//   - if a node doesn't have any of the labels in `labels`, it's left unchanged.
+//   - if a node has only a subset of the labels in `labelsKeys`, only that subset is removed.
+//   - if a node doesn't have any of the labels in `labelsKeys`, it's left unchanged.
 // UnlabelAll returns an error if a failure occurs.
-func (c Client) UnlabelAll(ctx context.Context, labels map[string]string) error {
+func (c Client) UnlabelAll(ctx context.Context, labelsKeys []string) error {
 	nodes, err := c.ListAll(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to unlabel K8s nodes: %w", err)
@@ -161,7 +161,7 @@ func (c Client) UnlabelAll(ctx context.Context, labels map[string]string) error 
 	// idempotent.
 	var errs []error
 	for _, n := range nodes {
-		if err := c.unlabel(ctx, n, labels); err != nil {
+		if err := c.unlabel(ctx, n, labelsKeys); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -206,7 +206,7 @@ func (c Client) untaint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 	return nil
 }
 
-func (c Client) label(ctx context.Context, n v1.Node, labels map[string]string) error {
+func (c Client) Label(ctx context.Context, n v1.Node, labels map[string]string) error {
 	newLabels := labelsUnion(n.Labels, labels)
 	if len(newLabels) == len(n.Labels) {
 		return nil
@@ -220,15 +220,22 @@ func (c Client) label(ctx context.Context, n v1.Node, labels map[string]string) 
 	return nil
 }
 
-func (c Client) unlabel(ctx context.Context, n v1.Node, labels map[string]string) error {
-	newLabels := labelsDiff(n.Labels, labels)
-	if len(newLabels) == len(n.Labels) {
+func (c Client) unlabel(ctx context.Context, n v1.Node, labelsKeysToRemove []string) error {
+	labelsChanged := false
+	for _, key := range labelsKeysToRemove {
+		if _, found := n.Labels[key]; found {
+			delete(n.Labels, key)
+			labelsChanged = true
+		}
+	}
+
+	if !labelsChanged {
 		return nil
 	}
 
-	n.Labels = newLabels
 	if _, err := c.Nodes.Update(ctx, &n, metav1.UpdateOptions{}); err != nil {
-		return fmt.Errorf("update of node %s to remove labels %v failed: %w", n.Name, labels, err)
+		return fmt.Errorf("update of node %s to remove labels with keys %v failed: %w",
+			n.Name, labelsKeysToRemove, err)
 	}
 
 	return nil
@@ -294,32 +301,10 @@ func labelsUnion(x, y map[string]string) map[string]string {
 	}
 
 	for key, val := range y {
-		if oldVal, keyAlreadyPresent := union[key]; keyAlreadyPresent && oldVal != val {
-			panic(fmt.Sprintf("can't label node: found a8s test label with key %s and value %s, "+
-				"value for that key must be equal to %s", key, oldVal, val))
-		}
 		union[key] = val
 	}
 
 	return union
-}
-
-func labelsDiff(x, y map[string]string) map[string]string {
-	diff := make(map[string]string)
-
-	for key, xVal := range x {
-		yVal, foundKey := y[key]
-		if !foundKey {
-			diff[key] = xVal
-			continue
-		}
-		if xVal != yVal {
-			panic(fmt.Sprintf("can't unlabel node: found a8s test label with key %s and value %s, "+
-				"value for that key must be equal to %s", key, xVal, yVal))
-		}
-	}
-
-	return diff
 }
 
 func (c Client) hasMasterNodeTaints(taints []v1.Taint) bool {

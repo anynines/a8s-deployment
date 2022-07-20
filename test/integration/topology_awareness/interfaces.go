@@ -23,6 +23,7 @@ type NodesTainter interface {
 }
 
 type NodesLabeler interface {
-	LabelWorkers(context.Context, map[string]string) error
-	UnlabelAll(context.Context, map[string]string) error
+	Label(ctx context.Context, node corev1.Node, labels map[string]string) error
+	UnlabelAll(ctx context.Context, keysOfLabelsToRemove []string) error
+	GetLabels(ctx context.Context, node string) (map[string]string, error)
 }
