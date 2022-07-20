@@ -455,8 +455,6 @@ var _ = Describe("DSIs topology awareness", func() {
 	})
 
 	Context("DSI pods have anti-affinity rules to repel each other", func() {
-		var k8sNodes []corev1.Node
-
 		const (
 			a8sTestNodeLabelKey = "a8s-test-host"
 			a8sTestAZLabelKey   = "a8s-test-az"
@@ -485,6 +483,7 @@ var _ = Describe("DSIs topology awareness", func() {
 
 			BeforeEach(func() {
 				Eventually(func(g Gomega) {
+					var k8sNodes []corev1.Node
 					k8sNodes, err = nodes.ListWorkers(ctx)
 					g.Expect(err).To(BeNil())
 
@@ -594,6 +593,7 @@ var _ = Describe("DSIs topology awareness", func() {
 
 			BeforeEach(func() {
 				Eventually(func(g Gomega) {
+					var k8sNodes []corev1.Node
 					k8sNodes, err = nodes.ListWorkers(ctx)
 					g.Expect(err).To(BeNil())
 
