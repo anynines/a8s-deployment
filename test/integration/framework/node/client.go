@@ -3,13 +3,15 @@ package node
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/errors"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/anynines/a8s-deployment/test/integration/framework/log"
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 type Client struct {
 	Nodes            corev1client.NodeInterface
 	MasterNodeTaints map[string]struct{}
+	Log              logr.Logger
 }
 
 func NewClientFromKubecfg(kubecfg string) (Client, error) {
@@ -44,6 +47,7 @@ func NewClientFromKubecfg(kubecfg string) (Client, error) {
 	return Client{
 		Nodes:            cv1Client.Nodes(),
 		MasterNodeTaints: MasterTaintKeys,
+		Log:              log.NewWithNames("Node", "Client"),
 	}, nil
 }
 
@@ -175,8 +179,10 @@ func (c Client) UnlabelAll(ctx context.Context, labelsKeys []string) error {
 
 func (c Client) taint(ctx context.Context, n v1.Node, t []v1.Taint) error {
 	if len(n.Spec.Taints) > 0 {
-		log.Printf("Warning: Node %s already is tainted with taints %v. This might break the "+
-			"tolerations tests", n.Name, n.Spec.Taints)
+		c.Log.Info(
+			"Warning: Node is already tainted with taints. This might break the tolerations tests.",
+			"node", n.Name, "taints", n.Spec.Taints,
+		)
 	}
 
 	newTaints := taintsUnion(n.Spec.Taints, t)
