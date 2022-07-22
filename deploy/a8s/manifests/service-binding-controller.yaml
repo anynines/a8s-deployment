@@ -108,6 +108,12 @@ status:
   conditions: []
   storedVersions: []
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-binding-manager-account
+  namespace: a8s-system
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -233,7 +239,7 @@ roleRef:
   name: service-binding-leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -246,7 +252,7 @@ roleRef:
   name: service-binding-manager-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -259,7 +265,7 @@ roleRef:
   name: service-binding-proxy-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: v1
@@ -369,6 +375,7 @@ spec:
           name: https
       securityContext:
         runAsUser: 65532
+      serviceAccountName: service-binding-manager-account
       terminationGracePeriodSeconds: 10
       volumes:
       - configMap:

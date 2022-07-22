@@ -8,7 +8,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- max_locks_per_transaction PostgreSQL configuration property has been added
+- max\_locks\_per\_transaction PostgreSQL configuration property has been added
 - end-to-end tests on PostgreSQL tolerations to node taints.
 
 ### Updated
@@ -26,6 +26,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - backup-manager now uses a dedicated ServiceAccount, instead of the default one
+- service-binding controller now uses a dedicated ServiceAccount, instead of the default one
 
 ## [0.1.0] - 2022-06-27
 
