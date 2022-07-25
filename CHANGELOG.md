@@ -27,6 +27,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - backup-manager now uses a dedicated ServiceAccount, instead of the default one
 - service-binding controller now uses a dedicated ServiceAccount, instead of the default one
+- postgresql-operator now used a dedicated ServiceAccount, instead of the default one
 
 ## [0.1.0] - 2022-06-27
 
