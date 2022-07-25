@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,6 +84,7 @@ func TestListAllHappyPaths(t *testing.T) {
 			nodes := node.Client{
 				Nodes:            k8sAPINodesClient,
 				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
 			}
 
 			// Invoke the method under test.
@@ -120,6 +122,7 @@ func TestListAllFails(t *testing.T) {
 	nodes := node.Client{
 		Nodes:            k8sClient.CoreV1().Nodes(),
 		MasterNodeTaints: node.MasterTaintKeys,
+		Log:              logr.Discard(),
 	}
 
 	// Invoke the method under test
@@ -243,6 +246,7 @@ func TestListWorkersHappyPaths(t *testing.T) {
 			nodes := node.Client{
 				Nodes:            k8sAPINodesClient,
 				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
 			}
 
 			// Invoke the method under test.
@@ -280,6 +284,7 @@ func TestListWorkersFails(t *testing.T) {
 	nodes := node.Client{
 		Nodes:            k8sClient.CoreV1().Nodes(),
 		MasterNodeTaints: node.MasterTaintKeys,
+		Log:              logr.Discard(),
 	}
 
 	// Invoke the method under test
@@ -619,6 +624,7 @@ func TestUnlabelAllHappyPaths(t *testing.T) {
 			nodes := node.Client{
 				Nodes:            k8sAPINodesClient,
 				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
 			}
 
 			// Invoke method under test
@@ -659,6 +665,7 @@ func TestUnlabelAllListFails(t *testing.T) {
 	nodes := node.Client{
 		Nodes:            sabotagedK8sClient.CoreV1().Nodes(),
 		MasterNodeTaints: node.MasterTaintKeys,
+		Log:              logr.Discard(),
 	}
 
 	// Invoke the method under test
@@ -749,6 +756,7 @@ func TestUnlabelAllUpdateFails(t *testing.T) {
 			nodes := node.Client{
 				Nodes:            k8sAPINodesClient,
 				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
 			}
 
 			// Invoke method under test
@@ -1208,6 +1216,7 @@ func TestTaintWorkersHappyPaths(t *testing.T) {
 			nodes := node.Client{
 				Nodes:            k8sAPINodesClient,
 				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
 			}
 
 			// Invoke method under test
@@ -1569,6 +1578,7 @@ func TestUntaintAllHappyPaths(t *testing.T) {
 			nodes := node.Client{
 				Nodes:            k8sAPINodesClient,
 				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
 			}
 
 			// Invoke method under test
