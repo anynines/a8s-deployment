@@ -403,13 +403,23 @@ var _ = Describe("Patroni Integration Tests", func() {
 			})
 
 			By("emitting an event about the configuration update", func() {
+				// We want to ensure that eventually the events for the updated object are present
+				// in the Kubernetes API. Expecting the events to be available on the first list
+				// operation is overly optimistic so we wait for them to become available before
+				// making further assertions in order to reduce flakiness.
 				events := &corev1.EventList{}
-				Expect(k8sClient.List(ctx, events, &ctrlruntimeclient.ListOptions{
-					FieldSelector: fields.AndSelectors(
-						fields.OneTermEqualSelector("reason", "Updated"),
-						fields.OneTermEqualSelector("involvedObject.uid",
-							string(instance.GetUID()))),
-				})).To(Succeed(), "failed to list events emitted for the config update of the DSI")
+				Eventually(func() bool {
+					Expect(k8sClient.List(ctx, events, &ctrlruntimeclient.ListOptions{
+						FieldSelector: fields.AndSelectors(
+							fields.OneTermEqualSelector("reason", "Updated"),
+							fields.OneTermEqualSelector("involvedObject.uid",
+								string(instance.GetUID())))})).To(Succeed(),
+						"failed to list events emitted for the config update of the DSI")
+
+					return len(events.Items) > 0
+				}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+					fmt.Sprintf("failed to list events emitted for the config update of %s/%s",
+						instance.GetNamespace(), instance.GetName()))
 
 				Expect(len(events.Items)).To(Equal(1), "exactly one event should be emitted for "+
 					"the config update of a DSI, found more than one")
