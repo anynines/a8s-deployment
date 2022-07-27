@@ -1,4 +1,4 @@
-# a8s Integration Tests
+# a8s End-to-End Tests
 
 ## Prerequisites
 - Ensure you have completed the
@@ -25,12 +25,12 @@ test cases test the same coarse-grained functionality.
 - To run *all* the test suites currently available run `go test ./...` from
   inside the test directory.
 - To run a *single* suite/piece of functionality, for example the backup tests,
-  run `go test ./integration/backup` from inside the test directory.
+  run `go test ./e2e/backup` from inside the test directory.
 - `go test` can also be replaced by `ginkgo` for more informative output.
 
 ### Adding or Modifying Tests
-- To add tests that test the integration between two or more a8s components, 
-  create a package under [integration/][Integration package]. This package will
+- To add tests that test the end-to-end (e2e) behavior of a8s, 
+  create a package under [e2e/][e2e package]. This package will
   import from the package [framework/][Framework package] which provides helper
   functionality in order to simplify the process of writing new tests and help
   make tests for different components more consistent. The framework packages
@@ -55,7 +55,7 @@ test cases test the same coarse-grained functionality.
 ├── README.md
 ├── go.mod
 ├── go.sum
-└── integration
+└── e2e
     ├── backup
     │   ├── backup_suite_test.go
     │   └── backup_test.go
@@ -82,6 +82,6 @@ test cases test the same coarse-grained functionality.
 
 [a8s-backup-manager]: https://github.com/anynines/a8s-backup-manager/
 [Platform Operator Documentation]: ../docs/platform-operators/installing_framework.md
-[Framework package]: integration/framework/
-[Backup package]: integration/backup
-[Integration package]: integration
+[Framework package]: e2e/framework/
+[Backup package]: e2e/backup
+[e2e package]: e2e
