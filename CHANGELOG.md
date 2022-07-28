@@ -14,6 +14,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Updated
 
 - Due to some internal code clean-up some error messages have changed in the logs
+- Rename tests from "integration tests" to "end-to-end tests", as they are end-to-end tests
+- Upgrade ginkgo from v1 to v2 in the end-to-end tests
 
 ### Fixed
 
