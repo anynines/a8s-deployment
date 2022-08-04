@@ -10,6 +10,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - max\_locks\_per\_transaction PostgreSQL configuration property has been added
 - end-to-end tests on PostgreSQL tolerations to node taints.
+- service-binding controller emits events for change of state
 
 ### Updated
 
