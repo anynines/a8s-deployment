@@ -23,7 +23,7 @@ PostgreSQL 13 and 14. **Don't use it for production workloads**. All features ar
 - Backup and restore of the PostgreSQL instance
 - Visualize the logs of the PostgreSQL instance and other components
 - Visualize the metrics of the PostgreSQL instance and other components
-
+s
 ## Index
 
 - [CHANGELOG](CHANGELOG.md)
