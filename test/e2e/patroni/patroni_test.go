@@ -245,7 +245,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					// {SharedBuffers, "200MB"}, // 2024 is converted to 200MB
 					{MaxReplicationSlots, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxReplicationSlots)},
 					{MaxWALSenders, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxWALSenders)},
-					{MaxLocksPerTransaction, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
+					{MaxLocksPerTransaction, strconv.Itoa(*pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -383,7 +383,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					// {SharedBuffers, "200MB"}, // 2024 is converted to 200MB
 					{MaxReplicationSlots, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxReplicationSlots)},
 					{MaxWALSenders, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxWALSenders)},
-					{MaxLocksPerTransaction, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
+					{MaxLocksPerTransaction, strconv.Itoa(*pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -442,8 +442,10 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 })
 
 func setCustomPostgresConfig(pg *v1alpha1.Postgresql) {
+	maxLocksPerTransaction := 120
+
 	pg.Spec.PostgresConfiguration.MaxConnections = 101
-	pg.Spec.PostgresConfiguration.MaxLocksPerTransaction = 120
+	pg.Spec.PostgresConfiguration.MaxLocksPerTransaction = &maxLocksPerTransaction
 	// SharedBuffers is not being set or updated.
 	// https://github.com/anynines/postgresql-operator/issues/75
 	pg.Spec.PostgresConfiguration.SharedBuffers = 200
