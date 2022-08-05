@@ -696,24 +696,36 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						pod.GetNamespace(), pod.GetName()))
 				dsi.WaitForPodDeletion(ctx, pod, k8sClient)
 
-				// Portforward to access new primary pod from outside cluster.
-				portForwardStopCh, localPort, err = framework.PortForward(
-					ctx, instancePort, kubeconfigPath,
-					instance, k8sClient)
-				Expect(err).To(BeNil(),
-					fmt.Sprintf("failed to establish portforward to DSI %s/%s",
-						instance.GetNamespace(), instance.GetName()))
+				// TODO: This is only a temporary solution to an issue that was introduced
+				// by the PostgreSQL extensions feature. In order to install PostgreSQL extensions
+				// the PostgreSQL-Operator executes an installation script. This overwrites the
+				// default Spilo entrypoint command of the container image and introduces
+				// additional latency to the initialization of a PostgreSQL instance. This means
+				// that the port-forward the tests are using might be opened while Patroni
+				// is not fully initialized. As a result the port-forward breaks and is closed.
+				// Wrapping everything into an Eventually solves this issue as opening a
+				// port-forward and using the service binding to read data from the DSI is
+				// retried in case of a failure.
+				Eventually(func(g Gomega) {
+					// Portforward to access new primary pod from outside cluster.
+					portForwardStopCh, localPort, err = framework.PortForward(
+						ctx, instancePort, kubeconfigPath,
+						instance, k8sClient)
+					g.Expect(err).To(BeNil(),
+						fmt.Sprintf("failed to establish portforward to DSI %s/%s",
+							instance.GetNamespace(), instance.GetName()))
 
-				// Create client for interacting with the new PostgreSQL primary
-				// node
-				client, err = dsi.NewClient(dataservice,
-					strconv.Itoa(localPort), serviceBindingData)
-				Expect(err).To(BeNil(), "failed to create new dsi client")
+					// Create client for interacting with the new PostgreSQL primary
+					// node
+					client, err = dsi.NewClient(dataservice,
+						strconv.Itoa(localPort), serviceBindingData)
+					g.Expect(err).To(BeNil(), "failed to create new dsi client")
 
-				// Ensure that newly read data matches our original test input
-				readData, err = client.Read(ctx, entity)
-				Expect(err).To(BeNil(), "failed to read data")
-				Expect(readData).To(Equal(testInput), "read data does not match test input")
+					// Ensure that newly read data matches our original test input
+					readData, err = client.Read(ctx, entity)
+					g.Expect(err).To(BeNil(), "failed to read data")
+					g.Expect(readData).To(Equal(testInput), "read data does not match test input")
+				}, 60*time.Second).Should(Succeed())
 			})
 		})
 
@@ -853,24 +865,36 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			})
 
 			By("ensuring that the data was replicated to the new primary", func() {
-				// Portforward to access new primary pod from outside cluster.
-				portForwardStopCh, localPort, err = framework.PortForward(
-					ctx, instancePort, kubeconfigPath, instance, k8sClient)
-				Expect(err).To(BeNil(),
-					fmt.Sprintf("failed to establish portforward to DSI %s/%s",
-						instance.GetNamespace(), instance.GetName()))
+				// TODO: This is only a temporary solution to an issue that was introduced
+				// by the PostgreSQL extensions feature. In order to install PostgreSQL extensions
+				// the PostgreSQL-Operator executes an installation script. This overwrites the
+				// default Spilo entrypoint command of the container image and introduces
+				// additional latency to the initialization of a PostgreSQL instance. This means
+				// that the port-forward the tests are using might be opened while Patroni
+				// is not fully initialized. As a result the port-forward breaks and is closed.
+				// Wrapping everything into an Eventually solves this issue as opening a
+				// port-forward and using the service binding to read data from the DSI is
+				// retried in case of a failure.
+				Eventually(func(g Gomega) {
+					// Portforward to access new primary pod from outside cluster.
+					portForwardStopCh, localPort, err = framework.PortForward(
+						ctx, instancePort, kubeconfigPath, instance, k8sClient)
+					g.Expect(err).To(BeNil(),
+						fmt.Sprintf("failed to establish portforward to DSI %s/%s",
+							instance.GetNamespace(), instance.GetName()))
 
-				// Create client for interacting with the new instance.
-				client, err = dsi.NewClient(
-					dataservice, strconv.Itoa(localPort), serviceBindingData)
-				Expect(err).To(BeNil(), "failed to create new dsi client")
+					// Create client for interacting with the new instance.
+					client, err = dsi.NewClient(
+						dataservice, strconv.Itoa(localPort), serviceBindingData)
+					g.Expect(err).To(BeNil(), "failed to create new dsi client")
 
-				// Ensure that the replicated data is equal to our previously read
-				// data
-				replicatedData, err := client.Read(ctx, entity)
-				Expect(err).To(BeNil(), "failed to read data")
-				Expect(readData).To(Equal(replicatedData),
-					"read data does not match data replicated in new primary")
+					// Ensure that the replicated data is equal to our previously read
+					// data
+					replicatedData, err := client.Read(ctx, entity)
+					g.Expect(err).To(BeNil(), "failed to read data")
+					g.Expect(readData).To(Equal(replicatedData),
+						"read data does not match data replicated in new primary")
+				}, 60*time.Second).Should(Succeed())
 			})
 		})
 	})

@@ -11,12 +11,16 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - max\_locks\_per\_transaction PostgreSQL configuration property has been added
 - end-to-end tests on PostgreSQL tolerations to node taints.
 - service-binding controller emits events for change of state
+- add field `extensions` to  `Postgresql.spec`, that allows installation of supported
+  PostgreSQL extensions.
+- support for MobilityDB PostgreSQL extension
 
 ### Updated
 
 - Due to some internal code clean-up some error messages have changed in the logs
 - Rename tests from "integration tests" to "end-to-end tests", as they are end-to-end tests
 - Upgrade ginkgo from v1 to v2 in the end-to-end tests
+- Upgrade version of PostgreSQL-Operator to v0.39.0
 
 ### Fixed
 
@@ -25,6 +29,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
   completed successfully
 - **breaking change** Fix issue where only a single event was emitted for two secrets
   of a PostgreSQL instance
+- Apply fix to PostgreSQL-Operator end-to-end tests to reduce flakiness
 
 ### Changed
 

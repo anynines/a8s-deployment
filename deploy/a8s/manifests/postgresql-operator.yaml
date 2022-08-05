@@ -36,6 +36,16 @@ spec:
           spec:
             description: PostgresqlSpec defines the desired state of Postgresql
             properties:
+              extensions:
+                description: Extensions defines a list of PostgreSQL extensions which
+                  should be installed. Installing means that the binaries and libraries
+                  of the defined extensions are moved to the PostgreSQL extension
+                  directory. The extensions are NOT loaded by default (i.e. by using
+                  the PostgreSQL "CREATE EXTENSION" command). Updating the list of
+                  extensions will cause a rolling update of the PostgreSQL instance.
+                items:
+                  type: string
+                type: array
               postgresConfiguration:
                 properties:
                   archiveTimeoutSeconds:
@@ -129,7 +139,6 @@ spec:
                     maximum: 262143
                     type: integer
                   maxLocksPerTransaction:
-                    default: 64
                     description: MaxLocksPerTransaction sets the maximum number of
                       locks per transaction. The shared lock table tracks locks on
                       max_locks_per_transaction * (max_connections + max_prepared_transactions)
@@ -1605,7 +1614,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.35.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:v0.39.0
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1688,6 +1697,34 @@ webhooks:
       path: /validate-postgresql-anynines-com-v1alpha1-postgresql
   failurePolicy: Fail
   name: vpostgresql.kb.io
+  rules:
+  - apiGroups:
+    - postgresql.anynines.com
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - postgresqls
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: a8s-system/postgresql-serving-cert
+  name: postgresql-mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: postgresql-webhook-service
+      namespace: a8s-system
+      path: /mutate-postgresql-anynines-com-v1alpha1-postgresql
+  failurePolicy: Fail
+  name: mpostgresql.kb.io
   rules:
   - apiGroups:
     - postgresql.anynines.com
