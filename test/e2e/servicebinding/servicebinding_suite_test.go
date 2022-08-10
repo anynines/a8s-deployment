@@ -9,9 +9,9 @@ import (
 	. "github.com/onsi/gomega"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/namespace"
+	"github.com/anynines/a8s-deployment/test/framework"
+	"github.com/anynines/a8s-deployment/test/framework/dsi"
+	"github.com/anynines/a8s-deployment/test/framework/namespace"
 )
 
 var (

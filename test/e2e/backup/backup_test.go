@@ -9,12 +9,12 @@ import (
 	. "github.com/onsi/gomega"
 
 	backupv1alpha1 "github.com/anynines/a8s-backup-manager/api/v1alpha1"
-	"github.com/anynines/a8s-deployment/test/e2e/framework"
-	bkp "github.com/anynines/a8s-deployment/test/e2e/framework/backup"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/restore"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/secret"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/servicebinding"
+	"github.com/anynines/a8s-deployment/test/framework"
+	bkp "github.com/anynines/a8s-deployment/test/framework/backup"
+	"github.com/anynines/a8s-deployment/test/framework/dsi"
+	"github.com/anynines/a8s-deployment/test/framework/restore"
+	"github.com/anynines/a8s-deployment/test/framework/secret"
+	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
 	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
 )
 

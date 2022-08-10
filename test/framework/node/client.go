@@ -11,7 +11,7 @@ import (
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework/log"
+	"github.com/anynines/a8s-deployment/test/framework/log"
 )
 
 var (

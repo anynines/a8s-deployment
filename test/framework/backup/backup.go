@@ -10,7 +10,7 @@ import (
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/anynines/a8s-backup-manager/api/v1alpha1"
-	"github.com/anynines/a8s-deployment/test/e2e/framework"
+	"github.com/anynines/a8s-deployment/test/framework"
 )
 
 const (
