@@ -13,10 +13,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/postgresql"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/secret"
+	"github.com/anynines/a8s-deployment/test/framework"
+	"github.com/anynines/a8s-deployment/test/framework/dsi"
+	"github.com/anynines/a8s-deployment/test/framework/postgresql"
+	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/postgresql-operator/api/v1alpha1"
 )
 

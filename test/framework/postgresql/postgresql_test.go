@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework/postgresql"
+	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 	"github.com/anynines/postgresql-operator/api/v1alpha1"
 )
 
