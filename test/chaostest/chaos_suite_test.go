@@ -40,7 +40,7 @@ func TestServiceBinding(t *testing.T) {
 var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.Background())
 
-	chaos = chaosmesh.Adapter{k8sClient}
+	chaos = chaosmesh.Adapter{Client: k8sClient}
 
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()

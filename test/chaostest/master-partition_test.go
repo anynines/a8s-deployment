@@ -19,8 +19,6 @@ const (
 	instancePort = 5432
 	replicas     = 3
 	suffixLength = 5
-	sbAmount     = 5
-	dsiAmount    = 3
 
 	DbAdminUsernameKey = "username"
 	DbAdminPasswordKey = "password"
