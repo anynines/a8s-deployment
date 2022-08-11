@@ -30,7 +30,7 @@ var (
 )
 
 type ChaosHelper interface {
-	IsolatePrimary(context.Context, dsi.Object) error
+	IsolatePrimary(context.Context, dsi.Object) (func(context.Context) error, error)
 }
 
 func TestServiceBinding(t *testing.T) {
@@ -48,7 +48,7 @@ var _ = BeforeSuite(func() {
 	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
 		framework.ConfigToVars(config)
 
-	v1alpha1.AddToScheme(scheme.Scheme)
+	Expect(v1alpha1.AddToScheme(scheme.Scheme)).To(Succeed())
 	// Create kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
 	Expect(err).To(BeNil(),

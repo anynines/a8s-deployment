@@ -31,11 +31,11 @@ var _ = Describe("Replication Manager", func() {
 	var (
 		portForwardStopCh chan struct{}
 
-		// sb             *sbv1alpha1.ServiceBinding
 		instance       dsi.Object
 		dsiAdminClient dsi.DSIClient
-		// dsiSbClient    dsi.DSIClient
-		// sbClientMap    map[*sbv1alpha1.ServiceBinding]dsi.DSIClient
+
+		oldPrimary []v1.Pod
+		teardown   func(context.Context) error
 	)
 
 	Context("The Primary is in a Network Partition and cannot reach the Kubernetes API, or replicas",
@@ -79,60 +79,75 @@ var _ = Describe("Replication Manager", func() {
 					strconv.Itoa(localPort))
 
 				Expect(err).To(BeNil(), "failed to create DSI client")
+
+				Expect(dsiAdminClient.Write(ctx, "test", "hello")).To(Succeed())
+
+				oldPrimary, err = framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
+				Expect(err).To(BeNil())
+
+				time.Sleep(30 * time.Second) // wait for replica synch
+
+				timeoutCtx, cancel := context.WithTimeout(ctx, framework.AsyncOpsTimeoutMins)
+				defer cancel()
+
+				var e error
+				teardown, e = chaos.IsolatePrimary(timeoutCtx, instance)
+				Expect(e).To(Succeed())
 			})
 
 			AfterEach(func() {
 				defer func() { close(portForwardStopCh) }()
+
+				Expect(teardown(ctx)).To(Succeed(),
+					"Failed to clean up injected fault",
+				)
 				Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(Succeed(),
 					fmt.Sprintf("failed to delete DSI %s/%s",
 						instance.GetNamespace(),
 						instance.GetName()))
 			})
 
-			Context("Handles a Network Partition of the Primary", func() {
-				var oldPrimary []v1.Pod
-				BeforeEach(func() {
-					Expect(dsiAdminClient.Write(ctx, "test", "hello")).To(Succeed())
-
-					oldPrimary, err = framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
-					Expect(err).To(BeNil())
-
-					time.Sleep(30 * time.Second) // wait for replica synch
-
-					c, cf := context.WithTimeout(ctx, 10*time.Second)
-					defer cf()
-
-					e := chaos.IsolatePrimary(c, instance)
-					Expect(e).To(Succeed())
-
-				})
-
-				It("Elects a new Primary", func() {
-					Eventually(func() bool {
-						newPrimary, err := framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
-						if err != nil {
+			It("Elects a new Primary", func() {
+				Eventually(func() bool {
+					newPrimary, err := framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
+					if err != nil {
+						return false
+					}
+					for _, o := range oldPrimary {
+						flag := false
+						for _, n := range newPrimary {
+							if n.Name == o.Name {
+								flag = true
+							}
+						}
+						if !flag {
 							return false
 						}
-						for _, o := range oldPrimary {
-							flag := false
-							for _, n := range newPrimary {
-								if n.UID == o.UID {
-									flag = true
-								}
-							}
-							if !flag {
-								return false
-							}
-						}
-						return true
-					}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
-						"No new master was elected after old primary was partitioned")
-				})
+					}
+					return true
+				}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+					"No new master was elected after old primary was partitioned")
+			})
 
-				It("Stops Accepting Writes to an Isolated Primary", func() {
-					Expect(dsiAdminClient.Write(ctx, "test", "123")).NotTo(Succeed(),
-						"Isolated Primary still accepts writes")
-				})
+			It("Stops Accepting Writes to an Isolated Primary", func() {
+				Eventually(func() error {
+
+					// Write to the old Primary
+					wErr := dsiAdminClient.Write(ctx, "test", "123")
+					canWrite := wErr == nil
+					primaries, err := framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
+					if err != nil {
+						// The write to the master has not actually failed, ignore error
+						return nil
+					}
+
+					if len(primaries) != 1 {
+						Expect(canWrite).To(BeFalse())
+					}
+
+					return wErr
+				}, framework.AsyncOpsTimeoutMins, 1*time.Second).
+					ShouldNot(Succeed(), "Isolated Primary still accepts writes")
 			})
 		})
 })
