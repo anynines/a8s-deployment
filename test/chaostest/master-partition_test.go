@@ -8,6 +8,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/anynines/a8s-deployment/test/e2e/framework"
 	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
@@ -37,7 +38,7 @@ var _ = Describe("Replication Manager", func() {
 		// sbClientMap    map[*sbv1alpha1.ServiceBinding]dsi.DSIClient
 	)
 
-	Context("The master is in a Network Partition and cannot reach the Kubernetes API, or replicas",
+	Context("The Primary is in a Network Partition and cannot reach the Kubernetes API, or replicas",
 		func() {
 			BeforeEach(func() {
 				// Create Dataservice instance and wait for instance readiness
@@ -88,45 +89,50 @@ var _ = Describe("Replication Manager", func() {
 						instance.GetName()))
 			})
 
-			It("Elects a new leader when the old one is in a Network partition", func() {
+			Context("Handles a Network Partition of the Primary", func() {
+				var oldPrimary []v1.Pod
+				BeforeEach(func() {
+					Expect(dsiAdminClient.Write(ctx, "test", "hello")).To(Succeed())
 
-				Expect(dsiAdminClient.Write(ctx, "test", "hello")).To(Succeed())
+					oldPrimary, err = framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
+					Expect(err).To(BeNil())
 
-				oldMaster, err := framework.GetPrimaryPodUsingServiceSelector(ctx, instance, k8sClient)
-				Expect(err).To(BeNil())
+					time.Sleep(30 * time.Second) // wait for replica synch
 
-				c, cf := context.WithTimeout(ctx, framework.AsyncOpsTimeoutMins)
-				defer cf()
+					c, cf := context.WithTimeout(ctx, 10*time.Second)
+					defer cf()
 
-				Expect(chaos.IsolatePrimary(c, instance)).To(Succeed())
-				defer chaos.Undo(instance)
+					e := chaos.IsolatePrimary(c, instance)
+					Expect(e).To(Succeed())
 
-				Eventually(func() bool {
-					newMaster, err := framework.GetPrimaryPodUsingServiceSelector(ctx, instance, k8sClient)
-					if err != nil {
-						return false
-					}
-					return oldMaster.UID != newMaster.UID
-				}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
-					"No new master was elected after old master was partitioned")
+				})
 
-			})
+				It("Elects a new Primary", func() {
+					Eventually(func() bool {
+						newPrimary, err := framework.GetAllPrimaryPodsUsingServiceSelector(ctx, instance, k8sClient)
+						if err != nil {
+							return false
+						}
+						for _, o := range oldPrimary {
+							flag := false
+							for _, n := range newPrimary {
+								if n.UID == o.UID {
+									flag = true
+								}
+							}
+							if !flag {
+								return false
+							}
+						}
+						return true
+					}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+						"No new master was elected after old primary was partitioned")
+				})
 
-			It("Stops Accepting Writes to an Isolated Master", func() {
-
-				Expect(dsiAdminClient.Write(ctx, "test", "hello")).To(Succeed())
-
-				Expect(err).To(BeNil())
-
-				c, cf := context.WithTimeout(ctx, framework.AsyncOpsTimeoutMins)
-				defer cf()
-
-				Expect(chaos.IsolatePrimary(c, instance)).To(Succeed())
-				defer chaos.Undo(instance)
-
-				Expect(dsiAdminClient.Write(ctx, "test", "123")).NotTo(Succeed(),
-					"Isolated Master still accepts writes")
-
+				It("Stops Accepting Writes to an Isolated Primary", func() {
+					Expect(dsiAdminClient.Write(ctx, "test", "123")).NotTo(Succeed(),
+						"Isolated Primary still accepts writes")
+				})
 			})
 		})
 })

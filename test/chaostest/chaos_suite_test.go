@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/client-go/kubernetes/scheme"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/anynines/a8s-deployment/test/chaosmesh"
@@ -29,7 +31,6 @@ var (
 
 type ChaosHelper interface {
 	IsolatePrimary(context.Context, dsi.Object) error
-	Undo(dsi.Object)
 }
 
 func TestServiceBinding(t *testing.T) {
@@ -40,8 +41,6 @@ func TestServiceBinding(t *testing.T) {
 var _ = BeforeSuite(func() {
 	ctx, cancel = context.WithCancel(context.Background())
 
-	chaos = chaosmesh.Adapter{Client: k8sClient}
-
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
@@ -49,10 +48,13 @@ var _ = BeforeSuite(func() {
 	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
 		framework.ConfigToVars(config)
 
+	v1alpha1.AddToScheme(scheme.Scheme)
 	// Create kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
 	Expect(err).To(BeNil(),
 		fmt.Sprintf("error creating Kubernetes client for dataservice %s", dataservice))
+
+	chaos = chaosmesh.FaultInjector{Client: k8sClient, Namespace: testingNamespace}
 
 	Expect(namespace.CreateIfNotExists(ctx, testingNamespace, k8sClient)).
 		To(Succeed(), "failed to create testing namespace")

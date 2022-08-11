@@ -196,3 +196,36 @@ func GetPrimaryPodUsingServiceSelector(ctx context.Context,
 		)
 	return primaryPod, nil
 }
+
+func GetAllPrimaryPodsUsingServiceSelector(ctx context.Context,
+	dsi runtimeClient.Object,
+	c runtimeClient.Client) ([]corev1.Pod, error) {
+
+	svcSelector, err := primarySvcSelector(ctx, dsi, c)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get selector for service: %w", err)
+	}
+
+	var primaryPods []corev1.Pod
+	EventuallyWithOffset(1, func() error {
+		primaryPodList := &corev1.PodList{}
+		if err := c.List(ctx, primaryPodList, &runtimeClient.ListOptions{
+			Namespace:     dsi.GetNamespace(),
+			LabelSelector: *svcSelector}); err != nil {
+
+			return err
+		}
+		if len(primaryPodList.Items) < 1 {
+			return fmt.Errorf("found %d primary pods",
+				len(primaryPodList.Items))
+		}
+		primaryPods = primaryPodList.Items
+		return nil
+	}, AsyncOpsTimeoutMins, 1*time.Second).
+		Should(
+			BeNil(),
+			"timeout reached to get primary pod using service selector for dsi %s/%s",
+			dsi.GetNamespace(), dsi.GetName(),
+		)
+	return primaryPods, nil
+}
