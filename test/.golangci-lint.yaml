@@ -131,4 +131,3 @@ issues:
     - linters:
       - lll
       source: "// \\+kubebuilder"
-
