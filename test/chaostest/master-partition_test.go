@@ -113,6 +113,10 @@ var _ = Describe("Replication Manager", func() {
 					if err != nil {
 						return false
 					}
+
+					// Old primary will not remove the primary label
+					// because patroni, which manages the labels cannot access the k8s api.
+					// This means we have handle the old primary still being marked as such
 					for _, o := range oldPrimary {
 						flag := false
 						for _, n := range newPrimary {

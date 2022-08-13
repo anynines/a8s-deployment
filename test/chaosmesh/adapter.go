@@ -20,6 +20,7 @@ type FaultInjector struct {
 }
 
 // Disallow all outgoing traffic from the primary to simulate a network partition.
+// Returns a function to undo the injected chaos.
 func (a FaultInjector) IsolatePrimary(ctx context.Context, o dsi.Object,
 ) (func(context.Context) error, error) {
 
