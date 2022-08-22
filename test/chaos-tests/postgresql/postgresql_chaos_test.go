@@ -15,6 +15,8 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
 	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -129,11 +131,10 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 			var err error
 			replicaStop, err = pgChaosInjector.StopReplicas(ctx, k8sClient)
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("timeout reached waiting for chaos to apply to DSI %s/%s: %s",
+				fmt.Sprintf("timeout reached waiting for chaos to apply to DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err,
-				))
+					instance.GetName()),
+			)
 		})
 
 		By("Wait for PodChaos to apply", func() {
@@ -147,11 +148,9 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 
 				return ready
 			}, asyncOpsTimeoutMins).Should(BeTrue(),
-				fmt.Sprintf("timeout reached waiting for chaos to apply to DSI %s/%s: %s",
+				fmt.Sprintf("timeout reached waiting for chaos to apply to DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err,
-				),
+					instance.GetName()),
 			)
 		})
 
@@ -185,10 +184,9 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		By("Ensuring data was written successfully to master", func() {
 			readData, err := client.Read(ctx, entity)
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to read data from  DSI %s/%s: %s",
+				fmt.Sprintf("failed to read data from  DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err),
+					instance.GetName()),
 			)
 
 			Expect(readData).To(Equal(writtenData),
@@ -245,10 +243,9 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 				instance.GetMasterLabels())
 
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to list master pods of DSI %s/%s : %s",
+				fmt.Sprintf("failed to list master pods of DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err),
+					instance.GetName()),
 			)
 
 			Expect(dsi.NPodsReady(masterPods)).To(BeZero(),
@@ -283,10 +280,9 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 			replicaPods, err := dsi.GetPodsWithLabels(ctx, k8sClient, instance.GetNamespace(),
 				instance.GetReplicaLabels())
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to list master pods of DSI %s/%s: %s",
+				fmt.Sprintf("failed to list master pods of DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err),
+					instance.GetName()),
 			)
 
 			Expect(len(replicaPods.Items) > 0).To(BeTrue(),
@@ -301,30 +297,272 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 			defer func() { close(replicaPortForwardStopCh) }()
 
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to open port forward to replica of DSI %s/%s: %s",
+				fmt.Sprintf("failed to open port forward to replica of DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err),
+					instance.GetName()),
 			)
 
 			replicaClient, err := dsi.NewClient(dataservice,
 				strconv.Itoa(replicaLocalPort), serviceBindingData)
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to create client to DSI %s/%s connecting to replica : %s",
+				fmt.Sprintf("failed to create client to DSI %s/%s connecting to replica",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err),
+					instance.GetName()),
 			)
 
 			readData, err := replicaClient.Read(ctx, entity)
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to read replica data of DSI %s/%s : %s",
+				fmt.Sprintf("failed to read replica data of DSI %s/%s",
 					instance.GetNamespace(),
-					instance.GetName(),
-					err),
+					instance.GetName()),
 			)
 			Expect(readData).To(Equal(writtenData),
 				fmt.Sprintf("read data does not match data written to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+	})
+
+	It("Failed Master rejoins as replica", func() {
+		dsi.WaitForReplicaReadiness(ctx, instance.GetClientObject(), k8sClient, replicas)
+
+		var masterPod *corev1.Pod
+		By("Selecting master Pod", func() {
+
+			masterPodList, err := dsi.GetPodsWithLabels(ctx, k8sClient, instance.GetNamespace(),
+				instance.GetMasterLabels())
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to select master pods of DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			Expect(len(masterPodList.Items)).To(BeEquivalentTo(1), "invalid number of masters")
+
+			masterPod = &masterPodList.Items[0]
+		})
+
+		var writtenData string
+		By("Writing random data to master", func() {
+			for i := 0; i < 50; i++ {
+				if i != 0 {
+					writtenData += "\n"
+				}
+				randString := framework.GenerateRandString(1000)
+				Expect(client.Write(ctx, entity, randString)).To(Succeed(),
+					fmt.Sprintf("failed to insert data in DSI %s/%s",
+						instance.GetNamespace(),
+						instance.GetName()),
+				)
+				writtenData += randString
+			}
+		})
+
+		By("Ensuring data was written successfully to master", func() {
+			readData, err := client.Read(ctx, entity)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to read data from  DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			Expect(readData).To(Equal(writtenData),
+				fmt.Sprintf("read data does not match data written to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		pgChaosInjector := chaos.PgInjector{Instance: instance}
+
+		// ensure data had time to propagate to replicas
+		// TODO: This could be removed if we can check for replication lag
+		time.Sleep(1 * time.Second)
+
+		var masterStop chaos.ChaosObject
+		By("Stop the master by applying PodChaos", func() {
+			masterStop, err = pgChaosInjector.StopMaster(ctx, k8sClient)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to apply chaos to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		By("Wait for chaos to apply", func() {
+			var err error
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx,
+					types.NamespacedName{Name: masterPod.Name, Namespace: instance.GetNamespace()},
+					masterPod)
+				Expect(err).To(BeNil(),
+					fmt.Sprintf("failed to get pod %s of DSI %s/%s",
+						masterPod.Name,
+						instance.GetNamespace(),
+						instance.GetName()),
+				)
+				return !dsi.IsPodReady(masterPod)
+			}, asyncOpsTimeoutMins).Should(BeTrue(),
+				fmt.Sprintf("timeout reached waiting for chaos to apply to DSI %s/%s: %s",
+					instance.GetNamespace(),
+					instance.GetName(),
+					err,
+				),
+			)
+		})
+
+		By("Waiting for failover to happen", func() {
+			Eventually(func() int {
+				masterPods, err := dsi.GetPodsWithLabels(ctx, k8sClient, instance.GetNamespace(),
+					instance.GetMasterLabels())
+
+				Expect(err).To(BeNil(),
+					fmt.Sprintf("failed to list master pods of DSI %s/%s",
+						instance.GetNamespace(),
+						instance.GetName()),
+				)
+
+				return dsi.NPodsReady(masterPods)
+			}, asyncOpsTimeoutMins).Should(BeEquivalentTo(1),
+				fmt.Sprintf("timeout reached while waiting for new master of DSI %s/%s"+
+					"to be elected",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		// recreate port forward to new master
+		// TODO: After rework of port forwarding logic, this step should be unnecessary
+		By("Recreating port forward for new master", func() {
+			close(portForwardStopCh)
+
+			masterPods, err := dsi.GetPodsWithLabels(ctx, k8sClient, instance.GetNamespace(),
+				instance.GetMasterLabels())
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to list master pods of DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			var newMasterPod *corev1.Pod
+			for _, pod := range masterPods.Items {
+				if dsi.IsPodReady(&pod) {
+					newMasterPod = &pod
+				}
+			}
+
+			portForwardStopCh, localPort, err = framework.PortForwardPod(
+				ctx, instancePort, kubeconfigPath, newMasterPod, k8sClient)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to recreate port forward to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			client, err = dsi.NewClient(dataservice, strconv.Itoa(localPort), serviceBindingData)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to recreate dsi client to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		By("Writing more random data to new master", func() {
+			for i := 0; i < 10; i++ {
+				writtenData += "\n"
+				randString := framework.GenerateRandString(1000)
+				Expect(client.Write(ctx, entity, randString)).To(Succeed(),
+					fmt.Sprintf("failed to insert data in DSI %s/%s",
+						instance.GetNamespace(),
+						instance.GetName()),
+				)
+				writtenData += randString
+			}
+		})
+
+		By("Ensuring data was written successfully to new master", func() {
+			readData, err := client.Read(ctx, entity)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to read data from  DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			Expect(readData).To(Equal(writtenData),
+				fmt.Sprintf("read data does not match data written to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		By("Restart old master by deleting chaos", func() {
+			Expect(masterStop.Delete(ctx, k8sClient)).To(Succeed(),
+				fmt.Sprintf("failed to delete chaos applied to DSI %s/%s",
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		dsi.WaitForReplicaReadiness(ctx, instance.GetClientObject(), k8sClient, replicas)
+
+		By("Ensure old master returns as replica", func() {
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx,
+					types.NamespacedName{Name: masterPod.Name, Namespace: instance.GetNamespace()},
+					masterPod)
+				Expect(err).To(BeNil(),
+					fmt.Sprintf("failed to get pod %s of DSI %s/%s",
+						masterPod.Name,
+						instance.GetNamespace(),
+						instance.GetName()),
+				)
+				return !postgresql.IsMaster(masterPod)
+			}, asyncOpsTimeoutMins).Should(BeTrue(),
+				fmt.Sprintf("timed out while waiting for former master pod %s of DSI %s/%s "+
+					"to rejoin the cluster as replica",
+					masterPod.Name,
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+		})
+
+		// wait for data to be propagated to old master
+		// TODO: This could be removed if we can check for replication lag
+		time.Sleep(5 * time.Second)
+
+		By("Ensuring data is readable from master", func() {
+			masterPortForwardStopCh, masterLocalPort, err := framework.PortForwardPod(
+				ctx, instancePort, kubeconfigPath, masterPod, k8sClient)
+			defer func() { close(masterPortForwardStopCh) }()
+
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to open port forward to replica pod %s of DSI %s/%s",
+					masterPod.Name,
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			replicaClient, err := dsi.NewClient(dataservice, strconv.Itoa(masterLocalPort),
+				serviceBindingData)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to create DSI client for pod %s of DSI %s/%s",
+					masterPod.Name,
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+
+			readData, err := replicaClient.Read(ctx, entity)
+			Expect(err).To(BeNil(),
+				fmt.Sprintf("failed to read data from replica pod %s of DSI %s/%s",
+					masterPod.Name,
+					instance.GetNamespace(),
+					instance.GetName()),
+			)
+			Expect(readData).To(Equal(writtenData),
+				fmt.Sprintf("read data from replica pod %s of DSI %s/%s doesn't match written data",
+					masterPod.Name,
 					instance.GetNamespace(),
 					instance.GetName()),
 			)

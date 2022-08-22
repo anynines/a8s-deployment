@@ -207,7 +207,7 @@ func GetPodsWithLabels(ctx context.Context, c runtimeClient.Client,
 func NPodsReady(l *corev1.PodList) int {
 	podsRunning := 0
 	for _, pod := range l.Items {
-		if isPodReady(&pod) {
+		if IsPodReady(&pod) {
 			podsRunning++
 		}
 	}
@@ -216,7 +216,7 @@ func NPodsReady(l *corev1.PodList) int {
 }
 
 // Determines readiness of pods by looking at container statuses
-func isPodReady(pod *corev1.Pod) bool {
+func IsPodReady(pod *corev1.Pod) bool {
 	for _, containerStatus := range pod.Status.ContainerStatuses {
 		if !containerStatus.Ready {
 			return false
