@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework/postgresql"
+	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 )
 
 // TODO: Create implementations for Data interface to generalize test data input

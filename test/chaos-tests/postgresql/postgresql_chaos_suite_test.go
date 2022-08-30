@@ -1,15 +1,20 @@
-package patroni
+package postgresql
 
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"k8s.io/client-go/kubernetes/scheme"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
+	chmv1alpha1 "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+
 	"github.com/anynines/a8s-deployment/test/framework"
+	"github.com/anynines/a8s-deployment/test/framework/chaos"
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/namespace"
 )
@@ -23,11 +28,9 @@ var (
 	k8sClient runtimeClient.Client
 )
 
-const expectedDataservice = "PostgreSQL"
-
-func TestPatroni(t *testing.T) {
+func TestChaos(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Patroni Suite")
+	RunSpecs(t, "PostgreSQL Chaos Test Suite")
 }
 
 var _ = BeforeSuite(func() {
@@ -39,21 +42,23 @@ var _ = BeforeSuite(func() {
 	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
 		framework.ConfigToVars(config)
 
-	// TODO: We could use AbortSuite to safely exit the test suite rather than the approach here.
-	// We may want to bump Ginkgo soon to keep it up to date and get new features.
-	// https://pkg.go.dev/github.com/onsi/ginkgo/v2#AbortSuite
-	// Provides information on failure to help the user identify the issue. When we use
-	// AbortSuite we can simply write out the error as a message.
-	Expect(dataservice).To(Equal(expectedDataservice), "this suite can run only for dataservice "+
-		expectedDataservice)
+	Expect(strings.ToLower(dataservice) == "postgresql").To(BeTrue(),
+		"This test suite only supports PostgreSQL")
 
-	// Create kubernetes client for interacting with the Kubernetes API
+	// Add ChaosMesh definitions
+	Expect(chmv1alpha1.AddToScheme(scheme.Scheme)).To(Succeed())
+
+	// Create Kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
 	Expect(err).To(BeNil(),
 		fmt.Sprintf("error creating Kubernetes client for dataservice %s", dataservice))
 
+	Expect(chaos.VerifyChaosMeshPresent(ctx, k8sClient)).To(Succeed(),
+		"ChaosMesh needs to be installed to run this test suite")
+
 	Expect(namespace.CreateIfNotExists(ctx, testingNamespace, k8sClient)).
 		To(Succeed(), "failed to create testing namespace")
+
 })
 
 var _ = AfterSuite(func() {

@@ -19,11 +19,11 @@ import (
 	"k8s.io/utils/pointer"
 	ctrlruntimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/postgresql"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/secret"
-	"github.com/anynines/a8s-deployment/test/e2e/framework/servicebinding"
+	"github.com/anynines/a8s-deployment/test/framework"
+	"github.com/anynines/a8s-deployment/test/framework/dsi"
+	"github.com/anynines/a8s-deployment/test/framework/postgresql"
+	"github.com/anynines/a8s-deployment/test/framework/secret"
+	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
 	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
 	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
 )

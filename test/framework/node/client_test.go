@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 	k8stest "k8s.io/client-go/testing"
 
-	"github.com/anynines/a8s-deployment/test/e2e/framework/node"
+	"github.com/anynines/a8s-deployment/test/framework/node"
 )
 
 func TestMain(m *testing.M) {
