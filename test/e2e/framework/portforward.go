@@ -60,27 +60,14 @@ func PortForward(ctx context.Context,
 	dsi runtimeClient.Object,
 	c runtimeClient.Client) (chan struct{}, int, error) {
 
-	pod, err := GetPrimaryPodUsingServiceSelector(ctx, dsi, c)
-	if err != nil {
-		return nil, -1, err
-	}
-
-	return PortForwardPod(ctx, targetPort, pathToKubeConfig, pod, c)
-}
-
-// PortForwardPod d establishes a port-forward from a randomly selected local port to port `targetPort`
-// of `pod`.
-//  To terminate the port-forward, close the returned channel.
-//  The other return arguments are the selected local port, and an error in case of failure.
-func PortForwardPod(ctx context.Context,
-	targetPort int,
-	pathToKubeConfig string,
-	pod *corev1.Pod,
-	c runtimeClient.Client) (chan struct{}, int, error) {
-
 	config, err := clientcmd.BuildConfigFromFlags("", pathToKubeConfig)
 	if err != nil {
 		panic(err)
+	}
+
+	pod, err := GetPrimaryPodUsingServiceSelector(ctx, dsi, c)
+	if err != nil {
+		return nil, -1, err
 	}
 
 	// stopCh control the port forwarding lifecycle. When it gets closed the

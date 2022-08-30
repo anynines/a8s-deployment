@@ -3,7 +3,7 @@ package topology_awareness
 import (
 	"fmt"
 
-	"github.com/anynines/a8s-deployment/test/framework/dsi"
+	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
 )
 
 type Object interface {

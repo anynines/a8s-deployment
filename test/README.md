@@ -30,16 +30,9 @@ test cases test the same coarse-grained functionality.
 
 - To run *all* the test suites currently available run `go test ./...` from
   inside the test directory.
-- To run the end-to-end tests use `go test ./e2e/..`
-- To run only the chaos tests use `go test ./chaos-tests`
-- To run a *single* suite/piece of functionality, for example the backup
-  end-to-end tests, run `go test ./e2e/backup` from inside the test directory.
+- To run a *single* suite/piece of functionality, for example the backup tests,
+  run `go test ./e2e/backup` from inside the test directory.
 - `go test` can also be replaced by `ginkgo` for more informative output.
-
-If your run includes the `chaos-tests`, you will have to install
-[ChaosMesh](https://chaos-mesh.org/). As the installation is specific to the
-container runtime used in your cluster, refer to the [official installation
-guide](https://chaos-mesh.org/docs/production-installation-using-helm/). 
 
 ### Adding or Modifying Tests
 
@@ -70,47 +63,41 @@ guide](https://chaos-mesh.org/docs/production-installation-using-helm/).
 ├── README.md
 ├── go.mod
 ├── go.sum
-└── chaos-tests
-│   ├── postgresql_chaos_suite_test.go
-│   └── postgresql_chaos_test.go
-├── e2e
-│   ├── backup
-│   │   ├── backup_suite_test.go
-│   │   └── backup_test.go
-│   ├── patroni
-│   │   ├── patroni_suite_test.go
-│   │   └── patroni_test.go
-│   ├── postgresql
-│   │   ├── postgresql_suite_test.go
-│   │   └── postgresql_test.go
-│   ├── servicebinding
-│   │   ├── servicebinding_suite_test.go
-│   │   └── servicebinding_test.go
-│   ├── topology_awareness
-│       ├── topology_awareness_suite_test.go
-│       └── topology_awareness_test.go
-└── framework
-      ├── backup
-      │   └── backup.go
-      ├── chaos
-      │   └── chaos.go
-      ├── dsi
-      │   ├── client.go
-      │   ├── dsi.go
-      │   └── dsiclient.go
-      ├── parse.go
-      ├── portforward.go
-      ├── postgresql
-      │   ├── dsiclient.go
-      │   └── postgresql.go
-      ├── restore
-      │   └── restore.go
-      ├── secret
-      │   └── secret.go
-      ├── servicebinding
-      │   └── servicebinding.go
-      └── util.go
-    
+└── e2e
+    ├── backup
+    │   ├── backup_suite_test.go
+    │   └── backup_test.go
+    ├── patroni
+    │   ├── patroni_suite_test.go
+    │   └── patroni_test.go
+    ├── postgresql
+    │   ├── postgresql_suite_test.go
+    │   └── postgresql_test.go
+    ├── servicebinding
+    │   ├── servicebinding_suite_test.go
+    │   └── servicebinding_test.go
+    ├── topology_awareness
+    │   ├── topology_awareness_suite_test.go
+    │   └── topology_awareness_test.go
+    └── framework
+        ├── backup
+        │   └── backup.go
+        ├── dsi
+        │   ├── client.go
+        │   ├── dsi.go
+        │   └── dsiclient.go
+        ├── parse.go
+        ├── portforward.go
+        ├── postgresql
+        │   ├── dsiclient.go
+        │   └── postgresql.go
+        ├── restore
+        │   └── restore.go
+        ├── secret
+        │   └── secret.go
+        ├── servicebinding
+        │   └── servicebinding.go
+        └── util.go
 ```
 
 Note: for packages that contain end-to-end test suites, only the test files are shown above. There

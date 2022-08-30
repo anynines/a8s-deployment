@@ -12,10 +12,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/anynines/a8s-deployment/test/framework"
-	"github.com/anynines/a8s-deployment/test/framework/dsi"
-	"github.com/anynines/a8s-deployment/test/framework/secret"
-	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
+	"github.com/anynines/a8s-deployment/test/e2e/framework"
+	"github.com/anynines/a8s-deployment/test/e2e/framework/dsi"
+	"github.com/anynines/a8s-deployment/test/e2e/framework/secret"
+	"github.com/anynines/a8s-deployment/test/e2e/framework/servicebinding"
 	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
 )
 

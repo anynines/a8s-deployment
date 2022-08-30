@@ -6,7 +6,7 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/framework/postgresql"
+	"github.com/anynines/a8s-deployment/test/e2e/framework/postgresql"
 )
 
 func NewK8sClient(ds, kubeconfig string) (client.Client, error) {

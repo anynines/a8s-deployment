@@ -11,11 +11,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/framework/postgresql"
+	"github.com/anynines/a8s-deployment/test/e2e/framework/postgresql"
 )
 
 const (
@@ -84,9 +83,6 @@ func supportedDataServices() string {
 
 // TODO: rather than having all these functions here, consider switching to an OOP approach where
 // each instance object exposes these functions for itself as methods.
-// This function does not check if replicas have properly started and have
-// their replication role defined in the labels, thus it might not enough for
-// all test cases, especially chaos tests.
 
 func WaitForReadiness(ctx context.Context, instance runtimeClient.Object, c runtimeClient.Client) {
 	var err error
@@ -105,30 +101,6 @@ func WaitForReadiness(ctx context.Context, instance runtimeClient.Object, c runt
 		}
 		return instanceCreated.ClusterStatus()
 	}, asyncOpsTimeoutMins, 1*time.Second).Should(Equal(clusterStatusRunning),
-		fmt.Sprintf("timeout reached waiting for instance %s/%s readiness: %s",
-			instance.GetNamespace(),
-			instance.GetName(),
-			err,
-		),
-	)
-}
-
-//  WaitForReplicaReadiness waits until the given number of ReplicaPods report as ready.
-func WaitForReplicaReadiness(ctx context.Context, instance runtimeClient.Object,
-	c runtimeClient.Client, replicas int) {
-
-	var err error
-	EventuallyWithOffset(1, func() bool {
-		dsiPods, err := GetPodsWithLabels(ctx, c, instance.GetNamespace(),
-			map[string]string{
-				"a8s.a9s/dsi-name": instance.GetName(),
-			})
-		if err != nil {
-			return false
-		}
-
-		return NPodsReady(dsiPods) == replicas
-	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for instance %s/%s readiness: %s",
 			instance.GetNamespace(),
 			instance.GetName(),
@@ -183,45 +155,4 @@ func WaitForPodDeletion(ctx context.Context, pod *corev1.Pod, c runtimeClient.Cl
 			err,
 		),
 	)
-}
-
-func GetPodsWithLabels(ctx context.Context, c runtimeClient.Client,
-	namespace string, label map[string]string) (*corev1.PodList, error) {
-
-	selector, err := labels.Set(label).AsValidatedSelector()
-	if err != nil {
-		return nil, err
-	}
-
-	podList := &corev1.PodList{}
-
-	err = c.List(ctx, podList, &runtimeClient.ListOptions{
-		Namespace:     namespace,
-		LabelSelector: selector,
-	})
-
-	return podList, err
-}
-
-// NPodsReady returns number ready pods in the given PodList.
-func NPodsReady(l *corev1.PodList) int {
-	podsRunning := 0
-	for _, pod := range l.Items {
-		if isPodReady(&pod) {
-			podsRunning++
-		}
-	}
-
-	return podsRunning
-}
-
-// Determines readiness of pods by looking at container statuses
-func isPodReady(pod *corev1.Pod) bool {
-	for _, containerStatus := range pod.Status.ContainerStatuses {
-		if !containerStatus.Ready {
-			return false
-		}
-	}
-
-	return true
 }

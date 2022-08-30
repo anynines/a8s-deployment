@@ -128,41 +128,6 @@ func (pg Postgresql) GetClientObject() runtimeClient.Object {
 	return pg.Postgresql
 }
 
-func (pg Postgresql) GetReplicaLabels() map[string]string {
-	return map[string]string{
-		pgv1alpha1.DSINameLabelKey:         pg.GetName(),
-		pgv1alpha1.ReplicationRoleLabelKey: "replica",
-	}
-}
-
-func (pg Postgresql) GetMasterLabels() map[string]string {
-	return map[string]string{
-		pgv1alpha1.DSINameLabelKey:         pg.GetName(),
-		pgv1alpha1.ReplicationRoleLabelKey: "master",
-	}
-}
-
-func (pg Postgresql) CheckPatroniLabelsAssigned(ctx context.Context,
-	c runtimeClient.Client) (bool, error) {
-
-	l, err := pg.Pods(ctx, c)
-	if err != nil {
-		return false, err
-	}
-	return hasReplicationRole(l), nil
-}
-
-// TODO: This function should become unnecessary as soon as a proper startup
-// probe is implemented
-func hasReplicationRole(l []corev1.Pod) bool {
-	for _, pod := range l {
-		if _, exists := pod.Labels["a8s.a9s/replication-role"]; !exists {
-			return false
-		}
-	}
-	return true
-}
-
 func NewK8sClient(kubeconfig string) (runtimeClient.Client, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
