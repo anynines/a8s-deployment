@@ -8,3 +8,6 @@ backup-store-config.yaml
 # changes and open PRs, and we don't want the files created by act when testing locally to be
 # committed.
 workflow/
+
+.vscode/
+
