@@ -232,3 +232,7 @@ func StandbyRoleSecretName(instanceName string) string {
 func PvcName(instanceName string, index int) string {
 	return fmt.Sprintf("%s-%s-%d", "pgdata", instanceName, index)
 }
+
+func IsMaster(pod *corev1.Pod) bool {
+	return pod.Labels[pgv1alpha1.ReplicationRoleLabelKey] == "master"
+}
