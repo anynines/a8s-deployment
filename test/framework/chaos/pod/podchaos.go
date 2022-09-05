@@ -1,4 +1,4 @@
-package chaos
+package pod
 
 import (
 	"context"
@@ -19,15 +19,15 @@ type PodChaos struct {
 }
 
 const (
-	podChaosCRDName string = "podchaos.chaos-mesh.org"
-	requiredVersion string = "v1alpha1"
+	ChaosCRDName         string = "podchaos.chaos-mesh.org"
+	ChaosRequiredVersion string = "v1alpha1"
 
 	PodKillAction       string = "pod-kill"
 	PodFailureAction    string = "pod-failure"
 	ContainerKillAction string = "container-kill"
 )
 
-func newPodChaos(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podChaos)) PodChaos {
+func NewChaos(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podChaos)) PodChaos {
 	podChaos := &chmv1alpha1.PodChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "pod-failure",
@@ -48,13 +48,13 @@ func newPodChaos(namespace string, selector chmv1alpha1.PodSelector, opts ...fun
 	return PodChaos{podChaos}
 }
 
-func withName(name string) func(podChaos) {
+func WithName(name string) func(podChaos) {
 	return func(c podChaos) {
 		c.ObjectMeta.Name = name
 	}
 }
 
-func withPodFailureAction(action string) func(podChaos) {
+func WithPodFailureAction(action string) func(podChaos) {
 	var a chmv1alpha1.PodChaosAction
 	switch action {
 	case PodKillAction:
@@ -96,7 +96,11 @@ func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
 	return nil
 }
 
-func newPodLabelSelector(labels map[string]string,
+func (nc PodChaos) GetObject() podChaos {
+	return nc.podChaos
+}
+
+func NewPodLabelSelector(labels map[string]string,
 	opts ...func(PodSelector)) PodSelector {
 
 	podSelector := &chmv1alpha1.PodSelector{
@@ -115,7 +119,7 @@ func newPodLabelSelector(labels map[string]string,
 	return podSelector
 }
 
-func withSelectorMode(mode string) func(PodSelector) {
+func WithSelectorMode(mode string) func(PodSelector) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
 	case "one":
@@ -135,7 +139,7 @@ func withSelectorMode(mode string) func(PodSelector) {
 	}
 }
 
-func withSelectorNamespace(namespaces []string) func(PodSelector) {
+func WithSelectorNamespace(namespaces []string) func(PodSelector) {
 	return func(s PodSelector) {
 		s.Selector.Namespaces = namespaces
 	}
