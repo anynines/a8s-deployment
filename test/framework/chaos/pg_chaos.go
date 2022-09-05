@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/anynines/a8s-deployment/test/framework/chaos/network"
+	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 )
 
 type PgInjector struct {
@@ -15,6 +17,7 @@ type PgInjector struct {
 type PgChaosHelper interface {
 	StopReplicas(ctx context.Context, c runtimeClient.Client) (ChaosObject, error)
 	StopMaster(ctx context.Context, c runtimeClient.Client) (ChaosObject, error)
+	PartitionMaster(ctx, c runtimeClient.Client, t []string) (ChaosObject, error)
 }
 
 func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (ChaosObject,
@@ -56,4 +59,23 @@ func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (Ch
 	}
 
 	return podChaos, nil
+}
+
+func (pg PgInjector) PartitionMaster(ctx context.Context, c runtimeClient.Client, t []string) (
+	ChaosObject, error) {
+
+	nc := network.NewChaos(pg.Instance.GetNamespace(),
+		*newPodLabelSelector(pg.Instance.GetMasterLabels(), withSelectorMode("all"),
+			withSelectorNamespace([]string{pg.Instance.GetNamespace()})),
+		network.WithName("partition-master"),
+		network.WithAction("partition"),
+		network.WithExternalTargets(t),
+		network.WithMode("all"),
+	)
+
+	if err := c.Create(ctx, nc.GetObject()); err != nil {
+		return nil, err
+	}
+
+	return nc, nil
 }

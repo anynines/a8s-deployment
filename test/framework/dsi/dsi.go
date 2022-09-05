@@ -113,7 +113,7 @@ func WaitForReadiness(ctx context.Context, instance runtimeClient.Object, c runt
 	)
 }
 
-//  WaitForReplicaReadiness waits until the given number of ReplicaPods report as ready.
+// WaitForReplicaReadiness waits until the given number of ReplicaPods report as ready.
 func WaitForReplicaReadiness(ctx context.Context, instance runtimeClient.Object,
 	c runtimeClient.Client, replicas int) {
 
