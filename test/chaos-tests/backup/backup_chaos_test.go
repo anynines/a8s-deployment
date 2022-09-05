@@ -7,7 +7,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 
 	backupv1alpha1 "github.com/anynines/a8s-backup-manager/api/v1alpha1"
 	"github.com/anynines/a8s-deployment/test/framework"
@@ -27,7 +26,8 @@ const (
 	replicas     = 1
 	suffixLength = 5
 
-	// entity is a generic term to describe where data services store their data.
+	// entity is a generic term to describe where data services store their data (e.g., a table in
+	// a PostgreSQL database)
 	entity = "test_entity"
 
 	// asyncOpsTimeoutMins is the amount of minutes after which assertions fail if the condition
@@ -37,7 +37,7 @@ const (
 	asyncOpsTimeoutMins = time.Minute * 5
 	// backupTimeoutMins is the amount of minutes after which assertions fail waiting for a backup
 	// to complete. This should be adjusted once we have backups capable of recovering from crashes.
-	backupTimeoutMins = time.Minute * 1
+	backupTimeoutMins = time.Minute * 10
 )
 
 var (
@@ -94,9 +94,16 @@ var _ = Describe("Backup Chaos Tests", func() {
 
 	AfterEach(func() {
 		defer func() { close(portForwardStopCh) }()
+
+		Expect(k8sClient.Delete(ctx, backup)).To(Succeed(),
+			fmt.Sprintf("failed to delete backup %s/%s",
+				backup.GetNamespace(), backup.GetName()))
+		bkp.WaitForDeletion(ctx, backup, k8sClient)
+
 		Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(Succeed(),
 			fmt.Sprintf("failed to delete instance %s/%s",
 				instance.GetNamespace(), instance.GetName()))
+
 		Expect(k8sClient.Delete(ctx, sb)).To(Succeed(),
 			fmt.Sprintf("failed to delete service binding %s/%s",
 				sb.GetNamespace(), sb.GetName()))
@@ -126,7 +133,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 		By("Ensuring data was written successfully to master", func() {
 			readData, err := client.Read(ctx, entity)
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to read data from  DSI %s/%s",
+				fmt.Sprintf("failed to read data from DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
 			)
@@ -225,22 +232,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 		})
 
 		By("Ensure the backup is eventually successful", func() {
-			Eventually(func() bool {
-				b := bkp.New()
-				err := k8sClient.Get(ctx, types.NamespacedName{
-					Name:      backup.GetName(),
-					Namespace: backup.GetNamespace(),
-				}, b)
-				if err != nil {
-					return false
-				}
-
-				return b.Status.Condition.Type == backupv1alpha1.SuccessStatusCondition
-			}, backupTimeoutMins).Should(BeTrue(),
-				fmt.Sprintf("timeout reached waiting for retried backup to succeed for DSI %s/%s",
-					instance.GetNamespace(),
-					instance.GetName()),
-			)
+			bkp.WaitForReadiness(ctx, backup, backupTimeoutMins, k8sClient)
 		})
 	})
 })
