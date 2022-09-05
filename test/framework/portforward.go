@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -96,42 +95,60 @@ func PortForwardPod(ctx context.Context,
 		ErrOut: os.Stderr,
 	}
 
-	var localPort int
+	var fw *portforward.PortForwarder
+
+	fw, err = portForwardAPod(portForwardAPodRequest{
+		restConfig: config,
+		pod:        *pod,
+		localPort:  0, // causes a random port to be chosen
+		targetPort: targetPort,
+		streams:    stream,
+		stopCh:     stopCh,
+		readyCh:    readyCh,
+	})
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to configure port forward for pod %s/%s port %d",
+			pod.Namespace, pod.Name, targetPort)
+	}
+
 	go func() {
-		var err error
-		for i := 0; i < 10; i++ {
-			localPort = pickPort()
-			err = portForwardAPod(portForwardAPodRequest{
-				restConfig: config,
-				pod:        *pod,
-				localPort:  localPort,
-				targetPort: targetPort,
-				streams:    stream,
-				stopCh:     stopCh,
-				readyCh:    readyCh,
-			})
-			if err == nil {
-				break
-			}
-			log.Printf("Attempt number %d failed to bind to port %d: %s", i, localPort, err)
-		}
+		err := fw.ForwardPorts()
+
 		if err != nil {
-			panic("we ran out of retries to find a port to portforward")
+			panic(fmt.Sprintf("An error occurred during port forwarding for pod %s/%s port %d: %s",
+				pod.Namespace, pod.Name, targetPort, err))
 		}
 	}()
 
 	<-readyCh
-	return stopCh, localPort, nil
+
+	portList, err := fw.GetPorts()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to get local port of port forward for pod %s/%s port %d",
+			pod.Namespace, pod.Name, targetPort)
+	}
+
+	if len(portList) != 1 {
+		return nil, 0, fmt.Errorf("unexpected number of forwarded ports %d, only"+
+			" one should be forwarded for pod %s/%s",
+			len(portList), pod.Namespace, pod.Name)
+	}
+	localPort := int(portList[0].Local)
+	log.Printf("Forwarding pod %s/%s port %d on local port %d",
+		pod.Namespace, pod.Name, targetPort, localPort)
+
+	return stopCh, localPort, err
 }
 
-func portForwardAPod(req portForwardAPodRequest) error {
+func portForwardAPod(req portForwardAPodRequest) (*portforward.PortForwarder, error) {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward",
 		req.pod.Namespace, req.pod.Name)
 	hostIP := strings.TrimLeft(req.restConfig.Host, "htps:/")
 
 	transport, upgrader, err := spdy.RoundTripperFor(req.restConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	dialer := spdy.NewDialer(upgrader,
@@ -143,9 +160,10 @@ func portForwardAPod(req portForwardAPodRequest) error {
 		[]string{fmt.Sprintf("%d:%d", req.localPort, req.targetPort)},
 		req.stopCh, req.readyCh, req.streams.Out, req.streams.ErrOut)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return fw.ForwardPorts()
+
+	return fw, nil
 }
 
 func primarySvcSelector(ctx context.Context,
@@ -165,11 +183,6 @@ func primarySvcSelector(ctx context.Context,
 			"spec.selector %s: %w", svc.Spec.Selector, err)
 	}
 	return &selector, nil
-}
-
-func pickPort() int {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return minPort + r.Intn(maxPort-minPort+1)
 }
 
 // TODO: Wait for primary pod explicitly in test setup rather than here. Asynchronous assertions
