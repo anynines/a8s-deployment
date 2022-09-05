@@ -6,12 +6,11 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-
 	apixv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,6 +44,7 @@ func VerifyChaosMeshPresent(ctx context.Context, c runtimeClient.Client) error {
 	return verifyChaosMeshControllersRunning(ctx, c)
 }
 
+// TODO: Verify all chaos CRDs are installed
 func verifyChaosMeshCRDsInstalled(ctx context.Context, c runtimeClient.Client) error {
 	crd := apixv1.CustomResourceDefinition{}
 	err := c.Get(ctx, types.NamespacedName{Name: podChaosCRDName}, &crd)

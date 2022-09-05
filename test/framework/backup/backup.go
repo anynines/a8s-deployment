@@ -55,6 +55,7 @@ func backupPrefix(dsiName string) string {
 	return fmt.Sprintf("%s-backup", dsiName)
 }
 
+// TODO: Make the timeout configurable for more advanced backup scenarios
 func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
 	var err error
 	EventuallyWithOffset(1, func() bool {
