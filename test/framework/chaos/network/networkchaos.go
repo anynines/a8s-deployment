@@ -18,21 +18,48 @@ type NetworkChaos struct {
 	networkChaos
 }
 
+// NetworkChaos Actions
 const (
-	// Actions
-	NetemAction     string = "netem"
-	DelayAction     string = "delay"
-	LossAction      string = "loss"
-	DuplicateAction string = "duplicate"
-	CorruptAction   string = "corrupt"
-	PartitionAction string = "partition"
-	BandwidthAction string = "bandwidth"
+	// NetemAction is a combination of several chaos actions i.e. delay, loss, duplicate, corrupt.
+	// When using this action multiple specs are merged into one Netem RPC and sends to chaos daemon.
+	NetemAction string = "netem"
 
-	// Modes
-	OneMode              string = "one"
-	AllMode              string = "all"
-	FixedMode            string = "fixed"
-	FixedPercentMode     string = "fixed-percent"
+	// DelayAction represents the chaos action of adding delay on pods.
+	DelayAction string = "delay"
+
+	// LossAction represents the chaos action of losing packets on pods.
+	LossAction string = "loss"
+
+	// DuplicateAction represents the chaos action of duplicating packets on pods.
+	DuplicateAction string = "duplicate"
+
+	// CorruptAction represents the chaos action of corrupting packets on pods.
+	CorruptAction string = "corrupt"
+
+	// PartitionAction represents the chaos action of network partition of pods.
+	PartitionAction string = "partition"
+
+	// BandwidthAction represents the chaos action of network bandwidth of pods.
+	BandwidthAction string = "bandwidth"
+)
+
+// NetworkChaos Modes
+const (
+	// OneMode represents that the system will do the chaos action on one object selected randomly.
+	OneMode string = "one"
+
+	// AllMode represents that the system will do the chaos action on all objects
+	// regardless of status (not ready or not running pods includes).
+	// Use this label carefully.
+	AllMode string = "all"
+
+	// FixedMode represents that the system will do the chaos action on a specific number of running objects.
+	FixedMode string = "fixed"
+
+	// FixedPercentMode to specify a fixed % that can be inject chaos action.
+	FixedPercentMode string = "fixed-percent"
+
+	// RandomMaxPercentMode to specify a maximum % that can be inject chaos action.
 	RandomMaxPercentMode string = "random-max-percent"
 )
 
