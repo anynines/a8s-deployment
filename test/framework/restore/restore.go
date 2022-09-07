@@ -6,6 +6,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -64,7 +65,7 @@ func recoveryPrefix(dsiName string) string {
 
 func WaitForReadiness(ctx context.Context, recovery *v1alpha1.Recovery, c runtimeClient.Client) {
 	var err error
-	EventuallyWithOffset(1, func() string {
+	EventuallyWithOffset(1, func() bool {
 		recoveryCreated := New()
 		if err = c.Get(
 			ctx,
@@ -74,10 +75,17 @@ func WaitForReadiness(ctx context.Context, recovery *v1alpha1.Recovery, c runtim
 			},
 			recoveryCreated,
 		); err != nil {
-			return fmt.Sprintf("%v+", err)
+			return false
 		}
-		return string(recoveryCreated.Status.Condition.Type)
-	}, asyncOpsTimeoutMins, 1*time.Second).Should(Equal(recoverySucceeded),
+
+		for _, c := range recoveryCreated.Status.Conditions {
+			if c.Type == "Complete" && c.Status == v1.ConditionTrue {
+				return true
+			}
+		}
+
+		return false
+	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for recovery %s/%s readiness at %s: %s",
 			recovery.GetNamespace(),
 			recovery.GetName(),

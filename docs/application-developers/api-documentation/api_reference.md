@@ -50,7 +50,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | `postgresql.anynines.com/v1alpha1`
 | `kind` _string_ | `Postgresql`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[PostgresqlSpec](#postgresqlspec)_ |  |
 | `status` _[PostgresqlStatus](#postgresqlstatus)_ |  |
 
@@ -62,7 +62,7 @@ PostgresqlList contains a list of Postgresql
 | --- | --- |
 | `apiVersion` _string_ | `postgresql.anynines.com/v1alpha1`
 | `kind` _string_ | `PostgresqlList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `items` _[Postgresql](#postgresql) array_ |  |
 
 #### PostgresqlSchedulingConstraints
@@ -72,8 +72,8 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) array_ | Tolerations is the list of tolerations that the Pods of the PostgreSQL instance will have with respect to the taints of the Kubernetes cluster nodes. It can be used to affect scheduling of the Pods of the PostgreSQL instance on the Kubernetes cluster nodes. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ and https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#toleration-v1-core . If you don't know what are the specific taints on the nodes of the Kubernetes cluster you're using, you should ask your cluster administrator. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
-| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#affinity-v1-core)_ | Affinity groups the fields that govern node affinity, Pod affinity, and Pod anti affinity. It has exactly the same syntax and semantics of the built-in Kubernetes affinity type: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#affinity-v1-core . It is copied as it is in the spec of the Pods of the PostgreSQL instance, and can be used to attract said Pods to specific Kubernetes cluster nodes based on those nodes' labels and on the labels of other Pods running on the nodes. In the latter case repulsion rules between Pods can also be configured via the PodAntiAffinity field. An important use case for repulsion rules would be HA: it can be ensured that the replicas of the same PostgreSQL instance repel each other and end up on different nodes or even availability zones. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity . To properly configure this field you might need to know which labels the DSI pods get. That's the union of the DSI's `metadata.labels`; the a8s-reserved labels "a8s.a9s/dsi-name": "<name of the instance>", "a8s.a9s/dsi-group": "postgresql.anynines.com", "a8s.a9s/dsi-kind": "Postgresql"; the label "a8s.a9s/replication-role", set to the value "master" for the primary pod and "replica" for the standby pods; the standard labels that Kubernetes adds to all pods managed via a statefulset. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
+| `tolerations` _[Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#toleration-v1-core) array_ | Tolerations is the list of tolerations that the Pods of the PostgreSQL instance will have with respect to the taints of the Kubernetes cluster nodes. It can be used to affect scheduling of the Pods of the PostgreSQL instance on the Kubernetes cluster nodes. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ and https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#toleration-v1-core . If you don't know what are the specific taints on the nodes of the Kubernetes cluster you're using, you should ask your cluster administrator. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
+| `affinity` _[Affinity](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#affinity-v1-core)_ | Affinity groups the fields that govern node affinity, Pod affinity, and Pod anti affinity. It has exactly the same syntax and semantics of the built-in Kubernetes affinity type: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#affinity-v1-core . It is copied as it is in the spec of the Pods of the PostgreSQL instance, and can be used to attract said Pods to specific Kubernetes cluster nodes based on those nodes' labels and on the labels of other Pods running on the nodes. In the latter case repulsion rules between Pods can also be configured via the PodAntiAffinity field. An important use case for repulsion rules would be HA: it can be ensured that the replicas of the same PostgreSQL instance repel each other and end up on different nodes or even availability zones. More information at https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity . To properly configure this field you might need to know which labels the DSI pods get. That's the union of the DSI's `metadata.labels`; the a8s-reserved labels "a8s.a9s/dsi-name": "<name of the instance>", "a8s.a9s/dsi-group": "postgresql.anynines.com", "a8s.a9s/dsi-kind": "Postgresql"; the label "a8s.a9s/replication-role", set to the value "master" for the primary pod and "replica" for the standby pods; the standard labels that Kubernetes adds to all pods managed via a statefulset. Updating this field will result in re-creation and re-scheduling of all the Pods of the PostgreSQL instance, so *there may be downtime*. |
 
 #### PostgresqlSpec
 
@@ -86,7 +86,7 @@ _Appears in:_
 | --- | --- |
 | `replicas` _integer_ | Replicas is the number of replicas of the data service in the cluster. Replicas of the PostgreSQL resource will constitute a streaming replication cluster. This value should be an odd number (with the exception of the value 0) to ensure the resultant cluster can establish quorum. Only scaling up is supported and not scaling down of replicas. |
 | `version` _integer_ | Version specifies the PostgreSQL version that the instance should use. It is required to pick a version and it cannot be changed afterwards, since major version upgrades are  currently unsupported. |
-| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core)_ | Resources is the desired compute resource requirements of PostgreSQL container within a pod in the cluster. Updating resources causes the replicas of the PostgreSQL cluster to be killed and recreated one at a time, which could potentially lead to downtime if something goes wrong during the update. |
+| `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#resourcerequirements-v1-core)_ | Resources is the desired compute resource requirements of PostgreSQL container within a pod in the cluster. Updating resources causes the replicas of the PostgreSQL cluster to be killed and recreated one at a time, which could potentially lead to downtime if something goes wrong during the update. |
 | `volumeSize` _Quantity_ | VolumeSize sets the size of the persistent volume of the PostgreSQL instance, the minimum size is 0.5Gi. The size is to be specified as a plain integer or as a fixed-point number using one of these suffixes: E, P, T, G, M, K, corresponding to kilo-, mega-, gigabytes, etc. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes, etc. For example  a value of "0.5Gi" corresponds to an instance with a persistent volume of 0.5 gibibytes. |
 | `postgresConfiguration` _[PostgresConfiguration](#postgresconfiguration)_ |  |
 | `schedulingConstraints` _[PostgresqlSchedulingConstraints](#postgresqlschedulingconstraints)_ | SchedulingConstraints contains subfields that affect how the Pods of the Postgresql instance will be scheduled onto Kubernetes cluster nodes. The subfields map directly to Kubernetes API primitives such as node taints, tolerations, affinity and (anti)affinity. See the documentation of each subfield for more details. Together, the subfields of SchedulingConstraints allow you to express constraints such as "Pods of this Postgresql instance MUST be scheduled to different availability zones", or "Pods of this Postgresql instance SHOULD preferrably (but not mandatorily) be scheduled to nodes that have a SSD", and many more. As a warning, the subfields of SchedulingConstraints can interfere with each other, so when you set one of them you should consider how it will interact with the values that you set for other subfields. |
@@ -245,8 +245,8 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `condition` _[StatusCondition](#statuscondition)_ | Condition describes the last observed status of the Backup. It tells whether the backup `succeeded`, is `inProgress` or `failed` (and error messages with more details if so), as well as the timestamp of when the Condition was last observed to be true. After `Condition.Type` reaches a value of `succeeded`, the Condition is never updated again. 
- TODO: this API is consistent with K8s API Conditions (https://github.com/kubernetes/kubernetes/issues/7856), but backups are probably not well-suited to be described by Conditions. Also, the time at which the backup was taken should probably be described more accurately and *more explicitly* than with `Condition.LastObservationTime`. So maybe we want to simplify the status of backups. |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Backup can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "UploadedToS3", "Terminating". |
+| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
 | `podUsedNamespacedName` _string_ | PodUsedNamespacedName is the namespaced name of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedID` (below) via a PodRef. |
 | `podUsedUID` _UID_ | PodUsedUID is the UID of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedNamespacedName` (above) via a PodRef. |
 | `backupID` _string_ | BackupID is the ID of the Backup; clients can use this to poll the status of the Backup at the Pod identified by `PodUsedID`. |
@@ -311,7 +311,8 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `condition` _[StatusCondition](#statuscondition)_ | Condition describes the last observed status of the Recovery. It tells whether the recovery `succeeded`, is `inProgress` or `failed` (and error messages with more details if so), as well as the timestamp of when the Condition was last observed to be true. After `Condition.Type` reaches a value of `succeeded`, the Condition is never updated again. |
+| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Recovery can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "Terminating". |
 | `podToPoll` _[PodRef](#podref)_ | The Pod to poll to learn the status of the Recovery, if the recovery is in Progress. |
 | `recoveryID` _string_ | RecoveryID is the ID of the Recovery; clients can use this to poll the status of the Recovery at the Pod identified by `PodToHit`. |
 
@@ -329,23 +330,3 @@ _Appears in:_
 | `kind` _string_ | Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. Postgresql, Redis, etc...). |
 | `apiGroup` _string_ | APIGroup is the API group of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. postgresql.anynines.com, redis.anynines.com, etc...). |
 
-#### StatusCondition
-
-StatusCondition is a summary of the last observed status of a Backup or a Recovery operation. TODO: Find a better name for this type.
-
-_Appears in:_
-- [BackupStatus](#backupstatus)
-- [RecoveryStatus](#recoverystatus)
-
-| Field | Description |
-| --- | --- |
-| `type` _[StatusConditionType](#statusconditiontype)_ | Type is a short camelCase message describing the last observed condition of the backup or recovery. Can be one of `succeeded`, `inProgress`, `failed`. |
-| `error` _string_ | Error contains a message describing what went wrong in case `Type` has value `failed`. |
-| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
-
-#### StatusConditionType
-
-_Underlying type:_ `string`
-
-_Appears in:_
-- [StatusCondition](#statuscondition)

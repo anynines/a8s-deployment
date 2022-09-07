@@ -183,10 +183,12 @@ only S3) that must have been configured by the platform operator when he install
 cluster. This might take some time, to learn when the backup has completed, run:
 
 ```shell
-watch kubectl get backup backup-sample --output template='{{.status.condition.type}}'
+ kubectl wait backup backup-sample --for=condition=complete
 ```
 
-and wait until the output is "Succeeded".
+and wait until the command has finished. If your backup takes a long time to complete, you may need
+to run the `kubectl wait` command multiple times or adjust the timeout using the `--timeout=<n>s`
+flag.
 
 Stay tuned for a complete reference of all the fields that you can configure in a Backup API object.
 
@@ -218,10 +220,12 @@ The a8s control plane will react by downloading the relevant backup and using it
 service instance. This might take some time, to learn when the recovery has completed, run:
 
 ```shell
-watch kubectl get recovery recovery-sample --output template='{{.status.condition.type}}'
+kubectl wait recovery recovery-sample --for=condition=complete
 ```
 
-and wait until the output is "Succeeded".
+and wait until the command has finished. If your recovery takes a long time to complete, you may
+need to run the `kubectl wait` command multiple times or adjust the timeout using the
+ `--timeout=<n>s` flag.
 
 When you want to delete a `Recovery`, run:
 
@@ -327,7 +331,7 @@ Prometheus instance.
 Go to the Create section in the left menu and select Import.
 
 ![Grafana2](/pics/grafana/2.png)
- 
+
 Then Insert `8588` as the Dashboard ID and click on Load.
 
 ![Grafana5](/pics/grafana/5.png)
