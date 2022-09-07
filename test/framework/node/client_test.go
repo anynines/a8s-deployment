@@ -14,6 +14,7 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	k8serrutil "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stest "k8s.io/client-go/testing"
 
@@ -28,6 +29,49 @@ func TestMain(m *testing.M) {
 	equality.Semantic.AddFuncs(compareNodesIgnoringOrder, compareTaintsIgnoringOrder)
 
 	os.Exit(m.Run())
+}
+
+func TestErrNodeUpdate(t *testing.T) {
+	t.Parallel()
+
+	testNode := newNode(withName("dummy node"))
+	wrappedErr := errors.New("dummy error")
+
+	err := node.ErrNodeUpdate{
+		Node: testNode,
+		Err:  wrappedErr,
+	}
+
+	if !strings.Contains(err.Error(), testNode.Name) {
+		t.Fatalf("Expected error message \"%v\" of ErrNodeUpdate to mention the name of the node "+
+			"%s but it doesn't", err, testNode.Name)
+	}
+
+	if !errors.Is(err, wrappedErr) {
+		t.Fatalf("Expected ErrNodeUpdate to wrap error \"%v\" but it doesn't", wrappedErr)
+	}
+}
+
+func TestErrNodeGet(t *testing.T) {
+	t.Parallel()
+
+	nodeName := "dummy node"
+	wrappedErr := errors.New("dummy error")
+
+	err := node.ErrNodeGet{
+		NodeName: nodeName,
+		Err:      wrappedErr,
+	}
+
+	if !strings.Contains(err.Error(), nodeName) {
+		t.Fatalf("Expected error message \"%v\" of ErrNodeGet to mention the name of the node "+
+			"%s but it doesn't", err, nodeName)
+	}
+
+	if !errors.Is(err, wrappedErr) {
+		t.Fatalf("Expected ErrNodeGet to wrap error \"%v\" but it doesn't", wrappedErr)
+	}
+
 }
 
 func TestGetWhenNodeExists(t *testing.T) {
@@ -134,14 +178,19 @@ func TestGetWhenNodeDoesntExist(t *testing.T) {
 			// Invoke the method under test.
 			gotNode, err := nodes.Get(context.Background(), tc.nameOfNodeToGet)
 
-			if !k8serr.IsNotFound(err) {
-				t.Fatalf("Expected error \"%v\" returned by Get to be a k8s API NotFound error, "+
-					"but it's not", err)
+			var geterr node.ErrNodeGet
+			if !errors.As(err, &geterr) {
+				t.Fatalf("Expected a node get error to occur but got \"%v\"", err)
 			}
 
-			if !strings.Contains(err.Error(), tc.nameOfNodeToGet) {
-				t.Fatalf("Expected error \"%v\" returned by Get to mention the name of the node "+
-					"to get, but it doesn't", err)
+			if geterr.NodeName != tc.nameOfNodeToGet {
+				t.Fatalf("Expected the returned error to mention the node name %s, but it reports "+
+					"the wrong node name %s", tc.nameOfNodeToGet, geterr.NodeName)
+			}
+
+			if !k8serr.IsNotFound(geterr.Err) {
+				t.Fatalf("Expected error \"%v\" returned by Get to be a k8s API NotFound error, "+
+					"but it's not", err)
 			}
 
 			if !equality.Semantic.DeepEqual(gotNode, v1.Node{}) {
@@ -176,19 +225,23 @@ func TestGetWrapsErrors(t *testing.T) {
 	// Invoke the method under test
 	gotNode, gotErr := nodes.Get(context.Background(), "n1")
 
-	// TODO: fix error checks to use the approach used in PR #134
 	if gotErr == nil {
-		t.Fatal("got nil error, expected non-nil error")
+		t.Fatal("Got nil error, expected non-nil error")
 	}
 
-	if !strings.Contains(strings.ToLower(gotErr.Error()), "get") {
-		t.Fatalf("got error \"%v\" should contain the word \"get\" (in any case) but it doesn't",
-			gotErr)
+	var geterr node.ErrNodeGet
+	if !errors.As(gotErr, &geterr) {
+		t.Fatalf("Expected a node get error to occur but got \"%v\"", gotErr)
 	}
 
-	if !strings.Contains(gotErr.Error(), testErr.Error()) {
-		t.Fatalf("got error \"%v\" should contain the error message \"%v\" returned by the "+
-			"K8s API but it doesn't", gotErr, testErr)
+	if geterr.NodeName != testNode.Name {
+		t.Fatalf("Expected the returned error to mention the node name %s, but it reports the "+
+			"wrong node name %s", testNode.Name, geterr.NodeName)
+	}
+
+	if !errors.Is(geterr, testErr) {
+		t.Fatalf("Got error \"%v\" must wrap injected error "+
+			"\"%v\" but it doesn't", gotErr, testErr)
 	}
 
 	if !equality.Semantic.DeepEqual(gotNode, v1.Node{}) {
@@ -297,21 +350,16 @@ func TestListAllFails(t *testing.T) {
 	gotNodes, gotErr := nodes.ListAll(context.Background())
 
 	if gotErr == nil {
-		t.Fatal("got nil error, expected non-nil error")
+		t.Fatal("Got nil error, expected non-nil error")
 	}
 
-	if !strings.Contains(strings.ToLower(gotErr.Error()), "list") {
-		t.Fatalf("got error \"%v\" should contain the word \"list\" (in any case) but it doesn't",
-			gotErr)
-	}
-
-	if !strings.Contains(gotErr.Error(), testErr.Error()) {
-		t.Fatalf("got error \"%v\" should contain the error message \"%v\" returned by the "+
-			"K8s API but it doesn't", gotErr, testErr)
+	if !errors.Is(gotErr, testErr) {
+		t.Fatalf("Got error \"%v\" must wrap injected error "+
+			"\"%v\" but it doesn't", gotErr, testErr)
 	}
 
 	if len(gotNodes) != 0 {
-		t.Fatalf("no node should be returned on error, but got non-empty nodes list %#+v", gotNodes)
+		t.Fatalf("No node should be returned on error, but got non-empty nodes list %#+v", gotNodes)
 	}
 }
 
@@ -459,17 +507,17 @@ func TestListWorkersFails(t *testing.T) {
 	gotNodes, gotErr := nodes.ListWorkers(context.Background())
 
 	if gotErr == nil {
-		t.Fatal("got nil error, expected non-nil error")
+		t.Fatal("Got nil error, expected non-nil error")
 	}
 
 	if !strings.Contains(strings.ToLower(gotErr.Error()), "list") {
-		t.Fatalf("got error \"%v\" should contain the word \"list\" (in any case) but it doesn't",
+		t.Fatalf("Got error \"%v\" should contain the word \"list\" (in any case) but it doesn't",
 			gotErr)
 	}
 
-	if !strings.Contains(gotErr.Error(), testErr.Error()) {
-		t.Fatalf("got error \"%v\" should contain the error message \"%v\" returned by the "+
-			"K8s API but it doesn't", gotErr, testErr)
+	if !errors.Is(gotErr, testErr) {
+		t.Fatalf("Got error \"%v\" must wrap injected error "+
+			"\"%v\" but it doesn't", gotErr, testErr)
 	}
 
 	if len(gotNodes) != 0 {
@@ -822,10 +870,12 @@ func TestUnlabelAllListFails(t *testing.T) {
 	keysOfLabelsToRemove := []string{"a8s.key1"}
 	inputNode := newNode(withName("n1"), withLabels(map[string]string{"a8s.key1": "val1"}))
 
-	// Prepare a fake K8s client that is sabotaged to return an error on LIST API calls.
+	// Prepare a fake K8s client that is sabotaged to return an error on LIST
+	// API calls.
+	testErr := errors.New("dummy error")
 	sabotagedK8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{inputNode}})
 	listSabotager := func(k8stest.Action) (bool, runtime.Object, error) {
-		return true, nil, errors.New("dummy error")
+		return true, nil, testErr
 	}
 	sabotagedK8sClient.PrependReactor("list", "nodes", listSabotager)
 
@@ -843,8 +893,8 @@ func TestUnlabelAllListFails(t *testing.T) {
 		t.Fatal("UnlabelAll returned <nil> error, expected non-nil error")
 	}
 
-	if !strings.Contains(err.Error(), "dummy error") {
-		t.Fatalf("Got error \"%s\" must contain message of injected error "+
+	if !errors.Is(err, testErr) {
+		t.Fatalf("Got error \"%s\" must wrap injected error "+
 			"\"dummy error\" but it doesn't", err.Error())
 	}
 }
@@ -907,7 +957,18 @@ func TestUnlabelAllUpdateFails(t *testing.T) {
 			// update must fail in the test case and makes them fail by returning an error.
 			testErr := errors.New("dummy error")
 			updateSabotager := func(apiCall k8stest.Action) (bool, runtime.Object, error) {
-				updatedNode := apiCall.(k8stest.UpdateAction).GetObject().(*v1.Node)
+				a, ok := apiCall.(k8stest.UpdateAction)
+				if !ok {
+					t.Fatalf("Failed type conversion of %s to k8stest.UpdateAction. "+
+						"This should never happen!", apiCall)
+				}
+
+				updatedNode, ok := a.GetObject().(*v1.Node)
+				if !ok {
+					t.Fatalf("Failed type conversion of requested object %s to *v1.Node. "+
+						"This should never happen!", a.GetObject())
+				}
+
 				if _, mustFail := tc.nodesWhoseUpdateFails[updatedNode.Name]; mustFail {
 					return true, nil, testErr
 				}
@@ -934,21 +995,33 @@ func TestUnlabelAllUpdateFails(t *testing.T) {
 				t.Fatal("UnlabelAll returned <nil> error, expected non-nil error")
 			}
 
+			var failedNodes k8serrutil.Aggregate
+			if !errors.As(err, &failedNodes) {
+				t.Fatalf("Expected aggregate error with list of nodes but got %v", err)
+			}
+
 			// Verify that the error message of every update that failed is mentioned in the error
 			// returned by UnlabelAll
-			individualUpdateErrsCount := strings.Count(err.Error(), testErr.Error())
-			if individualUpdateErrsCount != len(tc.nodesWhoseUpdateFails) {
+			if len(failedNodes.Errors()) != len(tc.nodesWhoseUpdateFails) {
 				t.Fatalf("Got error \"%s\" must report the error message of every update that "+
 					"failed, but it doesn't: %d updates should have failed but it reports the "+
 					"error messages of %d", err.Error(), len(tc.nodesWhoseUpdateFails),
-					individualUpdateErrsCount)
+					len(failedNodes.Errors()))
 			}
 
 			for nodeName := range tc.nodesWhoseUpdateFails {
-				if !strings.Contains(err.Error(), nodeName) {
-					t.Fatalf("Got error \"%s\" must report the name of each node whose update "+
-						"failed and it doesn't: update of %s should have failed but %s is not "+
-						"contained in the error message", err.Error(), nodeName, nodeName)
+				found := false
+				for _, e := range failedNodes.Errors() {
+					var n node.ErrNodeUpdate
+					if errors.As(e, &n) && n.Node.Name == nodeName {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Fatalf("Got error \"%s\" which must wrap one error for each node whose"+
+						" update failed but it doesn't: update of node %s failed, but no error for"+
+						" it is wrapped", err, nodeName)
 				}
 			}
 
@@ -1408,6 +1481,218 @@ func TestTaintWorkersHappyPaths(t *testing.T) {
 	}
 }
 
+func TestTaintWorkersListFails(t *testing.T) {
+	t.Parallel()
+
+	taintToAdd := []v1.Taint{{Key: "key1", Value: "val1", Effect: "NoSchedule"}}
+	inputNode := newNode(withName("n1"))
+
+	dummyErr := errors.New("dummy error")
+	// Prepare a fake K8s client that is sabotaged to return an error on LIST API calls.
+	sabotagedK8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{inputNode}})
+	listSabotager := func(k8stest.Action) (bool, runtime.Object, error) {
+		return true, nil, dummyErr
+	}
+	sabotagedK8sClient.PrependReactor("list", "nodes", listSabotager)
+
+	// Set up the object under test with the sabotaged K8s client
+	nodes := node.Client{
+		Nodes:            sabotagedK8sClient.CoreV1().Nodes(),
+		MasterNodeTaints: node.MasterTaintKeys,
+		Log:              logr.Discard(),
+	}
+
+	// Invoke the method under test
+	err := nodes.TaintWorkers(context.Background(), taintToAdd)
+
+	if err == nil {
+		t.Fatal("TaintWorkers returned <nil> error, expected non-nil error")
+	}
+
+	if !errors.Is(err, dummyErr) {
+		t.Fatalf("Got error \"%s\" must wrap injected error "+
+			"\"dummy error\" but it doesn't", err.Error())
+	}
+}
+
+func TestTaintWorkersUpdateFails(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		taintsToAdd   []v1.Taint
+		inputNodes    []v1.Node
+		expectedNodes []v1.Node
+		// this is a hash map rather than a slice to make it easy to verify if a node's update
+		// should fail with `nodesWhoseUpdateFails[nodeName]`
+		nodesWhoseUpdateFails map[string]struct{}
+	}{
+		"no_node_is_updated_because_updating_fails_for_all_nodes": {
+			taintsToAdd: []v1.Taint{
+				{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+				{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+			},
+			inputNodes: []v1.Node{
+				newNode(withName("n1")),
+				newNode(withName("n2")),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("n1")),
+				newNode(withName("n2")),
+			},
+			nodesWhoseUpdateFails: map[string]struct{}{
+				"n1": {},
+				"n2": {},
+			},
+		},
+
+		"only_1_node_out_of_3_is_updated_because_updating_the_others_fails": {
+			taintsToAdd: []v1.Taint{
+				{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+				{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+			},
+			inputNodes: []v1.Node{
+				newNode(withName("n1")),
+				newNode(withName("n2")),
+				newNode(withName("n3")),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("n1"), withTaints([]v1.Taint{
+					{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+					{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+				})),
+				newNode(withName("n2")),
+				newNode(withName("n3")),
+			},
+			nodesWhoseUpdateFails: map[string]struct{}{
+				"n2": {},
+				"n3": {},
+			},
+		},
+
+		"one_node_fails_to_be_tainted": {
+			taintsToAdd: []v1.Taint{
+				{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+				{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+			},
+			inputNodes: []v1.Node{
+				newNode(withName("n1")),
+				newNode(withName("n2")),
+				newNode(withName("n3")),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("n1"), withTaints([]v1.Taint{
+					{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+					{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+				})),
+				newNode(withName("n2")),
+				newNode(withName("n3"), withTaints([]v1.Taint{
+					{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+					{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+				})),
+			},
+			nodesWhoseUpdateFails: map[string]struct{}{
+				"n2": {},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Rebind tc into this lexical scope. Details on the why at
+			// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+			tc := tc
+
+			t.Parallel()
+
+			// Define a function that will intercept the K8s Update API calls on the nodes whose
+			// update must fail in the test case and makes them fail by
+			// returning an error.
+			testErr := errors.New("dummy error")
+			updateSabotager := func(apiCall k8stest.Action) (bool, runtime.Object, error) {
+				a, ok := apiCall.(k8stest.UpdateAction)
+				if !ok {
+					t.Fatalf("Failed type conversion of %s to k8stest.UpdateAction. "+
+						"This should never happen!", apiCall)
+				}
+
+				updatedNode, ok := a.GetObject().(*v1.Node)
+				if !ok {
+					t.Fatalf("Failed type conversion of requested object %s to *v1.Node. "+
+						"This should never happen!", a.GetObject())
+				}
+
+				if _, mustFail := tc.nodesWhoseUpdateFails[updatedNode.Name]; mustFail {
+					return true, nil, testErr
+				}
+				return false, nil, nil
+			}
+
+			// Prepare a fake K8s client that is sabotaged to return an error on the update of
+			// certain nodes via the function defined right above.
+			sabotagedK8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: tc.inputNodes})
+			sabotagedK8sClient.PrependReactor("update", "nodes", updateSabotager)
+			k8sAPINodesClient := sabotagedK8sClient.CoreV1().Nodes()
+
+			// Set up the object under test with the sabotaged K8s client
+			nodes := node.Client{
+				Nodes:            k8sAPINodesClient,
+				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
+			}
+
+			// Invoke method under test
+			err := nodes.TaintWorkers(context.Background(), tc.taintsToAdd)
+			if err == nil {
+				t.Fatal("TaintWorkers returned <nil> error, expected non-nil error")
+			}
+
+			var failedNodes k8serrutil.Aggregate
+			if !errors.As(err, &failedNodes) {
+				t.Fatalf("Expected aggregate error with list of nodes but got %v", err)
+			}
+
+			// Verify that the error message of every update that failed is mentioned in the error
+			// returned by TaintWorkers
+			if len(failedNodes.Errors()) != len(tc.nodesWhoseUpdateFails) {
+				t.Fatalf("Got error \"%s\" must report the error message of every update that "+
+					"failed, but it doesn't: %d updates should have failed but it reports the "+
+					"error messages of %d", err.Error(), len(tc.nodesWhoseUpdateFails),
+					len(failedNodes.Errors()))
+			}
+
+			for nodeName := range tc.nodesWhoseUpdateFails {
+				found := false
+				for _, e := range failedNodes.Errors() {
+					var n node.ErrNodeUpdate
+					if errors.As(e, &n) && n.Node.Name == nodeName {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Fatalf("Got error \"%s\" which must wrap one error for each node whose"+
+						" update failed but it doesn't: update of node %s failed, but no error for"+
+						" it is wrapped", err, nodeName)
+				}
+			}
+
+			// Get the nodes after invoking the method under test
+			gotNodesList, err := k8sAPINodesClient.List(context.Background(), metav1.ListOptions{})
+			if err != nil {
+				t.Fatal("Expected no error when listing nodes, got:", err)
+			}
+			gotNodes := gotNodesList.Items
+
+			// Compare the expected nodes with the got ones to ensure that only those whose update
+			// didn't fail changed.
+			if !equality.Semantic.DeepEqual(tc.expectedNodes, gotNodes) {
+				t.Fatalf("Expected nodes don't match got ones\n\n\texpected: %#+v\n\n\tgot:"+
+					" %#+v\n\n", tc.expectedNodes, gotNodes)
+			}
+		})
+	}
+}
+
 func TestUntaintAllHappyPaths(t *testing.T) {
 	t.Parallel()
 
@@ -1768,6 +2053,207 @@ func TestUntaintAllHappyPaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUntaintAllListFails(t *testing.T) {
+	t.Parallel()
+
+	taintToRemove := []v1.Taint{{Key: "key1", Value: "val1", Effect: "NoSchedule"}}
+	inputNode := newNode(withName("n1"), withTaints(taintToRemove))
+
+	// Prepare a fake K8s client that is sabotaged to return an error on LIST
+	// API calls.
+	testErr := errors.New("dummy error")
+	sabotagedK8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{inputNode}})
+	listSabotager := func(k8stest.Action) (bool, runtime.Object, error) {
+		return true, nil, testErr
+	}
+	sabotagedK8sClient.PrependReactor("list", "nodes", listSabotager)
+
+	// Set up the object under test with the sabotaged K8s client
+	nodes := node.Client{
+		Nodes:            sabotagedK8sClient.CoreV1().Nodes(),
+		MasterNodeTaints: node.MasterTaintKeys,
+		Log:              logr.Discard(),
+	}
+
+	// Invoke the method under test
+	err := nodes.UntaintAll(context.Background(), taintToRemove)
+
+	if err == nil {
+		t.Fatal("UntaintAll returned <nil> error, expected non-nil error")
+	}
+
+	if !errors.Is(err, testErr) {
+		t.Fatalf("Got error \"%s\" must wrap injected error "+
+			"\"dummy error\" but it doesn't", err.Error())
+	}
+}
+
+func TestUntaintAllUpdateFails(t *testing.T) {
+	t.Parallel()
+
+	testTaints := []v1.Taint{
+		{Key: "key1", Value: "val1", Effect: "NoSchedule"},
+		{Key: "key2", Value: "val2", Effect: "NoSchedule"},
+	}
+
+	testCases := map[string]struct {
+		taintsToRemove []v1.Taint
+		inputNodes     []v1.Node
+		expectedNodes  []v1.Node
+		// this is a hash map rather than a slice to make it easy to verify if a node's update
+		// should fail with `nodesWhoseUpdateFails[nodeName]`
+		nodesWhoseUpdateFails map[string]struct{}
+	}{
+		"no_node_is_updated_because_updating_fails_for_all_nodes": {
+			taintsToRemove: testTaints,
+			inputNodes: []v1.Node{
+				newNode(withName("n1"), withTaints(testTaints)),
+				newNode(withName("n2"), withTaints(testTaints)),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("n1"), withTaints(testTaints)),
+				newNode(withName("n2"), withTaints(testTaints)),
+			},
+			nodesWhoseUpdateFails: map[string]struct{}{
+				"n1": {},
+				"n2": {},
+			},
+		},
+
+		"only_1_node_out_of_3_is_updated_because_updating_the_others_fails": {
+			taintsToRemove: testTaints,
+			inputNodes: []v1.Node{
+				newNode(withName("n1"), withTaints(testTaints)),
+				newNode(withName("n2"), withTaints(testTaints)),
+				newNode(withName("n3"), withTaints(testTaints)),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("n1"), withTaints(nil)),
+				newNode(withName("n2"), withTaints(testTaints)),
+				newNode(withName("n3"), withTaints(testTaints)),
+			},
+			nodesWhoseUpdateFails: map[string]struct{}{
+				"n2": {},
+				"n3": {},
+			},
+		},
+
+		"one_node_out_of_3_is_not_updated_because_updating_fails": {
+			taintsToRemove: testTaints,
+			inputNodes: []v1.Node{
+				newNode(withName("n1"), withTaints(testTaints)),
+				newNode(withName("n2"), withTaints(testTaints)),
+				newNode(withName("n3"), withTaints(testTaints)),
+			},
+			expectedNodes: []v1.Node{
+				newNode(withName("n1")),
+				newNode(withName("n2"), withTaints(testTaints)),
+				newNode(withName("n3")),
+			},
+			nodesWhoseUpdateFails: map[string]struct{}{
+				"n2": {},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Rebind tc into this lexical scope. Details on the why at
+			// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+			tc := tc
+
+			t.Parallel()
+
+			// Define a function that will intercept the K8s Update API calls on the nodes whose
+			// update must fail in the test case and makes them fail by returning an error.
+			testErr := errors.New("dummy error")
+			updateSabotager := func(apiCall k8stest.Action) (bool, runtime.Object, error) {
+				a, ok := apiCall.(k8stest.UpdateAction)
+				if !ok {
+					t.Fatalf("Failed type conversion of %s to k8stest.UpdateAction. "+
+						"This should never happen!", apiCall)
+				}
+
+				updatedNode, ok := a.GetObject().(*v1.Node)
+				if !ok {
+					t.Fatalf("Failed type conversion of requested object %s to *v1.Node. "+
+						"This should never happen!", a.GetObject())
+				}
+
+				if _, mustFail := tc.nodesWhoseUpdateFails[updatedNode.Name]; mustFail {
+					return true, nil, testErr
+				}
+				return false, nil, nil
+			}
+
+			// Prepare a fake K8s client that is sabotaged to return an error on the update of
+			// certain nodes via the function defined right above.
+			sabotagedK8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: tc.inputNodes})
+			sabotagedK8sClient.PrependReactor("update", "nodes", updateSabotager)
+			k8sAPINodesClient := sabotagedK8sClient.CoreV1().Nodes()
+
+			// Set up the object under test with the sabotaged K8s client
+			nodes := node.Client{
+				Nodes:            k8sAPINodesClient,
+				MasterNodeTaints: node.MasterTaintKeys,
+				Log:              logr.Discard(),
+			}
+
+			// Invoke method under test
+			err := nodes.UntaintAll(context.Background(), tc.taintsToRemove)
+
+			if err == nil {
+				t.Fatal("UntaintAll returned <nil> error, expected non-nil error")
+			}
+
+			var failedNodes k8serrutil.Aggregate
+			if !errors.As(err, &failedNodes) {
+				t.Fatalf("Expected aggregate error with list of nodes but got %v", err)
+			}
+
+			// Verify that the error message of every update that failed is mentioned in the error
+			// returned by UntaintAll
+			if len(failedNodes.Errors()) != len(tc.nodesWhoseUpdateFails) {
+				t.Fatalf("Got error \"%s\" must report the error message of every update that "+
+					"failed, but it doesn't: %d updates should have failed but it reports the "+
+					"error messages of %d", err.Error(), len(tc.nodesWhoseUpdateFails),
+					len(failedNodes.Errors()))
+			}
+
+			for nodeName := range tc.nodesWhoseUpdateFails {
+				found := false
+				for _, e := range failedNodes.Errors() {
+					var n node.ErrNodeUpdate
+					if errors.As(e, &n) && n.Node.Name == nodeName {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Fatalf("Got error \"%s\" which must wrap one error for each node whose"+
+						" update failed but it doesn't: update of node %s failed, but no error for"+
+						" it is wrapped", err, nodeName)
+				}
+			}
+
+			// Get the nodes after invoking the method under test
+			gotNodesList, err := k8sAPINodesClient.List(context.Background(), metav1.ListOptions{})
+			if err != nil {
+				t.Fatal("Expected no error when listing nodes, got:", err)
+			}
+			gotNodes := gotNodesList.Items
+
+			// Compare the expected nodes with the got ones to ensure that only those whose update
+			// didn't fail changed.
+			if !equality.Semantic.DeepEqual(tc.expectedNodes, gotNodes) {
+				t.Fatalf("Expected nodes don't match got ones\n\n\texpected: %#+v\n\n\tgot:"+
+					" %#+v\n\n", tc.expectedNodes, gotNodes)
+			}
+		})
+	}
+
 }
 
 func newNode(opts ...func(*v1.Node)) v1.Node {
