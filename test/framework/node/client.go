@@ -121,19 +121,28 @@ func (c Client) TaintWorkers(ctx context.Context, t []v1.Taint) error {
 		return fmt.Errorf("failed to taint K8s worker nodes: %w", err)
 	}
 
+	// Here we don't fail fast. Rather than returning an error on the first failure, we try to
+	// taint as many nodes as possible, i.e., even if tainting a node fails we try to taint
+	// the remaining nodes. This is done because users of this library are e2e and integration tests
+	// that require tainting to succeed and will retry tainting multiple
+	// times before giving up, so it's faster to try to always tainting as many
+	// nodes as possible.
+	var errs []error
 	for _, w := range workers {
-		// TODO: consider moving on to taint other nodes when an error occurs here (while keeping
-		// the error).
 		if err := c.taint(ctx, w, t); err != nil {
-			return err
+			errs = append(errs, err)
 		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("tainting some nodes failed: %v", errors.NewAggregate(errs))
 	}
 
 	return nil
 }
 
 // UntaintAll removes the taints `t` from all the nodes (worker and master ones) in the K8s cluster.
-// UntaintAll is idempotent:
+// UntaintAll is idempotent and safe to retry:
 //   - if a node has only a subset of the taints in `t`, only that subset is removed.
 //   - if a node doesn't have any of the taints in `t`, it's left unchanged.
 //
@@ -146,12 +155,21 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 		return fmt.Errorf("failed to untaint K8s nodes: %w", err)
 	}
 
+	// Here we don't fail fast. Rather than returning an error on the first failure, we try to
+	// untaint as many nodes as possible, i.e., even if untainting a node fails we try to untaint
+	// the remaining nodes. This is done because users of this library are e2e and integration tests
+	// that require untainting to succeed and will retry untainting multiple
+	// times before giving up, so it's faster to try to always untaint as many
+	// nodes as possible.
+	var errs []error
 	for _, n := range nodes {
-		// TODO: consider moving on to untaint other nodes when an error occurs here (while keeping
-		// the error).
 		if err := c.untaint(ctx, n, t); err != nil {
-			return err
+			errs = append(errs, err)
 		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("removing taints from some nodes failed: %v", errors.NewAggregate(errs))
 	}
 
 	return nil
@@ -159,7 +177,7 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 
 // UnlabelAll removes the labels with the keys in `labelsKeys` from all the nodes (worker and master
 // ones) in the K8s cluster, regardless of the labels values.
-// UnlabelAll is idempotent:
+// UnlabelAll is idempotent and safe to retry:
 //   - if a node has only a subset of the labels in `labelsKeys`, only that subset is removed.
 //   - if a node doesn't have any of the labels in `labelsKeys`, it's left unchanged.
 //
@@ -174,8 +192,7 @@ func (c Client) UnlabelAll(ctx context.Context, labelsKeys []string) error {
 	// unlabel as many nodes as possible, i.e., even if unlabeling a node fails we try to unlabel
 	// the remaining nodes. This is done because users of this library are e2e and integration tests
 	// that require unlabeling to succeed, and will retry it if it fails, so it's actually faster
-	// to always try to unlabel as many nodes as possible. This is safe because unlabeling is
-	// idempotent.
+	// to always try to unlabel as many nodes as possible.
 	var errs []error
 	for _, n := range nodes {
 		if err := c.unlabel(ctx, n, labelsKeys); err != nil {
