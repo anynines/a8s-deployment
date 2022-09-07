@@ -6,6 +6,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -56,7 +57,7 @@ func backupPrefix(dsiName string) string {
 
 func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
 	var err error
-	EventuallyWithOffset(1, func() string {
+	EventuallyWithOffset(1, func() bool {
 		backupCreated := New()
 		if err = c.Get(
 			ctx,
@@ -66,10 +67,16 @@ func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeCli
 			},
 			backupCreated,
 		); err != nil {
-			return fmt.Sprintf("%v+", err)
+			return false
 		}
-		return string(backupCreated.Status.Condition.Type)
-	}, asyncOpsTimeoutMins, 1*time.Second).Should(Equal(backupSucceeded),
+
+		for _, c := range backupCreated.Status.Conditions {
+			if c.Type == "Complete" && c.Status == v1.ConditionTrue {
+				return true
+			}
+		}
+		return false
+	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for backup %s/%s readiness: %s",
 			backup.GetNamespace(),
 			backup.GetName(),
