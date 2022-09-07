@@ -31,6 +31,46 @@ type Client struct {
 	Log              logr.Logger
 }
 
+// ErrNodeUpdate is the error type returned when a node UPDATE call fails.
+// Unless you really really really really know what you're doing, avoid calling errors.Is on
+// variables of type `ErrNodeUpdate`, because it behaves in crazy ways.
+// First, ErrNodeUpdate is not reflexive with respect to errors.Is. This means that given a variable
+// `e` of type ErrNodeUpdate errors.Is(e, e) evaluates to `false`.
+// Second, errors.Is(e1, e2) can panic if both e1 and e2 are variables of type ErrNodeUpdate,
+// in the case where e1.Err and e2.Err are of two incomparable concrete types.
+// More details here: https://github.com/golang/go/issues/54709
+type ErrNodeUpdate struct {
+	Node v1.Node
+	Err  error
+}
+
+func (e ErrNodeUpdate) Error() string {
+	return fmt.Sprintf("failed to update node %#+v: %v", e.Node, e.Err)
+}
+
+func (e ErrNodeUpdate) Unwrap() error {
+	return e.Err
+}
+
+// ErrNodeGet is the error type returned when a node GET call fails.
+// Unless you really really really really know what you're doing, avoid calling errors.Is on
+// variables of type `ErrNodeGet`, because it behaves in crazy ways: errors.Is(e1, e2) can panic if
+// both e1 and e2 are variables of type ErrNodeGet, in the case where e1.Err and e2.Err are of two
+// incomparable concrete types.
+// More details here: https://github.com/golang/go/issues/54709
+type ErrNodeGet struct {
+	NodeName string
+	Err      error
+}
+
+func (e ErrNodeGet) Error() string {
+	return fmt.Sprintf("failed to get node %s: %v", e.NodeName, e.Err)
+}
+
+func (e ErrNodeGet) Unwrap() error {
+	return e.Err
+}
+
 func NewClientFromKubecfg(kubecfg string) (Client, error) {
 	cfg, err := clientcmd.BuildConfigFromFlags("", kubecfg)
 	if err != nil {
@@ -70,7 +110,7 @@ func (c Client) GetLabels(ctx context.Context, nodeName string) (map[string]stri
 func (c Client) Get(ctx context.Context, nodeName string) (v1.Node, error) {
 	n, err := c.Nodes.Get(ctx, nodeName, metav1.GetOptions{})
 	if err != nil {
-		return v1.Node{}, fmt.Errorf("failed to get node %s: %w", nodeName, err)
+		return v1.Node{}, ErrNodeGet{NodeName: nodeName, Err: err}
 	}
 	return *n, nil
 }
@@ -130,12 +170,12 @@ func (c Client) TaintWorkers(ctx context.Context, t []v1.Taint) error {
 	var errs []error
 	for _, w := range workers {
 		if err := c.taint(ctx, w, t); err != nil {
-			errs = append(errs, err)
+			errs = append(errs, ErrNodeUpdate{Node: w, Err: err})
 		}
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("tainting some nodes failed: %v", errors.NewAggregate(errs))
+		return fmt.Errorf("tainting some nodes failed: %w", errors.NewAggregate(errs))
 	}
 
 	return nil
@@ -164,12 +204,12 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 	var errs []error
 	for _, n := range nodes {
 		if err := c.untaint(ctx, n, t); err != nil {
-			errs = append(errs, err)
+			errs = append(errs, ErrNodeUpdate{Node: n, Err: err})
 		}
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("removing taints from some nodes failed: %v", errors.NewAggregate(errs))
+		return fmt.Errorf("removing taints from some nodes failed: %w", errors.NewAggregate(errs))
 	}
 
 	return nil
@@ -196,12 +236,12 @@ func (c Client) UnlabelAll(ctx context.Context, labelsKeys []string) error {
 	var errs []error
 	for _, n := range nodes {
 		if err := c.unlabel(ctx, n, labelsKeys); err != nil {
-			errs = append(errs, err)
+			errs = append(errs, ErrNodeUpdate{Node: n, Err: err})
 		}
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("unlabeling all or some nodes failed: %v", errors.NewAggregate(errs))
+		return fmt.Errorf("unlabeling all or some nodes failed: %w", errors.NewAggregate(errs))
 	}
 
 	return nil
