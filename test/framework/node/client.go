@@ -65,6 +65,16 @@ func (c Client) GetLabels(ctx context.Context, nodeName string) (map[string]stri
 	return node.Labels, nil
 }
 
+// Get returns the node named `nodeName`.
+// In case of error, it returns the error and an empty v1.Node struct.
+func (c Client) Get(ctx context.Context, nodeName string) (v1.Node, error) {
+	n, err := c.Nodes.Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		return v1.Node{}, fmt.Errorf("failed to get node %s: %w", nodeName, err)
+	}
+	return *n, nil
+}
+
 // ListAll returns a slice with all the nodes in the K8s cluster.
 // ListAll returns an empty slice and an error if a failure occurs.
 func (c Client) ListAll(ctx context.Context) ([]v1.Node, error) {
@@ -101,6 +111,7 @@ func (c Client) ListWorkers(ctx context.Context) ([]v1.Node, error) {
 // TaintWorkers is idempotent:
 //   - if a worker already has a subset of the taints in `t`, only the missing ones are added.
 //   - if a worker already has all the taints in `t`, it's left unchanged.
+//
 // If a worker has one (or more) taint(s) with the same key as one of the taints in `t` but
 // different value or effect, TaintWorkers panics.
 // TaintWorkers returns an error if a failure occurs.
@@ -125,6 +136,7 @@ func (c Client) TaintWorkers(ctx context.Context, t []v1.Taint) error {
 // UntaintAll is idempotent:
 //   - if a node has only a subset of the taints in `t`, only that subset is removed.
 //   - if a node doesn't have any of the taints in `t`, it's left unchanged.
+//
 // If a node has one (or more) taint(s) with the same key as one of the taints in `t` but different
 // value or effect, UntaintAll panics.
 // UntaintAll returns an error if a failure occurs.
@@ -150,6 +162,7 @@ func (c Client) UntaintAll(ctx context.Context, t []v1.Taint) error {
 // UnlabelAll is idempotent:
 //   - if a node has only a subset of the labels in `labelsKeys`, only that subset is removed.
 //   - if a node doesn't have any of the labels in `labelsKeys`, it's left unchanged.
+//
 // UnlabelAll returns an error if a failure occurs.
 func (c Client) UnlabelAll(ctx context.Context, labelsKeys []string) error {
 	nodes, err := c.ListAll(ctx)
