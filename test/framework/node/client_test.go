@@ -11,6 +11,7 @@ import (
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -27,6 +28,173 @@ func TestMain(m *testing.M) {
 	equality.Semantic.AddFuncs(compareNodesIgnoringOrder, compareTaintsIgnoringOrder)
 
 	os.Exit(m.Run())
+}
+
+func TestGetWhenNodeExists(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		nodeToGet v1.Node
+		nodes     []v1.Node
+	}{
+		"only_the_node_to_get_exists": {
+			nodeToGet: newNode(withName("n1")),
+			nodes:     []v1.Node{newNode(withName("n1"))},
+		},
+
+		"other_nodes_besides_the_one_to_get_exist": {
+			nodeToGet: newNode(withName("n2")),
+			nodes: []v1.Node{
+				newNode(withName("n10")),
+				// this is the node to get
+				newNode(withName("n2")),
+				newNode(withName("n20")),
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Rebind tc into this lexical scope. Details on the why at
+			// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+			tc := tc
+
+			t.Parallel()
+
+			// Set up fake K8s client pre-populated with the nodes that exist in the test case.
+			k8sAPINodesClient := fake.
+				NewSimpleClientset(&v1.NodeList{Items: tc.nodes}).
+				CoreV1().
+				Nodes()
+
+			// Set up object under test with the fake K8s client.
+			nodes := node.Client{
+				Nodes: k8sAPINodesClient,
+				Log:   logr.Discard(),
+			}
+
+			// Invoke the method under test.
+			gotNode, err := nodes.Get(context.Background(), tc.nodeToGet.Name)
+
+			if err != nil {
+				t.Fatalf("Expected no error when invoking Get, got error: \"%v\"", err)
+			}
+
+			// Compare the expected node with the got one to assess the test outcome.
+			if !equality.Semantic.DeepEqual(gotNode, tc.nodeToGet) {
+				t.Fatalf("Expected node doesn't match got one\n\n\texpected: %#+v\n\n\tgot:"+
+					" %#+v\n\n", tc.nodeToGet, gotNode)
+			}
+		})
+	}
+}
+
+func TestGetWhenNodeDoesntExist(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		nameOfNodeToGet string
+		nodes           []v1.Node
+	}{
+		"no_node_exists": {
+			nameOfNodeToGet: "n1",
+			nodes:           nil,
+		},
+
+		"some_nodes_exist_but_not_the_one_to_get": {
+			nameOfNodeToGet: "n4",
+			nodes: []v1.Node{
+				newNode(withName("n1")),
+				newNode(withName("n2")),
+				newNode(withName("n3")),
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			// Rebind tc into this lexical scope. Details on the why at
+			// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
+			tc := tc
+
+			t.Parallel()
+
+			// Set up fake K8s client pre-populated with the nodes that exist in the test case.
+			k8sAPINodesClient := fake.
+				NewSimpleClientset(&v1.NodeList{Items: tc.nodes}).
+				CoreV1().
+				Nodes()
+
+			// Set up object under test with the fake K8s client.
+			nodes := node.Client{
+				Nodes: k8sAPINodesClient,
+				Log:   logr.Discard(),
+			}
+
+			// Invoke the method under test.
+			gotNode, err := nodes.Get(context.Background(), tc.nameOfNodeToGet)
+
+			if !k8serr.IsNotFound(err) {
+				t.Fatalf("Expected error \"%v\" returned by Get to be a k8s API NotFound error, "+
+					"but it's not", err)
+			}
+
+			if !strings.Contains(err.Error(), tc.nameOfNodeToGet) {
+				t.Fatalf("Expected error \"%v\" returned by Get to mention the name of the node "+
+					"to get, but it doesn't", err)
+			}
+
+			if !equality.Semantic.DeepEqual(gotNode, v1.Node{}) {
+				t.Fatalf("Expected Get to return an empty node when the requested node doesn't "+
+					"exist, insted it returned non-empty node: %#+v", gotNode)
+			}
+		})
+	}
+}
+
+func TestGetWrapsErrors(t *testing.T) {
+	t.Parallel()
+
+	// Define a fake K8s client that is pre-populated with a test node.
+	testNode := newNode(withName("n1"))
+	k8sClient := fake.NewSimpleClientset(&v1.NodeList{Items: []v1.Node{testNode}})
+
+	// "Sabotage" the fake K8s client by adding to it a function that intercepts GET API calls
+	// and makes them fail returning an error.
+	testErr := errors.New("dummy error")
+	getSabotager := func(k8stest.Action) (bool, runtime.Object, error) {
+		return true, nil, testErr
+	}
+	k8sClient.PrependReactor("get", "nodes", getSabotager)
+
+	// Set up the object under test with the sabotaged client that will make K8s GET calls fail.
+	nodes := node.Client{
+		Nodes: k8sClient.CoreV1().Nodes(),
+		Log:   logr.Discard(),
+	}
+
+	// Invoke the method under test
+	gotNode, gotErr := nodes.Get(context.Background(), "n1")
+
+	// TODO: fix error checks to use the approach used in PR #134
+	if gotErr == nil {
+		t.Fatal("got nil error, expected non-nil error")
+	}
+
+	if !strings.Contains(strings.ToLower(gotErr.Error()), "get") {
+		t.Fatalf("got error \"%v\" should contain the word \"get\" (in any case) but it doesn't",
+			gotErr)
+	}
+
+	if !strings.Contains(gotErr.Error(), testErr.Error()) {
+		t.Fatalf("got error \"%v\" should contain the error message \"%v\" returned by the "+
+			"K8s API but it doesn't", gotErr, testErr)
+	}
+
+	if !equality.Semantic.DeepEqual(gotNode, v1.Node{}) {
+		t.Fatalf("Expected Get to return an empty node when it returns a non-nil error, but it "+
+			"returned a non-empty node: %#+v", gotNode)
+	}
 }
 
 func TestListAllHappyPaths(t *testing.T) {
