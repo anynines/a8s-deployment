@@ -126,7 +126,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 		By("Ensuring data was written successfully to master", func() {
 			readData, err := client.Read(ctx, entity)
 			Expect(err).To(BeNil(),
-				fmt.Sprintf("failed to read data from  DSI %s/%s",
+				fmt.Sprintf("failed to read data from DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
 			)

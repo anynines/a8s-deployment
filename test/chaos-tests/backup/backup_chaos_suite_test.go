@@ -42,7 +42,6 @@ var _ = BeforeSuite(func() {
 	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
 		framework.ConfigToVars(config)
 
-	// Does this need to be the case for backups? Probably not. But..
 	Expect(strings.ToLower(dataservice) == "postgresql").To(BeTrue(),
 		"This test suite only supports PostgreSQL")
 
