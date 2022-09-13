@@ -69,34 +69,84 @@ spec:
                 description: BackupID is the ID of the Backup; clients can use this
                   to poll the status of the Backup at the Pod identified by `PodUsedID`.
                 type: string
-              condition:
-                description: "Condition describes the last observed status of the
-                  Backup. It tells whether the backup `succeeded`, is `inProgress`
-                  or `failed` (and error messages with more details if so), as well
-                  as the timestamp of when the Condition was last observed to be true.
-                  After `Condition.Type` reaches a value of `succeeded`, the Condition
-                  is never updated again. \n TODO: this API is consistent with K8s
-                  API Conditions (https://github.com/kubernetes/kubernetes/issues/7856),
-                  but backups are probably not well-suited to be described by Conditions.
-                  Also, the time at which the backup was taken should probably be
-                  described more accurately and *more explicitly* than with `Condition.LastObservationTime`.
-                  So maybe we want to simplify the status of backups."
-                properties:
-                  error:
-                    description: Error contains a message describing what went wrong
-                      in case `Type` has value `failed`.
-                    type: string
-                  lastObservationTime:
-                    description: LastObservationTime is the timestamp of the last
-                      time the Condition was observed to be true.
-                    format: date-time
-                    type: string
-                  type:
-                    description: Type is a short camelCase message describing the
-                      last observed condition of the backup or recovery. Can be one
-                      of `succeeded`, `inProgress`, `failed`.
-                    type: string
-                type: object
+              conditions:
+                description: Conditions include a set of not mutually exclusive states
+                  the Backup can be in, as well as the last observed time stamp for
+                  these conditions. They include "Ready", "InProgress", "UploadedToS3",
+                  "Terminating".
+                items:
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource. --- This struct is intended for direct
+                    use as an array at the field path .status.conditions.  For example,
+                    type FooStatus struct{     // Represents the observations of a
+                    foo's current state.     // Known .status.conditions.type are:
+                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
+                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
+                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                    \n     // other fields }"
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the last time the condition
+                        transitioned from one status to another. This should be when
+                        the underlying condition changed.  If that is not known, then
+                        using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: message is a human readable message indicating
+                        details about the transition. This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: observedGeneration represents the .metadata.generation
+                        that the condition was set based upon. For instance, if .metadata.generation
+                        is currently 12, but the .status.conditions[x].observedGeneration
+                        is 9, the condition is out of date with respect to the current
+                        state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: reason contains a programmatic identifier indicating
+                        the reason for the condition's last transition. Producers
+                        of specific condition types may define expected values and
+                        meanings for this field, and whether the values are considered
+                        a guaranteed API. The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        --- Many .condition.type values are consistent across resources
+                        like Available, but because arbitrary conditions can be useful
+                        (see .node.status.conditions), the ability to deconflict is
+                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastObservationTime:
+                description: LastObservationTime is the timestamp of the last time
+                  the Condition was observed to be true.
+                format: date-time
+                type: string
               podUsedNamespacedName:
                 description: 'PodUsedNamespacedName is the namespaced name of the
                   DSI Pod to which the backup request was sent. TODO: Represent this
@@ -107,6 +157,8 @@ spec:
                   request was sent. TODO: Represent this jointly with `PodUsedNamespacedName`
                   (above) via a PodRef.'
                 type: string
+            required:
+            - conditions
             type: object
         required:
         - spec
@@ -196,28 +248,83 @@ spec:
           status:
             description: RecoveryStatus defines the observed state of Recovery
             properties:
-              condition:
-                description: Condition describes the last observed status of the Recovery.
-                  It tells whether the recovery `succeeded`, is `inProgress` or `failed`
-                  (and error messages with more details if so), as well as the timestamp
-                  of when the Condition was last observed to be true. After `Condition.Type`
-                  reaches a value of `succeeded`, the Condition is never updated again.
-                properties:
-                  error:
-                    description: Error contains a message describing what went wrong
-                      in case `Type` has value `failed`.
-                    type: string
-                  lastObservationTime:
-                    description: LastObservationTime is the timestamp of the last
-                      time the Condition was observed to be true.
-                    format: date-time
-                    type: string
-                  type:
-                    description: Type is a short camelCase message describing the
-                      last observed condition of the backup or recovery. Can be one
-                      of `succeeded`, `inProgress`, `failed`.
-                    type: string
-                type: object
+              conditions:
+                description: Conditions include a set of not mutually exclusive states
+                  the Recovery can be in, as well as the last observed time stamp
+                  for these conditions. They include "Ready", "InProgress", "Terminating".
+                items:
+                  description: "Condition contains details for one aspect of the current
+                    state of this API Resource. --- This struct is intended for direct
+                    use as an array at the field path .status.conditions.  For example,
+                    type FooStatus struct{     // Represents the observations of a
+                    foo's current state.     // Known .status.conditions.type are:
+                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
+                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
+                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                    \n     // other fields }"
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the last time the condition
+                        transitioned from one status to another. This should be when
+                        the underlying condition changed.  If that is not known, then
+                        using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: message is a human readable message indicating
+                        details about the transition. This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: observedGeneration represents the .metadata.generation
+                        that the condition was set based upon. For instance, if .metadata.generation
+                        is currently 12, but the .status.conditions[x].observedGeneration
+                        is 9, the condition is out of date with respect to the current
+                        state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: reason contains a programmatic identifier indicating
+                        the reason for the condition's last transition. Producers
+                        of specific condition types may define expected values and
+                        meanings for this field, and whether the values are considered
+                        a guaranteed API. The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                        --- Many .condition.type values are consistent across resources
+                        like Available, but because arbitrary conditions can be useful
+                        (see .node.status.conditions), the ability to deconflict is
+                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastObservationTime:
+                description: LastObservationTime is the timestamp of the last time
+                  the Condition was observed to be true.
+                format: date-time
+                type: string
               podToPoll:
                 description: The Pod to poll to learn the status of the Recovery,
                   if the recovery is in Progress.
@@ -241,6 +348,8 @@ spec:
                   this to poll the status of the Recovery at the Pod identified by
                   `PodToHit`.
                 type: string
+            required:
+            - conditions
             type: object
         type: object
     served: true
@@ -527,7 +636,7 @@ spec:
         - --leader-elect
         command:
         - a8s-backup-manager
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.25.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.30.0
         env:
         - name: systemNamespace
           valueFrom:
