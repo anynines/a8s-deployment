@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/framework/chaos/pod"
+	"github.com/anynines/a8s-deployment/test/framework/chaos/podchaos"
 )
 
 var (
@@ -49,22 +49,22 @@ func VerifyChaosMeshPresent(ctx context.Context, c runtimeClient.Client) error {
 // TODO: Verify all chaos CRDs are installed
 func verifyChaosMeshCRDsInstalled(ctx context.Context, c runtimeClient.Client) error {
 	crd := apixv1.CustomResourceDefinition{}
-	err := c.Get(ctx, types.NamespacedName{Name: pod.ChaosCRDName}, &crd)
+	err := c.Get(ctx, types.NamespacedName{Name: podchaos.ChaosCRDName}, &crd)
 	if k8serrors.IsNotFound(err) || k8serrors.IsGone(err) {
-		return fmt.Errorf("missing ChaosMesh CRD %s", pod.ChaosCRDName)
+		return fmt.Errorf("missing ChaosMesh CRD %s", podchaos.ChaosCRDName)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to verify presence of ChaosMesh CRD %s: %w", pod.ChaosCRDName, err)
+		return fmt.Errorf("failed to verify presence of ChaosMesh CRD %s: %w", podchaos.ChaosCRDName, err)
 	}
 
 	for _, version := range crd.Spec.Versions {
-		if version.Name == pod.ChaosRequiredVersion {
+		if version.Name == podchaos.ChaosRequiredVersion {
 			return nil
 		}
 	}
 
 	return fmt.Errorf("required version of ChaosMesh CRD %s not installed: needs %s",
-		pod.ChaosCRDName, pod.ChaosRequiredVersion)
+		podchaos.ChaosCRDName, podchaos.ChaosRequiredVersion)
 }
 
 func verifyChaosMeshControllersRunning(ctx context.Context, c runtimeClient.Client) error {

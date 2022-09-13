@@ -1,4 +1,4 @@
-package network
+package networkchaos
 
 import (
 	"context"
@@ -63,7 +63,7 @@ const (
 	randomMaxPercentMode string = "random-max-percent"
 )
 
-func NewChaos(namespace string, selector chmv1alpha1.PodSelector, opts ...func(networkChaos)) NetworkChaos {
+func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(networkChaos)) NetworkChaos {
 	networkChaos := &chmv1alpha1.NetworkChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "network-partition",

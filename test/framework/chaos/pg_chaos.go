@@ -6,8 +6,8 @@ import (
 
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-deployment/test/framework/chaos/network"
-	"github.com/anynines/a8s-deployment/test/framework/chaos/pod"
+	"github.com/anynines/a8s-deployment/test/framework/chaos/networkchaos"
+	"github.com/anynines/a8s-deployment/test/framework/chaos/podchaos"
 	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 )
 
@@ -24,14 +24,14 @@ type PgChaosHelper interface {
 func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (ChaosObject,
 	error) {
 
-	podChaos := pod.NewChaos(
+	podChaos := podchaos.New(
 		pg.Instance.GetNamespace(),
-		*pod.NewPodLabelSelector(pg.Instance.GetReplicaLabels(),
-			pod.WithSelectorMode("all"),
-			pod.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
+		*podchaos.NewPodLabelSelector(pg.Instance.GetReplicaLabels(),
+			podchaos.WithSelectorMode("all"),
+			podchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
 		),
-		pod.WithName(fmt.Sprintf("replica-failure-%s", pg.Instance.GetName())),
-		pod.WithPodFailureAction(pod.PodFailureAction),
+		podchaos.WithName(fmt.Sprintf("replica-failure-%s", pg.Instance.GetName())),
+		podchaos.WithPodFailureAction(podchaos.PodFailureAction),
 	)
 
 	if err := c.Create(ctx, podChaos); err != nil {
@@ -44,15 +44,15 @@ func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (
 func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (ChaosObject,
 	error) {
 
-	podChaos := pod.NewChaos(
+	podChaos := podchaos.New(
 		pg.Instance.GetNamespace(),
-		*pod.NewPodLabelSelector(
+		*podchaos.NewPodLabelSelector(
 			pg.Instance.GetMasterLabels(),
-			pod.WithSelectorMode("all"),
-			pod.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
+			podchaos.WithSelectorMode("all"),
+			podchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
 		),
-		pod.WithName("master-failure"),
-		pod.WithPodFailureAction(pod.PodFailureAction),
+		podchaos.WithName("master-failure"),
+		podchaos.WithPodFailureAction(podchaos.PodFailureAction),
 	)
 
 	if err := c.Create(ctx, podChaos.GetObject()); err != nil {
@@ -65,13 +65,14 @@ func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (Ch
 func (pg PgInjector) PartitionMaster(ctx context.Context, c runtimeClient.Client, t []string) (
 	ChaosObject, error) {
 
-	nc := network.NewChaos(pg.Instance.GetNamespace(),
-		*network.NewPodLabelSelector(pg.Instance.GetMasterLabels(), network.WithSelectorMode("all"),
-			network.WithSelectorNamespace([]string{pg.Instance.GetNamespace()})),
-		network.WithName("partition-master"),
-		network.WithAction("partition"),
-		network.WithExternalTargets(t),
-		network.WithMode("all"),
+	nc := networkchaos.New(pg.Instance.GetNamespace(),
+		*networkchaos.NewPodLabelSelector(pg.Instance.GetMasterLabels(),
+			networkchaos.WithSelectorMode("all"),
+			networkchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()})),
+		networkchaos.WithName("partition-master"),
+		networkchaos.WithAction("partition"),
+		networkchaos.WithExternalTargets(t),
+		networkchaos.WithMode("all"),
 	)
 
 	if err := c.Create(ctx, nc.GetObject()); err != nil {

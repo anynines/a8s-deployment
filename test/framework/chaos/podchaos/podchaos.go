@@ -1,4 +1,4 @@
-package pod
+package podchaos
 
 import (
 	"context"
@@ -27,7 +27,7 @@ const (
 	ContainerKillAction string = "container-kill"
 )
 
-func NewChaos(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podChaos)) PodChaos {
+func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podChaos)) PodChaos {
 	podChaos := &chmv1alpha1.PodChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "pod-failure",
