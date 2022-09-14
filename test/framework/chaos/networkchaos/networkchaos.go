@@ -20,47 +20,16 @@ type NetworkChaos struct {
 
 // NetworkChaos Actions
 const (
-	// netemAction is a combination of several chaos actions i.e. delay, loss, duplicate, corrupt.
-	// When using this action multiple specs are merged into one Netem RPC and sends to chaos daemon.
-	netemAction string = "netem"
-
-	// delayAction represents the chaos action of adding delay on pods.
-	delayAction string = "delay"
-
-	// lossAction represents the chaos action of losing packets on pods.
-	lossAction string = "loss"
-
-	// duplicateAction represents the chaos action of duplicating packets on pods.
-	duplicateAction string = "duplicate"
-
-	// corruptAction represents the chaos action of corrupting packets on pods.
-	corruptAction string = "corrupt"
-
 	// partitionAction represents the chaos action of network partition of pods.
 	partitionAction string = "partition"
-
-	// bandwidthAction represents the chaos action of network bandwidth of pods.
-	bandwidthAction string = "bandwidth"
 )
 
 // NetworkChaosModes
 const (
-	// oneMode represents that the system will do the chaos action on one object selected randomly.
-	oneMode string = "one"
-
 	// allMode represents that the system will do the chaos action on all objects
 	// regardless of status (not ready or not running pods includes).
 	// Use this label carefully.
 	allMode string = "all"
-
-	// fixedMode represents that the system will do the chaos action on a specific number of running objects.
-	fixedMode string = "fixed"
-
-	// fixedPercentMode to specify a fixed % that can be inject chaos action.
-	fixedPercentMode string = "fixed-percent"
-
-	// randomMaxPercentMode to specify a maximum % that can be inject chaos action.
-	randomMaxPercentMode string = "random-max-percent"
 )
 
 func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(networkChaos)) NetworkChaos {
@@ -99,20 +68,8 @@ func WithName(name string) func(networkChaos) {
 func WithAction(action string) func(networkChaos) {
 	var a chmv1alpha1.NetworkChaosAction
 	switch action {
-	case netemAction:
-		a = chmv1alpha1.NetemAction
-	case delayAction:
-		a = chmv1alpha1.DelayAction
-	case lossAction:
-		a = chmv1alpha1.LossAction
-	case duplicateAction:
-		a = chmv1alpha1.DuplicateAction
-	case corruptAction:
-		a = chmv1alpha1.CorruptAction
 	case partitionAction:
 		a = chmv1alpha1.PartitionAction
-	case bandwidthAction:
-		a = chmv1alpha1.BandwidthAction
 	default:
 		panic("Invalid NetworkChaosAction : " + action)
 	}
@@ -125,16 +82,8 @@ func WithAction(action string) func(networkChaos) {
 func WithMode(mode string) func(networkChaos) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
-	case oneMode:
-		m = chmv1alpha1.OneMode
 	case allMode:
 		m = chmv1alpha1.AllMode
-	case fixedMode:
-		m = chmv1alpha1.FixedMode
-	case fixedPercentMode:
-		m = chmv1alpha1.FixedPercentMode
-	case randomMaxPercentMode:
-		m = chmv1alpha1.RandomMaxPercentMode
 	default:
 		panic("Invalid NetworkChaos mode : " + mode)
 	}
