@@ -27,7 +27,8 @@ const (
 	replicas     = 1
 	suffixLength = 5
 
-	// entity is a generic term to describe where data services store their data.
+	// entity is a generic term to describe where data services store their data (e.g., a table in
+	// a PostgreSQL database)
 	entity = "test_entity"
 
 	// asyncOpsTimeoutMins is the amount of minutes after which assertions fail if the condition
