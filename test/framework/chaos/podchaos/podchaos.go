@@ -27,6 +27,7 @@ const (
 	ContainerKillAction string = "container-kill"
 )
 
+// New returns a PodChaos object configured with a selector and provided options.
 func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podChaos)) PodChaos {
 	podChaos := &chmv1alpha1.PodChaos{
 		ObjectMeta: metav1.ObjectMeta{
@@ -48,13 +49,15 @@ func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podCha
 	return PodChaos{podChaos}
 }
 
+// WithName overrides the Name field for a PodChaos object.
 func WithName(name string) func(podChaos) {
 	return func(c podChaos) {
 		c.ObjectMeta.Name = name
 	}
 }
 
-func WithPodFailureAction(action string) func(podChaos) {
+// WithAction overrides the PodChaos Action field.
+func WithAction(action string) func(podChaos) {
 	var a chmv1alpha1.PodChaosAction
 	switch action {
 	case PodKillAction:
@@ -72,6 +75,7 @@ func WithPodFailureAction(action string) func(podChaos) {
 	}
 }
 
+// CheckChaosActive checks if a PodChaos object indicates a successful injection of Chaos action.
 func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client) (bool, error) {
 	podChaos := &chmv1alpha1.PodChaos{}
 	err := c.Get(ctx, types.NamespacedName{Name: pc.Name, Namespace: pc.Namespace}, podChaos)
@@ -89,6 +93,7 @@ func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client)
 	return false, nil
 }
 
+// Delete deletes the PodChaos Object from the API server.
 func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
 	if err := c.Delete(ctx, pc.podChaos); err != nil {
 		return fmt.Errorf("failed to delete PodChaos %s: %w", pc.Name, err)
@@ -96,10 +101,12 @@ func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
 	return nil
 }
 
+// GetObject returns the actual PodChaos object
 func (nc PodChaos) GetObject() podChaos {
 	return nc.podChaos
 }
 
+// NewPodLabelSelector returns a new PodSelector configured using labels and provided options.
 func NewPodLabelSelector(labels map[string]string,
 	opts ...func(PodSelector)) PodSelector {
 
@@ -119,6 +126,7 @@ func NewPodLabelSelector(labels map[string]string,
 	return podSelector
 }
 
+// WithSelectorMode overrides the SelectorMode for a PodSelector.
 func WithSelectorMode(mode string) func(PodSelector) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
@@ -139,6 +147,7 @@ func WithSelectorMode(mode string) func(PodSelector) {
 	}
 }
 
+// WithSelectorNamespace overrides the namespaces for a PodSelector.
 func WithSelectorNamespace(namespaces []string) func(PodSelector) {
 	return func(s PodSelector) {
 		s.Selector.Namespaces = namespaces

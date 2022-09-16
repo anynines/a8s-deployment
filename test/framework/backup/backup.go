@@ -55,8 +55,10 @@ func backupPrefix(dsiName string) string {
 	return fmt.Sprintf("%s-backup", dsiName)
 }
 
-// TODO: Make the timeout configurable for more advanced backup scenarios
+// WaitForReadiness waits for the backup object status condition of type "Complete" to indicate
+// true.
 func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
+	// TODO: Make the timeout configurable for more advanced backup scenarios
 	var err error
 	EventuallyWithOffset(1, func() bool {
 		backupCreated := New()

@@ -21,6 +21,7 @@ type PgChaosHelper interface {
 	PartitionMaster(ctx, c runtimeClient.Client, t []string) (ChaosObject, error)
 }
 
+// StopReplicas applies PodChaos causing the PostgreSQL instance's replicas to fail.
 func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (ChaosObject,
 	error) {
 
@@ -31,7 +32,7 @@ func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (
 			podchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
 		),
 		podchaos.WithName(fmt.Sprintf("replica-failure-%s", pg.Instance.GetName())),
-		podchaos.WithPodFailureAction(podchaos.PodFailureAction),
+		podchaos.WithAction(podchaos.PodFailureAction),
 	)
 
 	if err := c.Create(ctx, podChaos); err != nil {
@@ -41,6 +42,7 @@ func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (
 	return podChaos, nil
 }
 
+// StopMaster applies PodChaos causing the PostgreSQL instance's master to fail.
 func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (ChaosObject,
 	error) {
 
@@ -52,7 +54,7 @@ func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (Ch
 			podchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
 		),
 		podchaos.WithName("master-failure"),
-		podchaos.WithPodFailureAction(podchaos.PodFailureAction),
+		podchaos.WithAction(podchaos.PodFailureAction),
 	)
 
 	if err := c.Create(ctx, podChaos.GetObject()); err != nil {
@@ -62,6 +64,7 @@ func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (Ch
 	return podChaos, nil
 }
 
+// PartitionMaster applies NetworkChaos to isolate the master of the PostgreSQL instance.
 func (pg PgInjector) PartitionMaster(ctx context.Context, c runtimeClient.Client, t []string) (
 	ChaosObject, error) {
 
