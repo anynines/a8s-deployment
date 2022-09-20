@@ -3,7 +3,7 @@ module github.com/anynines/a8s-deployment/test
 go 1.19
 
 require (
-	github.com/anynines/a8s-backup-manager v0.30.0
+	github.com/anynines/a8s-backup-manager v0.32.1
 	github.com/anynines/a8s-service-binding-controller v0.28.0
 	github.com/anynines/postgresql-operator v0.44.0
 	github.com/go-logr/logr v1.2.3
@@ -81,8 +81,8 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
-	golang.org/x/net v0.0.0-20220906165146-f3363e06e74c // indirect
-	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
+	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
+	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1 // indirect
 	golang.org/x/sys v0.0.0-20220907062415-87db552b00fd // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect

@@ -14,6 +14,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - add field `extensions` to  `Postgresql.spec`, that allows installation of supported
   PostgreSQL extensions.
 - support for MobilityDB PostgreSQL extension
+- backup custom resources now have a `maxRetries` field that specifies how often a backup
+  will be retried before entering a failed state
 
 ### Updated
 
@@ -30,13 +32,15 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - **breaking change** Fix issue where only a single event was emitted for two secrets
   of a PostgreSQL instance
 - Apply fix to PostgreSQL-Operator end-to-end tests to reduce flakiness
+- backup manager now handles crashes of the backup agent gracefully by restarting the failed backup
 
 ### Changed
 
 - backup-manager now uses a dedicated ServiceAccount, instead of the default one
 - service-binding controller now uses a dedicated ServiceAccount, instead of the default one
 - postgresql-operator now used a dedicated ServiceAccount, instead of the default one
-- backup custom resources now use a list of Conditions instead of a single enum as the status
+- **breaking change** backup custom resources now use a list of Conditions instead of a single enum
+as the status
 
 ## [0.1.0] - 2022-06-27
 
