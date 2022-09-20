@@ -6,6 +6,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -15,7 +16,6 @@ import (
 )
 
 const (
-	backupSucceeded = "Succeeded"
 	// asyncOpsTimeoutMins is the amount of minutes after which assertions fail if the condition
 	// they check has not become true. Needed because some conditions might become true only
 	// after some time, so we need to check them asynchronously.
@@ -80,6 +80,26 @@ func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins 
 		return false
 	}, timeoutMins, 1*time.Second).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for backup %s/%s readiness: %s",
+			backup.GetNamespace(),
+			backup.GetName(),
+			err,
+		),
+	)
+}
+
+func WaitForDeletion(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
+	var err error
+	EventuallyWithOffset(1, func() bool {
+		b := New()
+		err = c.Get(
+			ctx,
+			types.NamespacedName{
+				Name:      backup.GetName(),
+				Namespace: backup.GetNamespace(),
+			}, b)
+		return err != nil && errors.IsNotFound(err)
+	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+		fmt.Sprintf("timeout reached waiting for backup %s/%s deletion: %s",
 			backup.GetNamespace(),
 			backup.GetName(),
 			err,

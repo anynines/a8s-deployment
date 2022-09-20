@@ -37,7 +37,7 @@ const (
 	asyncOpsTimeoutMins = time.Minute * 5
 	// backupTimeoutMins is the amount of minutes after which assertions fail waiting for a backup
 	// to complete. This should be adjusted once we have backups capable of recovering from crashes.
-	backupTimeoutMins = time.Minute * 1
+	backupTimeoutMins = time.Minute * 10
 )
 
 var (
@@ -94,9 +94,16 @@ var _ = Describe("Backup Chaos Tests", func() {
 
 	AfterEach(func() {
 		defer func() { close(portForwardStopCh) }()
+
+		Expect(k8sClient.Delete(ctx, backup)).To(Succeed(),
+			fmt.Sprintf("failed to delete backup %s/%s",
+				backup.GetNamespace(), backup.GetName()))
+		bkp.WaitForDeletion(ctx, backup, k8sClient)
+
 		Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(Succeed(),
 			fmt.Sprintf("failed to delete instance %s/%s",
 				instance.GetNamespace(), instance.GetName()))
+
 		Expect(k8sClient.Delete(ctx, sb)).To(Succeed(),
 			fmt.Sprintf("failed to delete service binding %s/%s",
 				sb.GetNamespace(), sb.GetName()))
@@ -225,17 +232,6 @@ var _ = Describe("Backup Chaos Tests", func() {
 		})
 
 		By("Ensure the backup is eventually successful", func() {
-			fmt.Println("Waiting for backup to become ready")
-			loops := 20
-			for {
-				time.Sleep(1 * time.Minute)
-				loops = loops - 1
-				fmt.Println("Loops left:", loops)
-				if loops < 1 {
-					break
-				}
-			}
-			fmt.Println("Done sleeping")
 			bkp.WaitForReadiness(ctx, backup, backupTimeoutMins, k8sClient)
 		})
 	})
