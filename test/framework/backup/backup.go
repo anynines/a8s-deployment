@@ -57,8 +57,7 @@ func backupPrefix(dsiName string) string {
 
 // WaitForReadiness waits for the backup object status condition of type "Complete" to indicate
 // true.
-func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
-	// TODO: Make the timeout configurable for more advanced backup scenarios
+func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins time.Duration, c runtimeClient.Client) {
 	var err error
 	EventuallyWithOffset(1, func() bool {
 		backupCreated := New()
@@ -79,7 +78,7 @@ func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeCli
 			}
 		}
 		return false
-	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+	}, timeoutMins, 1*time.Second).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for backup %s/%s readiness: %s",
 			backup.GetNamespace(),
 			backup.GetName(),

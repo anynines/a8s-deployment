@@ -7,7 +7,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/types"
 
 	backupv1alpha1 "github.com/anynines/a8s-backup-manager/api/v1alpha1"
 	"github.com/anynines/a8s-deployment/test/framework"
@@ -226,22 +225,18 @@ var _ = Describe("Backup Chaos Tests", func() {
 		})
 
 		By("Ensure the backup is eventually successful", func() {
-			Eventually(func() bool {
-				b := bkp.New()
-				err := k8sClient.Get(ctx, types.NamespacedName{
-					Name:      backup.GetName(),
-					Namespace: backup.GetNamespace(),
-				}, b)
-				if err != nil {
-					return false
+			fmt.Println("Waiting for backup to become ready")
+			loops := 20
+			for {
+				time.Sleep(1 * time.Minute)
+				loops = loops - 1
+				fmt.Println("Loops left:", loops)
+				if loops < 1 {
+					break
 				}
-
-				return b.Status.Condition.Type == backupv1alpha1.SuccessStatusCondition
-			}, backupTimeoutMins).Should(BeTrue(),
-				fmt.Sprintf("timeout reached waiting for retried backup to succeed for DSI %s/%s",
-					instance.GetNamespace(),
-					instance.GetName()),
-			)
+			}
+			fmt.Println("Done sleeping")
+			bkp.WaitForReadiness(ctx, backup, backupTimeoutMins, k8sClient)
 		})
 	})
 })
