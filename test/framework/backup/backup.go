@@ -57,7 +57,9 @@ func backupPrefix(dsiName string) string {
 
 // WaitForReadiness waits for the backup object status condition of type "Complete" to indicate
 // true.
-func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins time.Duration, c runtimeClient.Client) {
+func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins time.Duration,
+	c runtimeClient.Client) {
+
 	var err error
 	EventuallyWithOffset(1, func() bool {
 		backupCreated := New()
@@ -87,6 +89,7 @@ func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins 
 	)
 }
 
+// WaitForDeletion waits for the backup object to be deleted from the API server.
 func WaitForDeletion(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
 	var err error
 	EventuallyWithOffset(1, func() bool {
