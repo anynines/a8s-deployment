@@ -102,8 +102,8 @@ func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
 }
 
 // GetObject returns the actual PodChaos object
-func (nc PodChaos) GetObject() podChaos {
-	return nc.podChaos
+func (pc PodChaos) GetObject() podChaos {
+	return pc.podChaos
 }
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.

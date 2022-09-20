@@ -35,7 +35,7 @@ func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (
 		podchaos.WithAction(podchaos.PodFailureAction),
 	)
 
-	if err := c.Create(ctx, podChaos); err != nil {
+	if err := c.Create(ctx, podChaos.GetObject()); err != nil {
 		return nil, err
 	}
 
