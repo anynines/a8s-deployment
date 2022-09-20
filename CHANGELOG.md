@@ -15,7 +15,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
   PostgreSQL extensions.
 - support for MobilityDB PostgreSQL extension
 - backup custom resources now have a `maxRetries` field that specifies how often a backup
-will be retried before entering a failed state
+  will be retried before entering a failed state
+
 ### Updated
 
 - Due to some internal code clean-up some error messages have changed in the logs
@@ -31,7 +32,7 @@ will be retried before entering a failed state
 - **breaking change** Fix issue where only a single event was emitted for two secrets
   of a PostgreSQL instance
 - Apply fix to PostgreSQL-Operator end-to-end tests to reduce flakiness
-- backup manager now handles crashes of the backup agent gracefully by restarting them
+- backup manager now handles crashes of the backup agent gracefully by restarting the failed backup
 
 ### Changed
 
