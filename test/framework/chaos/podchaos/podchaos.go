@@ -8,15 +8,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type podChaos = chmv1alpha1.PodChaos
+type PodChaos chmv1alpha1.PodChaos
 type PodSelector = chmv1alpha1.PodSelector
-
-type PodChaos struct {
-	innerObject podChaos
-}
 
 const (
 	CRDName         string = "podchaos.chaos-mesh.org"
@@ -28,8 +25,8 @@ const (
 )
 
 // New returns a PodChaos object configured with a selector and provided options.
-func New(namespace string, selector *PodSelector, opts ...func(*podChaos)) PodChaos {
-	podChaos := &chmv1alpha1.PodChaos{
+func New(namespace string, selector *PodSelector, opts ...func(*PodChaos)) PodChaos {
+	podChaos := chmv1alpha1.PodChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "pod-failure",
 			Namespace: namespace,
@@ -42,22 +39,23 @@ func New(namespace string, selector *PodSelector, opts ...func(*podChaos)) PodCh
 		},
 	}
 
+	podChaosObj := PodChaos(podChaos)
 	for _, lambda := range opts {
-		lambda(podChaos)
+		lambda(&podChaosObj)
 	}
 
-	return PodChaos{*podChaos}
+	return podChaosObj
 }
 
 // WithName overrides the Name field for a PodChaos object.
-func WithName(name string) func(*podChaos) {
-	return func(c *podChaos) {
+func WithName(name string) func(*PodChaos) {
+	return func(c *PodChaos) {
 		c.ObjectMeta.Name = name
 	}
 }
 
 // WithAction overrides the PodChaos Action field.
-func WithAction(action string) func(*podChaos) {
+func WithAction(action string) func(*PodChaos) {
 	var a chmv1alpha1.PodChaosAction
 	switch action {
 	case PodKillAction:
@@ -70,7 +68,7 @@ func WithAction(action string) func(*podChaos) {
 		panic("Invalid PodChaosAction : " + action)
 	}
 
-	return func(c *podChaos) {
+	return func(c *PodChaos) {
 		c.Spec.Action = a
 	}
 }
@@ -78,7 +76,7 @@ func WithAction(action string) func(*podChaos) {
 // CheckChaosActive checks if a PodChaos object indicates a successful injection of Chaos action.
 func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client) (bool, error) {
 	podChaos := &chmv1alpha1.PodChaos{}
-	err := c.Get(ctx, types.NamespacedName{Name: pc.innerObject.Name, Namespace: pc.innerObject.Namespace}, podChaos)
+	err := c.Get(ctx, types.NamespacedName{Name: pc.Name, Namespace: pc.Namespace}, podChaos)
 	if err != nil {
 		return false, fmt.Errorf("failed getting PodChaos %s: %w", podChaos.Name, err)
 	}
@@ -93,17 +91,10 @@ func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client)
 	return false, nil
 }
 
-// Delete deletes the PodChaos Object from the API server.
-func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
-	if err := c.Delete(ctx, &pc.innerObject); err != nil {
-		return fmt.Errorf("failed to delete PodChaos %s: %w", pc.innerObject.Name, err)
-	}
-	return nil
-}
-
 // GetObject returns the actual PodChaos object
-func (pc PodChaos) GetObject() *podChaos {
-	return &pc.innerObject
+func (pc PodChaos) GetObject() client.Object {
+	chaosObj := chmv1alpha1.PodChaos(pc)
+	return &chaosObj
 }
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.

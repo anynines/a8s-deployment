@@ -8,15 +8,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type networkChaos = chmv1alpha1.NetworkChaos
+type NetworkChaos chmv1alpha1.NetworkChaos
 type PodSelector = chmv1alpha1.PodSelector
-
-type NetworkChaos struct {
-	networkChaos
-}
 
 // NetworkChaos Actions
 const (
@@ -33,8 +30,8 @@ const (
 )
 
 // New returns a NetworkChaos object configured with a selector and provided options.
-func New(namespace string, selector *PodSelector, opts ...func(*networkChaos)) NetworkChaos {
-	networkChaos := &networkChaos{
+func New(namespace string, selector *PodSelector, opts ...func(*NetworkChaos)) NetworkChaos {
+	networkChaos := chmv1alpha1.NetworkChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "network-partition",
 			Namespace: namespace,
@@ -53,22 +50,23 @@ func New(namespace string, selector *PodSelector, opts ...func(*networkChaos)) N
 		},
 	}
 
+	networkChaosObj := NetworkChaos(networkChaos)
 	for _, lambda := range opts {
-		lambda(networkChaos)
+		lambda(&networkChaosObj)
 	}
 
-	return NetworkChaos{*networkChaos}
+	return networkChaosObj
 }
 
 // WithName overrides the Name field for a NetworkChaos object.
-func WithName(name string) func(*networkChaos) {
-	return func(c *networkChaos) {
+func WithName(name string) func(*NetworkChaos) {
+	return func(c *NetworkChaos) {
 		c.ObjectMeta.Name = name
 	}
 }
 
 // WithAction overrides the NetworkChaos Action field.
-func WithAction(action string) func(*networkChaos) {
+func WithAction(action string) func(*NetworkChaos) {
 	var a chmv1alpha1.NetworkChaosAction
 	switch action {
 	case partitionAction:
@@ -77,13 +75,13 @@ func WithAction(action string) func(*networkChaos) {
 		panic("Invalid NetworkChaosAction : " + action)
 	}
 
-	return func(c *networkChaos) {
+	return func(c *NetworkChaos) {
 		c.Spec.Action = a
 	}
 }
 
 // WithAction overrides the NetworkChaos Mode field.
-func WithMode(mode string) func(*networkChaos) {
+func WithMode(mode string) func(*NetworkChaos) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
 	case allMode:
@@ -92,7 +90,7 @@ func WithMode(mode string) func(*networkChaos) {
 		panic("Invalid NetworkChaos mode : " + mode)
 	}
 
-	return func(nc *networkChaos) {
+	return func(nc *NetworkChaos) {
 		nc.Spec.Mode = m
 	}
 }
@@ -113,17 +111,10 @@ func (nc NetworkChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Cli
 	return false, nil
 }
 
-// Delete deletes the NetworkChaos Object from the API server.
-func (nc NetworkChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
-	if err := c.Delete(ctx, &nc.networkChaos); err != nil {
-		return fmt.Errorf("failed to delete NetworkChaos %s: %w", nc.Name, err)
-	}
-	return nil
-}
-
 // GetObject returns the actual NetworkChaos object
-func (nc NetworkChaos) GetObject() *networkChaos {
-	return &nc.networkChaos
+func (nc NetworkChaos) GetObject() client.Object {
+	networkChaosObj := chmv1alpha1.NetworkChaos(nc)
+	return &networkChaosObj
 }
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.
@@ -175,8 +166,8 @@ func WithSelectorNamespace(namespaces []string) func(*PodSelector) {
 }
 
 // WithExternalTargets overrides the ExternalTargets for a NetworkChaos object.
-func WithExternalTargets(targets []string) func(*networkChaos) {
-	return func(nc *networkChaos) {
+func WithExternalTargets(targets []string) func(*NetworkChaos) {
+	return func(nc *NetworkChaos) {
 		nc.Spec.ExternalTargets = targets
 	}
 }
