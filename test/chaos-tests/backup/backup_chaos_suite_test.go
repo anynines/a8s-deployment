@@ -6,12 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	chmv1alpha1 "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
-
-	chmv1alpha1 "github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 
 	"github.com/anynines/a8s-deployment/test/framework"
 	"github.com/anynines/a8s-deployment/test/framework/chaos"

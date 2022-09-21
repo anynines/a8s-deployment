@@ -30,7 +30,7 @@ var (
 type ChaosObject interface {
 	// CheckChaosActive checks whether the effect of the applied chaos is already active
 	CheckChaosActive(ctx context.Context, c runtimeClient.Client) (bool, error)
-	GetObject() runtimeClient.Object
+	KubernetesObject() runtimeClient.Object
 }
 
 func VerifyChaosMeshPresent(ctx context.Context, c runtimeClient.Client) error {

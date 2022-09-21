@@ -92,7 +92,7 @@ func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client)
 }
 
 // GetObject returns the actual PodChaos object
-func (pc PodChaos) GetObject() client.Object {
+func (pc PodChaos) KubernetesObject() client.Object {
 	chaosObj := chmv1alpha1.PodChaos(pc)
 	return &chaosObj
 }

@@ -216,7 +216,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 		time.Sleep(time.Second * 10)
 
 		By("Restart master by deleting PodChaos", func() {
-			Expect(k8sClient.Delete(ctx, masterStop.GetObject())).To(Succeed(),
+			Expect(k8sClient.Delete(ctx, masterStop.KubernetesObject())).To(Succeed(),
 				fmt.Sprintf("failed to delete PodChaos on DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
@@ -224,7 +224,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 		})
 
 		By("Delete network partition on master", func() {
-			Expect(k8sClient.Delete(ctx, partitionMaster.GetObject())).To(Succeed(),
+			Expect(k8sClient.Delete(ctx, partitionMaster.KubernetesObject())).To(Succeed(),
 				fmt.Sprintf("failed to delete network partition on DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
