@@ -199,7 +199,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		// Restart the replicas with available master so that they can pick up
 		// on their replication lag
 		By("Restart replicas by deleting PodChaos", func() {
-			Expect(replicaStop.Delete(ctx, k8sClient)).To(Succeed(),
+			Expect(k8sClient.Delete(ctx, replicaStop.GetObject())).To(Succeed(),
 				fmt.Sprintf("failed to delete chaos applied to DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
@@ -258,7 +258,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 
 		// Ensure recovery as soon as the master comes back online
 		By("Restart master by deleting PodChaos", func() {
-			Expect(masterStop.Delete(ctx, k8sClient)).To(Succeed(),
+			Expect(k8sClient.Delete(ctx, masterStop.GetObject())).To(Succeed(),
 				fmt.Sprintf("failed to delete chaos applied to DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
@@ -498,7 +498,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		})
 
 		By("Restart old master by deleting chaos", func() {
-			Expect(masterStop.Delete(ctx, k8sClient)).To(Succeed(),
+			Expect(k8sClient.Delete(ctx, masterStop.GetObject())).To(Succeed(),
 				fmt.Sprintf("failed to delete chaos applied to DSI %s/%s",
 					instance.GetNamespace(),
 					instance.GetName()),
