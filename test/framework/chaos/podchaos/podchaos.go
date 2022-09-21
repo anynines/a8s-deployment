@@ -15,7 +15,7 @@ type podChaos = chmv1alpha1.PodChaos
 type PodSelector = chmv1alpha1.PodSelector
 
 type PodChaos struct {
-	podChaos
+	innerObject podChaos
 }
 
 const (
@@ -78,7 +78,7 @@ func WithAction(action string) func(*podChaos) {
 // CheckChaosActive checks if a PodChaos object indicates a successful injection of Chaos action.
 func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client) (bool, error) {
 	podChaos := &chmv1alpha1.PodChaos{}
-	err := c.Get(ctx, types.NamespacedName{Name: pc.Name, Namespace: pc.Namespace}, podChaos)
+	err := c.Get(ctx, types.NamespacedName{Name: pc.innerObject.Name, Namespace: pc.innerObject.Namespace}, podChaos)
 	if err != nil {
 		return false, fmt.Errorf("failed getting PodChaos %s: %w", podChaos.Name, err)
 	}
@@ -95,15 +95,15 @@ func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client)
 
 // Delete deletes the PodChaos Object from the API server.
 func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
-	if err := c.Delete(ctx, &pc.podChaos); err != nil {
-		return fmt.Errorf("failed to delete PodChaos %s: %w", pc.Name, err)
+	if err := c.Delete(ctx, &pc.innerObject); err != nil {
+		return fmt.Errorf("failed to delete PodChaos %s: %w", pc.innerObject.Name, err)
 	}
 	return nil
 }
 
 // GetObject returns the actual PodChaos object
 func (pc PodChaos) GetObject() *podChaos {
-	return &pc.podChaos
+	return &pc.innerObject
 }
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.
