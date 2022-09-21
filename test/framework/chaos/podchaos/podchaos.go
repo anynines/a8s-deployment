@@ -11,16 +11,16 @@ import (
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type podChaos = *chmv1alpha1.PodChaos
-type PodSelector = *chmv1alpha1.PodSelector
+type podChaos = chmv1alpha1.PodChaos
+type PodSelector = chmv1alpha1.PodSelector
 
 type PodChaos struct {
 	podChaos
 }
 
 const (
-	ChaosCRDName         string = "podchaos.chaos-mesh.org"
-	ChaosRequiredVersion string = "v1alpha1"
+	CRDName         string = "podchaos.chaos-mesh.org"
+	RequiredVersion string = "v1alpha1"
 
 	PodKillAction       string = "pod-kill"
 	PodFailureAction    string = "pod-failure"
@@ -28,7 +28,7 @@ const (
 )
 
 // New returns a PodChaos object configured with a selector and provided options.
-func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podChaos)) PodChaos {
+func New(namespace string, selector *PodSelector, opts ...func(*podChaos)) PodChaos {
 	podChaos := &chmv1alpha1.PodChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "pod-failure",
@@ -37,7 +37,7 @@ func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podCha
 		Spec: chmv1alpha1.PodChaosSpec{
 			Action: chmv1alpha1.PodFailureAction,
 			ContainerSelector: chmv1alpha1.ContainerSelector{
-				PodSelector: selector,
+				PodSelector: *selector,
 			},
 		},
 	}
@@ -46,18 +46,18 @@ func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(podCha
 		lambda(podChaos)
 	}
 
-	return PodChaos{podChaos}
+	return PodChaos{*podChaos}
 }
 
 // WithName overrides the Name field for a PodChaos object.
-func WithName(name string) func(podChaos) {
-	return func(c podChaos) {
+func WithName(name string) func(*podChaos) {
+	return func(c *podChaos) {
 		c.ObjectMeta.Name = name
 	}
 }
 
 // WithAction overrides the PodChaos Action field.
-func WithAction(action string) func(podChaos) {
+func WithAction(action string) func(*podChaos) {
 	var a chmv1alpha1.PodChaosAction
 	switch action {
 	case PodKillAction:
@@ -70,7 +70,7 @@ func WithAction(action string) func(podChaos) {
 		panic("Invalid PodChaosAction : " + action)
 	}
 
-	return func(c podChaos) {
+	return func(c *podChaos) {
 		c.Spec.Action = a
 	}
 }
@@ -95,20 +95,20 @@ func (pc PodChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Client)
 
 // Delete deletes the PodChaos Object from the API server.
 func (pc PodChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
-	if err := c.Delete(ctx, pc.podChaos); err != nil {
+	if err := c.Delete(ctx, &pc.podChaos); err != nil {
 		return fmt.Errorf("failed to delete PodChaos %s: %w", pc.Name, err)
 	}
 	return nil
 }
 
 // GetObject returns the actual PodChaos object
-func (pc PodChaos) GetObject() podChaos {
-	return pc.podChaos
+func (pc PodChaos) GetObject() *podChaos {
+	return &pc.podChaos
 }
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.
 func NewPodLabelSelector(labels map[string]string,
-	opts ...func(PodSelector)) PodSelector {
+	opts ...func(*PodSelector)) *PodSelector {
 
 	podSelector := &chmv1alpha1.PodSelector{
 		Selector: chmv1alpha1.PodSelectorSpec{
@@ -127,7 +127,7 @@ func NewPodLabelSelector(labels map[string]string,
 }
 
 // WithSelectorMode overrides the SelectorMode for a PodSelector.
-func WithSelectorMode(mode string) func(PodSelector) {
+func WithSelectorMode(mode string) func(*PodSelector) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
 	case "one":
@@ -142,14 +142,14 @@ func WithSelectorMode(mode string) func(PodSelector) {
 		m = chmv1alpha1.RandomMaxPercentMode
 	}
 
-	return func(s PodSelector) {
+	return func(s *PodSelector) {
 		s.Mode = m
 	}
 }
 
 // WithSelectorNamespace overrides the namespaces for a PodSelector.
-func WithSelectorNamespace(namespaces []string) func(PodSelector) {
-	return func(s PodSelector) {
+func WithSelectorNamespace(namespaces []string) func(*PodSelector) {
+	return func(s *PodSelector) {
 		s.Selector.Namespaces = namespaces
 	}
 }

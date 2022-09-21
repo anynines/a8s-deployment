@@ -49,22 +49,22 @@ func VerifyChaosMeshPresent(ctx context.Context, c runtimeClient.Client) error {
 // TODO: Verify all chaos CRDs are installed
 func verifyChaosMeshCRDsInstalled(ctx context.Context, c runtimeClient.Client) error {
 	crd := apixv1.CustomResourceDefinition{}
-	err := c.Get(ctx, types.NamespacedName{Name: podchaos.ChaosCRDName}, &crd)
+	err := c.Get(ctx, types.NamespacedName{Name: podchaos.CRDName}, &crd)
 	if k8serrors.IsNotFound(err) || k8serrors.IsGone(err) {
-		return fmt.Errorf("missing ChaosMesh CRD %s", podchaos.ChaosCRDName)
+		return fmt.Errorf("missing ChaosMesh CRD %s", podchaos.CRDName)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to verify presence of ChaosMesh CRD %s: %w", podchaos.ChaosCRDName, err)
+		return fmt.Errorf("failed to verify presence of ChaosMesh CRD %s: %w", podchaos.CRDName, err)
 	}
 
 	for _, version := range crd.Spec.Versions {
-		if version.Name == podchaos.ChaosRequiredVersion {
+		if version.Name == podchaos.RequiredVersion {
 			return nil
 		}
 	}
 
 	return fmt.Errorf("required version of ChaosMesh CRD %s not installed: needs %s",
-		podchaos.ChaosCRDName, podchaos.ChaosRequiredVersion)
+		podchaos.CRDName, podchaos.RequiredVersion)
 }
 
 func verifyChaosMeshControllersRunning(ctx context.Context, c runtimeClient.Client) error {

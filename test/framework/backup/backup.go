@@ -22,6 +22,7 @@ const (
 	// TODO: Make asyncOpsTimeoutMins an invocation parameter.
 	asyncOpsTimeoutMins = time.Minute * 5
 	suffixLength        = 6
+	pollingPeriod       = 1 * time.Second
 )
 
 // Option represents a functional option for backup objects. To learn what a functional option is,
@@ -80,7 +81,7 @@ func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins 
 			}
 		}
 		return false
-	}, timeoutMins, 1*time.Second).Should(BeTrue(),
+	}, timeoutMins, pollingPeriod).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for backup %s/%s readiness: %s",
 			backup.GetNamespace(),
 			backup.GetName(),
@@ -100,8 +101,8 @@ func WaitForDeletion(ctx context.Context, backup *v1alpha1.Backup, c runtimeClie
 				Name:      backup.GetName(),
 				Namespace: backup.GetNamespace(),
 			}, b)
-		return err != nil && errors.IsNotFound(err)
-	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+		return errors.IsNotFound(err)
+	}, asyncOpsTimeoutMins, pollingPeriod).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for backup %s/%s deletion: %s",
 			backup.GetNamespace(),
 			backup.GetName(),

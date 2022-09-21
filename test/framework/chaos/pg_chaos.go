@@ -27,7 +27,7 @@ func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (
 
 	podChaos := podchaos.New(
 		pg.Instance.GetNamespace(),
-		*podchaos.NewPodLabelSelector(pg.Instance.GetReplicaLabels(),
+		podchaos.NewPodLabelSelector(pg.Instance.GetReplicaLabels(),
 			podchaos.WithSelectorMode("all"),
 			podchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
 		),
@@ -48,7 +48,7 @@ func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (Ch
 
 	podChaos := podchaos.New(
 		pg.Instance.GetNamespace(),
-		*podchaos.NewPodLabelSelector(
+		podchaos.NewPodLabelSelector(
 			pg.Instance.GetMasterLabels(),
 			podchaos.WithSelectorMode("all"),
 			podchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()}),
@@ -69,7 +69,7 @@ func (pg PgInjector) PartitionMaster(ctx context.Context, c runtimeClient.Client
 	ChaosObject, error) {
 
 	nc := networkchaos.New(pg.Instance.GetNamespace(),
-		*networkchaos.NewPodLabelSelector(pg.Instance.GetMasterLabels(),
+		networkchaos.NewPodLabelSelector(pg.Instance.GetMasterLabels(),
 			networkchaos.WithSelectorMode("all"),
 			networkchaos.WithSelectorNamespace([]string{pg.Instance.GetNamespace()})),
 		networkchaos.WithName("partition-master"),

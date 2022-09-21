@@ -11,8 +11,8 @@ import (
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type networkChaos = *chmv1alpha1.NetworkChaos
-type PodSelector = *chmv1alpha1.PodSelector
+type networkChaos = chmv1alpha1.NetworkChaos
+type PodSelector = chmv1alpha1.PodSelector
 
 type NetworkChaos struct {
 	networkChaos
@@ -33,8 +33,8 @@ const (
 )
 
 // New returns a NetworkChaos object configured with a selector and provided options.
-func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(networkChaos)) NetworkChaos {
-	networkChaos := &chmv1alpha1.NetworkChaos{
+func New(namespace string, selector *PodSelector, opts ...func(*networkChaos)) NetworkChaos {
+	networkChaos := &networkChaos{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "network-partition",
 			Namespace: namespace,
@@ -57,18 +57,18 @@ func New(namespace string, selector chmv1alpha1.PodSelector, opts ...func(networ
 		lambda(networkChaos)
 	}
 
-	return NetworkChaos{networkChaos}
+	return NetworkChaos{*networkChaos}
 }
 
 // WithName overrides the Name field for a NetworkChaos object.
-func WithName(name string) func(networkChaos) {
-	return func(c networkChaos) {
+func WithName(name string) func(*networkChaos) {
+	return func(c *networkChaos) {
 		c.ObjectMeta.Name = name
 	}
 }
 
 // WithAction overrides the NetworkChaos Action field.
-func WithAction(action string) func(networkChaos) {
+func WithAction(action string) func(*networkChaos) {
 	var a chmv1alpha1.NetworkChaosAction
 	switch action {
 	case partitionAction:
@@ -77,13 +77,13 @@ func WithAction(action string) func(networkChaos) {
 		panic("Invalid NetworkChaosAction : " + action)
 	}
 
-	return func(c networkChaos) {
+	return func(c *networkChaos) {
 		c.Spec.Action = a
 	}
 }
 
 // WithAction overrides the NetworkChaos Mode field.
-func WithMode(mode string) func(networkChaos) {
+func WithMode(mode string) func(*networkChaos) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
 	case allMode:
@@ -92,7 +92,7 @@ func WithMode(mode string) func(networkChaos) {
 		panic("Invalid NetworkChaos mode : " + mode)
 	}
 
-	return func(nc networkChaos) {
+	return func(nc *networkChaos) {
 		nc.Spec.Mode = m
 	}
 }
@@ -106,10 +106,8 @@ func (nc NetworkChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Cli
 	}
 
 	for _, cond := range networkChaos.Status.Conditions {
-		if cond.Type == chmv1alpha1.ConditionAllInjected {
-			if cond.Status == corev1.ConditionTrue {
-				return true, nil
-			}
+		if cond.Type == chmv1alpha1.ConditionAllInjected && cond.Status == corev1.ConditionTrue {
+			return true, nil
 		}
 	}
 	return false, nil
@@ -117,20 +115,20 @@ func (nc NetworkChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Cli
 
 // Delete deletes the NetworkChaos Object from the API server.
 func (nc NetworkChaos) Delete(ctx context.Context, c runtimeClient.Client) error {
-	if err := c.Delete(ctx, nc.networkChaos); err != nil {
+	if err := c.Delete(ctx, &nc.networkChaos); err != nil {
 		return fmt.Errorf("failed to delete NetworkChaos %s: %w", nc.Name, err)
 	}
 	return nil
 }
 
 // GetObject returns the actual NetworkChaos object
-func (nc NetworkChaos) GetObject() networkChaos {
-	return nc.networkChaos
+func (nc NetworkChaos) GetObject() *networkChaos {
+	return &nc.networkChaos
 }
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.
 func NewPodLabelSelector(labels map[string]string,
-	opts ...func(PodSelector)) PodSelector {
+	opts ...func(*PodSelector)) *PodSelector {
 
 	podSelector := &chmv1alpha1.PodSelector{
 		Selector: chmv1alpha1.PodSelectorSpec{
@@ -149,7 +147,7 @@ func NewPodLabelSelector(labels map[string]string,
 }
 
 // WithSelectorMode overrides the SelectorMode for a PodSelector.
-func WithSelectorMode(mode string) func(PodSelector) {
+func WithSelectorMode(mode string) func(*PodSelector) {
 	var m chmv1alpha1.SelectorMode
 	switch mode {
 	case "one":
@@ -164,21 +162,21 @@ func WithSelectorMode(mode string) func(PodSelector) {
 		m = chmv1alpha1.RandomMaxPercentMode
 	}
 
-	return func(s PodSelector) {
+	return func(s *PodSelector) {
 		s.Mode = m
 	}
 }
 
 // WithSelectorNamespace overrides the namespaces for a PodSelector.
-func WithSelectorNamespace(namespaces []string) func(PodSelector) {
-	return func(s PodSelector) {
+func WithSelectorNamespace(namespaces []string) func(*PodSelector) {
+	return func(s *PodSelector) {
 		s.Selector.Namespaces = namespaces
 	}
 }
 
 // WithExternalTargets overrides the ExternalTargets for a NetworkChaos object.
-func WithExternalTargets(targets []string) func(networkChaos) {
-	return func(nc networkChaos) {
+func WithExternalTargets(targets []string) func(*networkChaos) {
+	return func(nc *networkChaos) {
 		nc.Spec.ExternalTargets = targets
 	}
 }
