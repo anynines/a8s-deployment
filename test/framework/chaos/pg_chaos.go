@@ -35,7 +35,7 @@ func (pg PgInjector) StopReplicas(ctx context.Context, c runtimeClient.Client) (
 		podchaos.WithAction(podchaos.PodFailureAction),
 	)
 
-	if err := c.Create(ctx, podChaos.GetObject()); err != nil {
+	if err := c.Create(ctx, podChaos.KubernetesObject()); err != nil {
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func (pg PgInjector) StopMaster(ctx context.Context, c runtimeClient.Client) (Ch
 		podchaos.WithAction(podchaos.PodFailureAction),
 	)
 
-	if err := c.Create(ctx, podChaos.GetObject()); err != nil {
+	if err := c.Create(ctx, podChaos.KubernetesObject()); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +78,7 @@ func (pg PgInjector) PartitionMaster(ctx context.Context, c runtimeClient.Client
 		networkchaos.WithMode("all"),
 	)
 
-	if err := c.Create(ctx, nc.GetObject()); err != nil {
+	if err := c.Create(ctx, nc.KubernetesObject()); err != nil {
 		return nil, err
 	}
 

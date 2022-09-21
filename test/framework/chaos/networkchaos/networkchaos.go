@@ -112,7 +112,7 @@ func (nc NetworkChaos) CheckChaosActive(ctx context.Context, c runtimeClient.Cli
 }
 
 // GetObject returns the actual NetworkChaos object
-func (nc NetworkChaos) GetObject() client.Object {
+func (nc NetworkChaos) KubernetesObject() client.Object {
 	networkChaosObj := chmv1alpha1.NetworkChaos(nc)
 	return &networkChaosObj
 }
