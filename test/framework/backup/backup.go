@@ -6,6 +6,7 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -15,13 +16,13 @@ import (
 )
 
 const (
-	backupSucceeded = "Succeeded"
 	// asyncOpsTimeoutMins is the amount of minutes after which assertions fail if the condition
 	// they check has not become true. Needed because some conditions might become true only
 	// after some time, so we need to check them asynchronously.
 	// TODO: Make asyncOpsTimeoutMins an invocation parameter.
 	asyncOpsTimeoutMins = time.Minute * 5
 	suffixLength        = 6
+	pollingPeriod       = 1 * time.Second
 )
 
 // Option represents a functional option for backup objects. To learn what a functional option is,
@@ -55,7 +56,11 @@ func backupPrefix(dsiName string) string {
 	return fmt.Sprintf("%s-backup", dsiName)
 }
 
-func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
+// WaitForReadiness waits for the backup object status condition of type "Complete" to indicate
+// true.
+func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, timeoutMins time.Duration,
+	c runtimeClient.Client) {
+
 	var err error
 	EventuallyWithOffset(1, func() bool {
 		backupCreated := New()
@@ -76,8 +81,29 @@ func WaitForReadiness(ctx context.Context, backup *v1alpha1.Backup, c runtimeCli
 			}
 		}
 		return false
-	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
+	}, timeoutMins, pollingPeriod).Should(BeTrue(),
 		fmt.Sprintf("timeout reached waiting for backup %s/%s readiness: %s",
+			backup.GetNamespace(),
+			backup.GetName(),
+			err,
+		),
+	)
+}
+
+// WaitForDeletion waits for the backup object to be deleted from the API server.
+func WaitForDeletion(ctx context.Context, backup *v1alpha1.Backup, c runtimeClient.Client) {
+	var err error
+	EventuallyWithOffset(1, func() bool {
+		b := New()
+		err = c.Get(
+			ctx,
+			types.NamespacedName{
+				Name:      backup.GetName(),
+				Namespace: backup.GetNamespace(),
+			}, b)
+		return errors.IsNotFound(err)
+	}, asyncOpsTimeoutMins, pollingPeriod).Should(BeTrue(),
+		fmt.Sprintf("timeout reached waiting for backup %s/%s deletion: %s",
 			backup.GetNamespace(),
 			backup.GetName(),
 			err,

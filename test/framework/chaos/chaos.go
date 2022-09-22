@@ -6,13 +6,14 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-
 	apixv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/anynines/a8s-deployment/test/framework/chaos/podchaos"
 )
 
 var (
@@ -29,8 +30,7 @@ var (
 type ChaosObject interface {
 	// CheckChaosActive checks whether the effect of the applied chaos is already active
 	CheckChaosActive(ctx context.Context, c runtimeClient.Client) (bool, error)
-	// Delete removes the Chaos from the Cluster.
-	Delete(ctx context.Context, c runtimeClient.Client) error
+	KubernetesObject() runtimeClient.Object
 }
 
 func VerifyChaosMeshPresent(ctx context.Context, c runtimeClient.Client) error {
@@ -45,24 +45,25 @@ func VerifyChaosMeshPresent(ctx context.Context, c runtimeClient.Client) error {
 	return verifyChaosMeshControllersRunning(ctx, c)
 }
 
+// TODO: Verify all chaos CRDs are installed
 func verifyChaosMeshCRDsInstalled(ctx context.Context, c runtimeClient.Client) error {
 	crd := apixv1.CustomResourceDefinition{}
-	err := c.Get(ctx, types.NamespacedName{Name: podChaosCRDName}, &crd)
+	err := c.Get(ctx, types.NamespacedName{Name: podchaos.CRDName}, &crd)
 	if k8serrors.IsNotFound(err) || k8serrors.IsGone(err) {
-		return fmt.Errorf("missing ChaosMesh CRD %s", podChaosCRDName)
+		return fmt.Errorf("missing ChaosMesh CRD %s", podchaos.CRDName)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to verify presence of ChaosMesh CRD %s: %w", podChaosCRDName, err)
+		return fmt.Errorf("failed to verify presence of ChaosMesh CRD %s: %w", podchaos.CRDName, err)
 	}
 
 	for _, version := range crd.Spec.Versions {
-		if version.Name == requiredVersion {
+		if version.Name == podchaos.RequiredVersion {
 			return nil
 		}
 	}
 
 	return fmt.Errorf("required version of ChaosMesh CRD %s not installed: needs %s",
-		podChaosCRDName, requiredVersion)
+		podchaos.CRDName, podchaos.RequiredVersion)
 }
 
 func verifyChaosMeshControllersRunning(ctx context.Context, c runtimeClient.Client) error {

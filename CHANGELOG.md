@@ -16,6 +16,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - support for MobilityDB PostgreSQL extension
 - backup custom resources now have a `maxRetries` field that specifies how often a backup
   will be retried before entering a failed state
+- Add chaos test for crashing backup agent
 
 ### Updated
 

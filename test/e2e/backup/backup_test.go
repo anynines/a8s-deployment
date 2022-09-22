@@ -125,7 +125,7 @@ var _ = Describe("Backup", func() {
 			Expect(k8sClient.Create(ctx, backup)).To(Succeed(),
 				fmt.Sprintf("failed to create backup for DSI %s/%s",
 					instance.GetNamespace(), instance.GetName()))
-			bkp.WaitForReadiness(ctx, backup, k8sClient)
+			bkp.WaitForReadiness(ctx, backup, framework.AsyncOpsTimeoutMins, k8sClient)
 		})
 
 		By("Writing more data", func() {
