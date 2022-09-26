@@ -36,8 +36,9 @@ const (
 
 	instancePort = 5432
 
-	taintingTimeout = 15 * time.Second
-	labelingTimeout = 15 * time.Second
+	taintingTimeout = 5 * time.Second
+	labelingTimeout = 5 * time.Second
+	listingTimeout  = 5 * time.Second
 )
 
 var _ = Describe("DSIs topology awareness", func() {
@@ -482,17 +483,23 @@ var _ = Describe("DSIs topology awareness", func() {
 			numAZs := 3
 
 			BeforeEach(func() {
-				Eventually(func(g Gomega) {
-					var k8sNodes []corev1.Node
+				var k8sNodes []corev1.Node
+				var err error
+				Eventually(func() error {
 					k8sNodes, err = nodes.ListWorkers(ctx)
-					g.Expect(err).To(BeNil())
+					return err
+				}, listingTimeout).Should(Succeed(),
+					fmt.Sprintf("Timed out while waiting for list workers to "+
+						"succeed, last error: %s", err))
 
-					for i, n := range k8sNodes {
-						az := "az-" + strconv.Itoa(i%numAZs)
-						labelToAdd := map[string]string{a8sTestAZLabelKey: az}
-						g.Expect(nodes.Label(ctx, n, labelToAdd)).To(Succeed())
+				for i, n := range k8sNodes {
+					labels := map[string]string{
+						a8sTestAZLabelKey: "az-" + strconv.Itoa(i%numAZs),
 					}
-				}).Should(Succeed(), labelingTimeout)
+					Eventually(func() error {
+						return labelNode(ctx, nodes, n.Name, labels)
+					}, labelingTimeout).Should(Succeed())
+				}
 			})
 
 			It("Implements a 3-replica DSI where each replica is in a different AZ", func() {
@@ -592,21 +599,24 @@ var _ = Describe("DSIs topology awareness", func() {
 			numNodes := 3
 
 			BeforeEach(func() {
-				Eventually(func(g Gomega) {
-					var k8sNodes []corev1.Node
+				var k8sNodes []corev1.Node
+				var err error
+				Eventually(func() error {
 					k8sNodes, err = nodes.ListWorkers(ctx)
-					g.Expect(err).To(BeNil())
+					return err
+				}, listingTimeout).Should(Succeed(),
+					fmt.Sprintf("Timed out while waiting for list workers to "+
+						"succeed, last error: %s", err))
 
-					for i, n := range k8sNodes {
-						az := "az-" + strconv.Itoa(i%numAZs)
-						node := "node-" + strconv.Itoa(i%numNodes)
-						labelsToAdd := map[string]string{
-							a8sTestAZLabelKey:   az,
-							a8sTestNodeLabelKey: node,
-						}
-						g.Expect(nodes.Label(ctx, n, labelsToAdd)).To(Succeed())
+				for i, n := range k8sNodes {
+					labels := map[string]string{
+						a8sTestAZLabelKey:   "az-" + strconv.Itoa(i%numAZs),
+						a8sTestNodeLabelKey: "node-" + strconv.Itoa(i%numNodes),
 					}
-				}).Should(Succeed(), labelingTimeout)
+					Eventually(func() error {
+						return labelNode(ctx, nodes, n.Name, labels)
+					}, labelingTimeout).Should(Succeed())
+				}
 			})
 
 			It("Implements a 3-replica DSI with replicas spread across 3 hosts and 2 AZs", func() {
@@ -777,4 +787,18 @@ func verifyDSIPodsAreInMoreThanOneAZ(ctx context.Context,
 	}
 
 	return fmt.Errorf("all dsi pods are in AZ %s when they should be in more than one AZ", podAZ)
+}
+
+func labelNode(ctx context.Context, nodes NodesClient, nodeName string,
+	labels map[string]string) error {
+
+	// We do a Get to base the update off of a fresh version of the node, to minimize the risk of
+	// MVCC conflicts.
+	// For details: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+	node, err := nodes.Get(ctx, nodeName)
+	if err != nil {
+		return fmt.Errorf("failed to label node %s: %w", nodeName, err)
+	}
+
+	return nodes.Label(ctx, node, labels)
 }

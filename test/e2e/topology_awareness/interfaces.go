@@ -7,12 +7,13 @@ import (
 )
 
 type NodesClient interface {
-	NodesLister
+	NodesReader
 	NodesTainter
 	NodesLabeler
 }
 
-type NodesLister interface {
+type NodesReader interface {
+	Get(ctx context.Context, nodeName string) (corev1.Node, error)
 	ListAll(context.Context) ([]corev1.Node, error)
 	ListWorkers(context.Context) ([]corev1.Node, error)
 }
