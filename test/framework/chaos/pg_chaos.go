@@ -1,3 +1,6 @@
+// chaos is a utility package for injecting faults into running instances.
+// Chaos Mesh takes awhile to apply the Chaos objects in which the backup could have already
+// been completed. This can increase flakiness.
 package chaos
 
 import (
