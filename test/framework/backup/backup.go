@@ -44,6 +44,12 @@ func SetNamespacedName(dsi runtimeClient.Object) Option {
 	}
 }
 
+func MaxRetries(maxRetries string) Option {
+	return func(b *v1alpha1.Backup) {
+		b.Spec.MaxRetries = maxRetries
+	}
+}
+
 func New(opts ...Option) *v1alpha1.Backup {
 	b := &v1alpha1.Backup{}
 	for _, opt := range opts {
