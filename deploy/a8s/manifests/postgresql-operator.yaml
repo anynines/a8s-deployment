@@ -1614,7 +1614,11 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
+<<<<<<< Updated upstream
         image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:a45447d9b1d80da17228f7890b00058f2099f022
+=======
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:bc36f72404ae29e587b41898c0fb06591595c1da
+>>>>>>> Stashed changes
         livenessProbe:
           httpGet:
             path: /healthz
