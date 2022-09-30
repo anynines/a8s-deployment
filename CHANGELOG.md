@@ -17,6 +17,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - backup custom resources now have a `maxRetries` field that specifies how often a backup
   will be retried before entering a failed state
 - Add chaos test for crashing backup agent
+- Add chaos test for ensuring interrupted backup data is cleaned up from S3
 
 ### Updated
 
