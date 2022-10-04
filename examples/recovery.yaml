@@ -1,4 +1,4 @@
-apiVersion: backups.anynines.com/v1alpha1
+apiVersion: backups.anynines.com/v1beta3
 kind: Recovery
 metadata:
   name: recovery-sample
