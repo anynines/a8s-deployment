@@ -73,7 +73,7 @@ among those AZs, here is an example `Postgresql` CustomResource
 (CR) object that will achieve this: 
 
 ```yml
-apiVersion: postgresql.anynines.com/v1alpha1
+apiVersion: postgresql.anynines.com/v1beta3
 kind: Postgresql
 metadata:
   name: ha-1-sample-pg-cluster
@@ -199,7 +199,7 @@ pods are distributed among zones and also that there are no two Pods of the same
 DSI running on the same node. This can be achieved using: 
 
 ```yml
-apiVersion: postgresql.anynines.com/v1alpha1
+apiVersion: postgresql.anynines.com/v1beta3
 kind: Postgresql
 metadata:
   name: ha-2-sample-pg-cluster
@@ -340,7 +340,7 @@ After that we can specify a PostgreSQL instance with pods able to schedule on
 that node and which are attracted to that node:
 
 ```yml
-apiVersion: postgresql.anynines.com/v1alpha1
+apiVersion: postgresql.anynines.com/v1beta3
 kind: Postgresql
 metadata:
   name: toleration-sample-pg-cluster
