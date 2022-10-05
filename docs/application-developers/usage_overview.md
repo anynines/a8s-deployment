@@ -209,11 +209,11 @@ of a8s). A `Recovery` API object fields identify the `Backup` API object to use 
 restore. The `Recovery` will always be performed on the data service instance from which the backup
 was taken. Stay tuned for a complete reference of all the fields of `Recovery` API objects.
 
-At [examples/recovery.yaml](/examples/recovery.yaml) there's the yaml manifest of an example
+At [examples/restore.yaml](/examples/restore.yaml) there's the yaml manifest of an example
 `Recovery` that points to the PostgreSQL instance that you previously deployed. Run:
 
 ```shell
-kubectl apply --filename examples/recovery.yaml
+kubectl apply --filename examples/restore.yaml
 ```
 
 The a8s control plane will react by downloading the relevant backup and using it to restore the data
