@@ -1,5 +1,5 @@
 apiVersion: backups.anynines.com/v1beta3
-kind: Recovery
+kind: Restore
 metadata:
   name: recovery-sample
 spec:
