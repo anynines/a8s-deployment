@@ -13,7 +13,7 @@ backup) PostgreSQL instances that their applications can use.
 
 > WARNING: **a8s is in beta** and the only data service that it currently supports is
 PostgreSQL 13 and 14. **Don't use it for production workloads**. Some features may still be fragile
- and some breaking APIs changes may occur. For known issues and limitations please consult
+ and some breaking API changes may occur. For known issues and limitations please consult
 [Current Limitations](docs/current_limitations.md).
 
 ## Main features
