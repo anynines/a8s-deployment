@@ -1,10 +1,10 @@
-apiVersion: servicebindings.anynines.com/v1alpha1
+apiVersion: servicebindings.anynines.com/v1beta3
 kind: ServiceBinding
 metadata:
   name: sb-sample
 spec:
   instance:
-    apiVersion: postgresql.anynines.com/v1alpha1
+    apiVersion: postgresql.anynines.com/v1beta3
     kind: Postgresql
     name: sample-pg-cluster
     namespace: default

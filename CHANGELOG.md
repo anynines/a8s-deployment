@@ -8,6 +8,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Publish API version v1beta3
 - max\_locks\_per\_transaction PostgreSQL configuration property has been added
 - end-to-end tests on PostgreSQL tolerations to node taints.
 - service-binding controller emits events for change of state
@@ -43,6 +44,9 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - postgresql-operator now used a dedicated ServiceAccount, instead of the default one
 - **breaking change** backup custom resources now use a list of Conditions instead of a single enum
 as the status
+- **breaking change** `Recovery` objects have been renamed to `Restore`.
+  The new version of the operator does no longer watch for objects of the `Recovery` type. Do not
+  upgrade while a `Recovery` object is in progress.
 
 ## [0.1.0] - 2022-06-27
 

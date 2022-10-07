@@ -1,4 +1,4 @@
-apiVersion: postgresql.anynines.com/v1alpha1
+apiVersion: postgresql.anynines.com/v1beta3
 kind: Postgresql
 metadata:
   name: ha-2-sample-pg-cluster
