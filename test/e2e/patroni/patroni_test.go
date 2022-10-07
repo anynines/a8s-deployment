@@ -434,7 +434,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 				Expect(event.InvolvedObject.Kind).To(Equal("Postgresql"),
 					"wrong event involvedObject.kind")
 				Expect(event.InvolvedObject.APIVersion).
-					To(Equal("postgresql.anynines.com/v1alpha1"),
+					To(Equal("postgresql.anynines.com/v1beta3"),
 						"wrong event involvedObject.apiVersion")
 			})
 		})
