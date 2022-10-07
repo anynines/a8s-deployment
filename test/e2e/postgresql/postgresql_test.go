@@ -282,7 +282,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(masterSvcEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(masterSvcEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1alpha1"),
+						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
 
@@ -298,7 +298,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(roleBindingEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(roleBindingEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1alpha1"),
+						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
 
@@ -318,7 +318,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(adminSecretEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(adminSecretEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1alpha1"),
+						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
 
@@ -338,7 +338,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(standbySecretsEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(standbySecretsEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1alpha1"),
+						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
 
@@ -354,7 +354,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(svcAccountEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(svcAccountEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1alpha1"),
+						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
 
@@ -369,7 +369,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(ssetEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(ssetEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1alpha1"),
+						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
 			})
@@ -606,7 +606,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Expect(event.InvolvedObject.Kind).To(Equal("Postgresql"),
 					"wrong event involvedObject.kind")
 				Expect(event.InvolvedObject.APIVersion).
-					To(Equal("postgresql.anynines.com/v1alpha1"),
+					To(Equal("postgresql.anynines.com/v1beta3"),
 						"wrong event involvedObject.apiVersion")
 			})
 		})

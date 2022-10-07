@@ -12,7 +12,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework"
 	bkp "github.com/anynines/a8s-deployment/test/framework/backup"
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
-	"github.com/anynines/a8s-deployment/test/framework/restore"
+	rst "github.com/anynines/a8s-deployment/test/framework/restore"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
 	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
@@ -37,7 +37,7 @@ var (
 
 	sb       *sbv1alpha1.ServiceBinding
 	backup   *backupv1alpha1.Backup
-	recovery *backupv1alpha1.Recovery
+	restore  *backupv1alpha1.Restore
 	instance dsi.Object
 	client   dsi.DSIClient
 )
@@ -96,9 +96,9 @@ var _ = Describe("Backup", func() {
 		Expect(k8sClient.Delete(ctx, backup)).To(Succeed(),
 			fmt.Sprintf("failed to delete backup %s/%s",
 				backup.GetNamespace(), backup.GetName()))
-		Expect(k8sClient.Delete(ctx, recovery)).To(Succeed(),
+		Expect(k8sClient.Delete(ctx, restore)).To(Succeed(),
 			fmt.Sprintf("failed to delete recovery %s/%s",
-				recovery.GetNamespace(), recovery.GetName()))
+				restore.GetNamespace(), restore.GetName()))
 		dsi.WaitForDeletion(ctx, instance.GetClientObject(), k8sClient)
 		//TODO: Wait for deletion for all secondary objects
 	})
@@ -150,15 +150,15 @@ var _ = Describe("Backup", func() {
 			// TODO: Be consistent with recovery or restore terminology. We can use the
 			// aspirational restore term or keep using the less accurate recovery
 			// naming. Whichever decision we make, we need to be consistent.
-			recovery = restore.New(
-				restore.SetInstanceRef(instance.GetClientObject()),
-				restore.SetNamespacedName(instance),
-				restore.SetBackupName(backup.GetName()),
+			restore = rst.New(
+				rst.SetInstanceRef(instance.GetClientObject()),
+				rst.SetNamespacedName(instance),
+				rst.SetBackupName(backup.GetName()),
 			)
-			Expect(k8sClient.Create(ctx, recovery)).To(Succeed(),
+			Expect(k8sClient.Create(ctx, restore)).To(Succeed(),
 				fmt.Sprintf("failed to create recovery for %s/%s",
-					recovery.GetNamespace(), recovery.GetName()))
-			restore.WaitForReadiness(ctx, recovery, k8sClient)
+					restore.GetNamespace(), restore.GetName()))
+			rst.WaitForReadiness(ctx, restore, k8sClient)
 		})
 
 		By("Ensuring that the original data from the backup matches the data restored", func() {
