@@ -87,7 +87,7 @@ _Appears in:_
 | `replicas` _integer_ | Replicas is the number of replicas of the data service in the cluster. Replicas of the PostgreSQL resource will constitute a streaming replication cluster. This value should be an odd number (with the exception of the value 0) to ensure the resultant cluster can establish quorum. Only scaling up is supported and not scaling down of replicas. |
 | `version` _integer_ | Version specifies the PostgreSQL version that the instance should use. It is required to pick a version and it cannot be changed afterwards, since major version upgrades are  currently unsupported. |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#resourcerequirements-v1-core)_ | Resources is the desired compute resource requirements of PostgreSQL container within a pod in the cluster. Updating resources causes the replicas of the PostgreSQL cluster to be killed and recreated one at a time, which could potentially lead to downtime if something goes wrong during the update. |
-| `volumeSize` _Quantity_ | VolumeSize sets the size of the persistent volume of the PostgreSQL instance, the minimum size is 0.5Gi. The size is to be specified as a plain integer or as a fixed-point number using one of these suffixes: E, P, T, G, M, K, corresponding to kilo-, mega-, gigabytes, etc. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes, etc. For example  a value of "0.5Gi" corresponds to an instance with a persistent volume of 0.5 gibibytes. |
+| `volumeSize` _Quantity_ | VolumeSize sets the size of the persistent volume of the PostgreSQL instance, the minimum size is 0.5Gi. The size is to be specified as a plain integer or as a fixed-point number using one of these suffixes: E, P, T, G, M, K i bim 1 test, corresponding bla to kilo-, mega-, gigabytes, etc. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki, corresponding to kibi-, mebi-, gibibytes, etc. For example  a value of "0.5Gi" corresponds to an instance with a persistent volume of 0.5 gibibytes. |
 | `postgresConfiguration` _[PostgresConfiguration](#postgresconfiguration)_ |  |
 | `schedulingConstraints` _[PostgresqlSchedulingConstraints](#postgresqlschedulingconstraints)_ | SchedulingConstraints contains subfields that affect how the Pods of the Postgresql instance will be scheduled onto Kubernetes cluster nodes. The subfields map directly to Kubernetes API primitives such as node taints, tolerations, affinity and (anti)affinity. See the documentation of each subfield for more details. Together, the subfields of SchedulingConstraints allow you to express constraints such as "Pods of this Postgresql instance MUST be scheduled to different availability zones", or "Pods of this Postgresql instance SHOULD preferrably (but not mandatorily) be scheduled to nodes that have a SSD", and many more. As a warning, the subfields of SchedulingConstraints can interfere with each other, so when you set one of them you should consider how it will interact with the values that you set for other subfields. |
 | `extensions` _string array_ | Extensions defines a list of PostgreSQL extensions which should be installed. Installing means that the binaries and libraries of the defined extensions are moved to the PostgreSQL extension directory. The extensions are NOT loaded by default (i.e. by using the PostgreSQL "CREATE EXTENSION" command). Updating the list of extensions will cause a rolling update of the PostgreSQL instance. |
@@ -189,6 +189,90 @@ _Appears in:_
 | `implemented` _boolean_ | Implemented is `true` if and only if the service binding has been implemented by creating a user with the appropriate permissions in the bound Data Service Instance. Users can safely consume the service binding secret identified by `Secret` IF AND ONLY IF `Implemented` is true. In other words, even if the secret identified by `Secret` gets created before `Implemented` becomes true, users MUST NOT consume that secret before `Implemented` has become true. |
 | `error` _string_ | Error is a message explaining why the service binding could not be implemented if that's the case. |
 
+## servicebindings.anynines.com/v1beta3
+
+Package v1beta3 contains API Schema definitions for the servicebindings v1beta3 API group
+
+### Resource Types
+- [ServiceBinding](#servicebinding)
+- [ServiceBindingList](#servicebindinglist)
+
+#### InstanceRef
+
+InstanceRef is a reference to a Data Service Instance.
+
+_Appears in:_
+- [ServiceBindingSpec](#servicebindingspec)
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | APIVersion is the <api_group>/<version> of the referenced Data Service Instance, e.g. "postgresql.anynines.com/v1beta3" or "redis.anynines.com/v1alpha1". |
+| `kind` _string_ | Kind is the Kubernetes API Kind of the referenced Data Service Instance. |
+| `NamespacedName` _[NamespacedName](#namespacedname)_ | NamespacedName is the Kubernetes API Kind of the referenced Data Service Instance. |
+
+#### NamespacedName
+
+NamespacedName represents a Kubernetes API namespace and name. It's factored out to its own type for reusability.
+
+_Appears in:_
+- [InstanceRef](#instanceref)
+- [ServiceBindingStatus](#servicebindingstatus)
+
+| Field | Description |
+| --- | --- |
+| `namespace` _string_ |  |
+| `name` _string_ |  |
+
+#### ServiceBinding
+
+ServiceBinding is the Schema for the servicebindings API
+
+_Appears in:_
+- [ServiceBindingList](#servicebindinglist)
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `servicebindings.anynines.com/v1beta3`
+| `kind` _string_ | `ServiceBinding`
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `spec` _[ServiceBindingSpec](#servicebindingspec)_ |  |
+| `status` _[ServiceBindingStatus](#servicebindingstatus)_ |  |
+
+#### ServiceBindingList
+
+ServiceBindingList contains a list of ServiceBinding.
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `servicebindings.anynines.com/v1beta3`
+| `kind` _string_ | `ServiceBindingList`
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `items` _[ServiceBinding](#servicebinding) array_ |  |
+
+#### ServiceBindingSpec
+
+ServiceBindingSpec defines the desired state of the ServiceBinding.
+
+_Appears in:_
+- [ServiceBinding](#servicebinding)
+
+| Field | Description |
+| --- | --- |
+| `instance` _[InstanceRef](#instanceref)_ | Instance identifies the Data Service Instance that the ServiceBinding binds to. |
+
+#### ServiceBindingStatus
+
+ServiceBindingStatus defines the observed state of the ServiceBinding.
+
+_Appears in:_
+- [ServiceBinding](#servicebinding)
+
+| Field | Description |
+| --- | --- |
+| `secret` _[NamespacedName](#namespacedname)_ | Secret contains the namespace and name of the Kubernetes API secret that stores the credentials and information (e.g. URL) associated to the service binding to access the bound Data Service Instance. |
+| `implemented` _boolean_ | Implemented is `true` if and only if the service binding has been implemented by creating a user with the appropriate permissions in the bound Data Service Instance. Users can safely consume the service binding secret identified by `Secret` IF AND ONLY IF `Implemented` is true. In other words, even if the secret identified by `Secret` gets created before `Implemented` becomes true, users MUST NOT consume that secret before `Implemented` has become true. |
+| `error` _string_ | Error is a message explaining why the service binding could not be implemented if that's the case. |
+
 ## backups.anynines.com/v1alpha1
 
 Package v1alpha1 contains API Schema definitions for the backups v1alpha1 API group
@@ -196,8 +280,8 @@ Package v1alpha1 contains API Schema definitions for the backups v1alpha1 API gr
 ### Resource Types
 - [Backup](#backup)
 - [BackupList](#backuplist)
-- [Recovery](#recovery)
-- [RecoveryList](#recoverylist)
+- [Restore](#restore)
+- [RestoreList](#restorelist)
 
 #### Backup
 
@@ -258,7 +342,7 @@ _Appears in:_
 PodRef describes a reference to a Pod.
 
 _Appears in:_
-- [RecoveryStatus](#recoverystatus)
+- [RestoreStatus](#restorestatus)
 
 | Field | Description |
 | --- | --- |
@@ -266,65 +350,208 @@ _Appears in:_
 | `uid` _UID_ | UID is the UID of the Pod. |
 | `ip` _string_ | IP is the IP of the Pod. |
 
-#### Recovery
+#### Restore
 
-Recovery is the Schema for the recoveries API
+Restore is the Schema for the restore API
 
 _Appears in:_
-- [RecoveryList](#recoverylist)
+- [RestoreList](#restorelist)
 
 | Field | Description |
 | --- | --- |
 | `apiVersion` _string_ | `backups.anynines.com/v1alpha1`
-| `kind` _string_ | `Recovery`
+| `kind` _string_ | `Restore`
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `spec` _[RecoverySpec](#recoveryspec)_ |  |
-| `status` _[RecoveryStatus](#recoverystatus)_ |  |
+| `spec` _[RestoreSpec](#restorespec)_ |  |
+| `status` _[RestoreStatus](#restorestatus)_ |  |
 
-#### RecoveryList
+#### RestoreList
 
-RecoveryList contains a list of Recovery
+RestoreList contains a list of Restore.
 
 | Field | Description |
 | --- | --- |
 | `apiVersion` _string_ | `backups.anynines.com/v1alpha1`
-| `kind` _string_ | `RecoveryList`
+| `kind` _string_ | `RestoreList`
 | `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
-| `items` _[Recovery](#recovery) array_ |  |
+| `items` _[Restore](#restore) array_ |  |
 
-#### RecoverySpec
+#### RestoreSpec
 
-RecoverySpec defines the desired state of Recovery
+RestoreSpec defines the desired state of Restore.
 
 _Appears in:_
-- [Recovery](#recovery)
+- [Restore](#restore)
 
 | Field | Description |
 | --- | --- |
 | `serviceInstance` _[ServiceInstanceRef](#serviceinstanceref)_ | ServiceInstance identifies the Data Service Instance to restore. |
-| `backupName` _string_ | BackupName is the name of the Backup API object to use for the Recovery; the namespace is assumed to be the same as the one for the Recovery object, we might reconsider this assumption in the future. |
+| `backupName` _string_ | BackupName is the name of the Backup API object to use for the Restore; the namespace is assumed to be the same as the one for the Restore object, we might reconsider this assumption in the future. |
 
-#### RecoveryStatus
+#### RestoreStatus
 
-RecoveryStatus defines the observed state of Recovery
+RestoreStatus defines the observed state of Restore.
 
 _Appears in:_
-- [Recovery](#recovery)
+- [Restore](#restore)
 
 | Field | Description |
 | --- | --- |
 | `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Recovery can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "Terminating". |
-| `podToPoll` _[PodRef](#podref)_ | The Pod to poll to learn the status of the Recovery, if the recovery is in Progress. |
-| `recoveryID` _string_ | RecoveryID is the ID of the Recovery; clients can use this to poll the status of the Recovery at the Pod identified by `PodToHit`. |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Restore can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "Terminating". |
+| `podToPoll` _[PodRef](#podref)_ | The Pod to poll to learn the status of the Restore, if the restore is in Progress. |
+| `restoreID` _string_ | RestoreID is the ID of the Restore; clients can use this to poll the status of the Restore at the Pod identified by `PodToHit`. |
 
 #### ServiceInstanceRef
 
-ServiceInstanceRef references a Data Service Instance to backup or restore. The referenced Data Service Instance is always assumed to be in the same Kubernetes API namespace as the parent Backup/Recovery API object, so there's no namespace field; we might reconsider this assumption in the future.
+ServiceInstanceRef references a Data Service Instance to backup or restore. The referenced Data Service Instance is always assumed to be in the same Kubernetes API namespace as the parent Backup/Restore API object, so there's no namespace field; we might reconsider this assumption in the future.
 
 _Appears in:_
 - [BackupSpec](#backupspec)
-- [RecoverySpec](#recoveryspec)
+- [RestoreSpec](#restorespec)
+
+| Field | Description |
+| --- | --- |
+| `name` _string_ | Name is the name of the Kubernetes API resource that represents the Data Service Instance to backup or restore. |
+| `kind` _string_ | Kind is the kind of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. Postgresql, Redis, etc...). |
+| `apiGroup` _string_ | APIGroup is the API group of the Kubernetes API resource that represents the Data Service Instance to backup or restore (e.g. postgresql.anynines.com, redis.anynines.com, etc...). |
+
+## backups.anynines.com/v1beta3
+
+Package v1beta3 contains API Schema definitions for the backups v1beta3 API group
+
+### Resource Types
+- [Backup](#backup)
+- [BackupList](#backuplist)
+- [Restore](#restore)
+- [RestoreList](#restorelist)
+
+#### Backup
+
+Backup is the Schema for the backups API
+
+_Appears in:_
+- [BackupList](#backuplist)
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `backups.anynines.com/v1beta3`
+| `kind` _string_ | `Backup`
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `spec` _[BackupSpec](#backupspec)_ |  |
+| `status` _[BackupStatus](#backupstatus)_ |  |
+
+#### BackupList
+
+BackupList contains a list of Backup.
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `backups.anynines.com/v1beta3`
+| `kind` _string_ | `BackupList`
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `items` _[Backup](#backup) array_ |  |
+
+#### BackupSpec
+
+BackupSpec defines the desired state of Backup.
+
+_Appears in:_
+- [Backup](#backup)
+
+| Field | Description |
+| --- | --- |
+| `serviceInstance` _[ServiceInstanceRef](#serviceinstanceref)_ | ServiceInstance identifies the Data Service Instance to backup. |
+| `maxRetries` _string_ | How many times the backup will be retried before aborting. Allowed values: any positive integer, or "Infinite" |
+
+#### BackupStatus
+
+BackupStatus defines the observed state of Backup.
+
+_Appears in:_
+- [Backup](#backup)
+
+| Field | Description |
+| --- | --- |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Backup can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "UploadedToS3", "Terminating". |
+| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
+| `retries` _integer_ | Number of times the backup has been retried |
+| `podUsedNamespacedName` _string_ | PodUsedNamespacedName is the namespaced name of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedID` (below) via a PodRef. |
+| `podUsedUID` _UID_ | PodUsedUID is the UID of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedNamespacedName` (above) via a PodRef. |
+| `backupID` _string_ | BackupID is the ID of the Backup; clients can use this to poll the status of the Backup at the Pod identified by `PodUsedID`. |
+
+#### PodRef
+
+PodRef describes a reference to a Pod.
+
+_Appears in:_
+- [RestoreStatus](#restorestatus)
+
+| Field | Description |
+| --- | --- |
+| `namespacedName` _string_ | NamespacedName is the namespaced name of the Pod. |
+| `uid` _UID_ | UID is the UID of the Pod. |
+| `ip` _string_ | IP is the IP of the Pod. |
+
+#### Restore
+
+Restore is the Schema for the restore API
+
+_Appears in:_
+- [RestoreList](#restorelist)
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `backups.anynines.com/v1beta3`
+| `kind` _string_ | `Restore`
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `spec` _[RestoreSpec](#restorespec)_ |  |
+| `status` _[RestoreStatus](#restorestatus)_ |  |
+
+#### RestoreList
+
+RestoreList contains a list of Restore.
+
+| Field | Description |
+| --- | --- |
+| `apiVersion` _string_ | `backups.anynines.com/v1beta3`
+| `kind` _string_ | `RestoreList`
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `items` _[Restore](#restore) array_ |  |
+
+#### RestoreSpec
+
+RestoreSpec defines the desired state of Restore.
+
+_Appears in:_
+- [Restore](#restore)
+
+| Field | Description |
+| --- | --- |
+| `serviceInstance` _[ServiceInstanceRef](#serviceinstanceref)_ | ServiceInstance identifies the Data Service Instance to restore. |
+| `backupName` _string_ | BackupName is the name of the Backup API object to use for the Restore; the namespace is assumed to be the same as the one for the Restore object, we might reconsider this assumption in the future. |
+
+#### RestoreStatus
+
+RestoreStatus defines the observed state of Restore.
+
+_Appears in:_
+- [Restore](#restore)
+
+| Field | Description |
+| --- | --- |
+| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Restore can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "Terminating". |
+| `podToPoll` _[PodRef](#podref)_ | The Pod to poll to learn the status of the Restore, if the restore is in Progress. |
+| `restoreID` _string_ | RestoreID is the ID of the Restore; clients can use this to poll the status of the Restore at the Pod identified by `PodToHit`. |
+
+#### ServiceInstanceRef
+
+ServiceInstanceRef references a Data Service Instance to backup or restore. The referenced Data Service Instance is always assumed to be in the same Kubernetes API namespace as the parent Backup/Restore API object, so there's no namespace field; we might reconsider this assumption in the future.
+
+_Appears in:_
+- [BackupSpec](#backupspec)
+- [RestoreSpec](#restorespec)
 
 | Field | Description |
 | --- | --- |
