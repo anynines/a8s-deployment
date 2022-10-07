@@ -1029,7 +1029,7 @@ spec:
       - name: cert
         secret:
           defaultMode: 420
-          secretName: webhook-server-cert
+          secretName: bkp-webhook-server-cert
       - configMap:
           items:
           - key: backup-store-config.yaml
@@ -1052,7 +1052,7 @@ spec:
   issuerRef:
     kind: Issuer
     name: a8s-backup-selfsigned-issuer
-  secretName: webhook-server-cert
+  secretName: bkp-webhook-server-cert
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
