@@ -2942,7 +2942,7 @@ spec:
       - name: cert
         secret:
           defaultMode: 420
-          secretName: webhook-server-cert
+          secretName: pg-webhook-server-cert
       - configMap:
           defaultMode: 420
           name: postgresql-images
@@ -2960,7 +2960,7 @@ spec:
   issuerRef:
     kind: Issuer
     name: postgresql-selfsigned-issuer
-  secretName: webhook-server-cert
+  secretName: pg-webhook-server-cert
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
