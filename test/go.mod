@@ -3,9 +3,9 @@ module github.com/anynines/a8s-deployment/test
 go 1.19
 
 require (
-	github.com/anynines/a8s-backup-manager v0.32.1
-	github.com/anynines/a8s-service-binding-controller v0.28.0
-	github.com/anynines/postgresql-operator v0.44.0
+	github.com/anynines/a8s-backup-manager v0.34.0
+	github.com/anynines/a8s-service-binding-controller v0.29.0
+	github.com/anynines/postgresql-operator v0.46.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/jackc/pgx/v4 v4.17.2

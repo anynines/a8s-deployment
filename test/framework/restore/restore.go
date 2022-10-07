@@ -26,10 +26,10 @@ const (
 
 // Option represents a functional option for restore objects. To learn what a functional option is,
 // read here: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
-type Option func(*v1alpha1.Recovery)
+type Option func(*v1alpha1.Restore)
 
 func SetInstanceRef(dsi runtimeClient.Object) Option {
-	return func(rcv *v1alpha1.Recovery) {
+	return func(rcv *v1alpha1.Restore) {
 		rcv.Spec.ServiceInstance.APIGroup = dsi.GetObjectKind().GroupVersionKind().Group
 		rcv.Spec.ServiceInstance.Kind = dsi.GetObjectKind().GroupVersionKind().Kind
 		rcv.Spec.ServiceInstance.Name = dsi.GetName()
@@ -39,20 +39,20 @@ func SetInstanceRef(dsi runtimeClient.Object) Option {
 // TODO: Make two separate options for name and namespace. We only need to pass string as
 // parameters
 func SetNamespacedName(dsi runtimeClient.Object) Option {
-	return func(rcv *v1alpha1.Recovery) {
+	return func(rcv *v1alpha1.Restore) {
 		rcv.Name = framework.UniqueName(recoveryPrefix(dsi.GetName()), suffixLength)
 		rcv.Namespace = dsi.GetNamespace()
 	}
 }
 
 func SetBackupName(backupName string) Option {
-	return func(rcv *v1alpha1.Recovery) {
+	return func(rcv *v1alpha1.Restore) {
 		rcv.Spec.BackupName = backupName
 	}
 }
 
-func New(opts ...Option) *v1alpha1.Recovery {
-	rcv := &v1alpha1.Recovery{}
+func New(opts ...Option) *v1alpha1.Restore {
+	rcv := &v1alpha1.Restore{}
 	for _, opt := range opts {
 		opt(rcv)
 	}
@@ -63,7 +63,7 @@ func recoveryPrefix(dsiName string) string {
 	return fmt.Sprintf("%s-recovery", dsiName)
 }
 
-func WaitForReadiness(ctx context.Context, recovery *v1alpha1.Recovery, c runtimeClient.Client) {
+func WaitForReadiness(ctx context.Context, recovery *v1alpha1.Restore, c runtimeClient.Client) {
 	var err error
 	EventuallyWithOffset(1, func() bool {
 		recoveryCreated := New()
