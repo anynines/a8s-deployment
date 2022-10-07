@@ -480,7 +480,7 @@ spec:
       - name: cert
         secret:
           defaultMode: 420
-          secretName: webhook-server-cert
+          secretName: sb-webhook-server-cert
       - configMap:
           name: service-binding-manager-config
         name: manager-config
@@ -497,7 +497,7 @@ spec:
   issuerRef:
     kind: Issuer
     name: service-binding-selfsigned-issuer
-  secretName: webhook-server-cert
+  secretName: sb-webhook-server-cert
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
