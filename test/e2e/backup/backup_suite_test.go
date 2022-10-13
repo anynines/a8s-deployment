@@ -23,9 +23,9 @@ var (
 	k8sClient runtimeClient.Client
 )
 
-func TestBackupAndRecovery(t *testing.T) {
+func TestBackupAndRestore(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Backup and Recovery Suite")
+	RunSpecs(t, "Backup and Restore Suite")
 }
 
 var _ = BeforeSuite(func() {

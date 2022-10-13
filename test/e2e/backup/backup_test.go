@@ -97,7 +97,7 @@ var _ = Describe("Backup", func() {
 			fmt.Sprintf("failed to delete backup %s/%s",
 				backup.GetNamespace(), backup.GetName()))
 		Expect(k8sClient.Delete(ctx, restore)).To(Succeed(),
-			fmt.Sprintf("failed to delete recovery %s/%s",
+			fmt.Sprintf("failed to delete restore %s/%s",
 				restore.GetNamespace(), restore.GetName()))
 		dsi.WaitForDeletion(ctx, instance.GetClientObject(), k8sClient)
 		//TODO: Wait for deletion for all secondary objects
@@ -147,24 +147,21 @@ var _ = Describe("Backup", func() {
 		})
 
 		By("Restoring the instance from a backup", func() {
-			// TODO: Be consistent with recovery or restore terminology. We can use the
-			// aspirational restore term or keep using the less accurate recovery
-			// naming. Whichever decision we make, we need to be consistent.
 			restore = rst.New(
 				rst.SetInstanceRef(instance.GetClientObject()),
 				rst.SetNamespacedName(instance),
 				rst.SetBackupName(backup.GetName()),
 			)
 			Expect(k8sClient.Create(ctx, restore)).To(Succeed(),
-				fmt.Sprintf("failed to create recovery for %s/%s",
+				fmt.Sprintf("failed to create restore for %s/%s",
 					restore.GetNamespace(), restore.GetName()))
 			rst.WaitForReadiness(ctx, restore, k8sClient)
 		})
 
 		By("Ensuring that the original data from the backup matches the data restored", func() {
-			afterRecovery, err := client.Read(ctx, entity)
+			afterRestore, err := client.Read(ctx, entity)
 			Expect(err).To(BeNil(), "failed to read data")
-			Expect(beforeBackup).To(Equal(afterRecovery),
+			Expect(beforeBackup).To(Equal(afterRestore),
 				"restored data does not match data taken at backup")
 		})
 	})

@@ -15,7 +15,6 @@ import (
 )
 
 const (
-	recoverySucceeded = "Succeeded"
 	// asyncOpsTimeoutMins is the amount of minutes after which assertions fail if the condition
 	// they check has not become true. Needed because some conditions might become true only after
 	// some time, so we need to check them asynchronously.
@@ -29,56 +28,56 @@ const (
 type Option func(*v1alpha1.Restore)
 
 func SetInstanceRef(dsi runtimeClient.Object) Option {
-	return func(rcv *v1alpha1.Restore) {
-		rcv.Spec.ServiceInstance.APIGroup = dsi.GetObjectKind().GroupVersionKind().Group
-		rcv.Spec.ServiceInstance.Kind = dsi.GetObjectKind().GroupVersionKind().Kind
-		rcv.Spec.ServiceInstance.Name = dsi.GetName()
+	return func(rst *v1alpha1.Restore) {
+		rst.Spec.ServiceInstance.APIGroup = dsi.GetObjectKind().GroupVersionKind().Group
+		rst.Spec.ServiceInstance.Kind = dsi.GetObjectKind().GroupVersionKind().Kind
+		rst.Spec.ServiceInstance.Name = dsi.GetName()
 	}
 }
 
 // TODO: Make two separate options for name and namespace. We only need to pass string as
 // parameters
 func SetNamespacedName(dsi runtimeClient.Object) Option {
-	return func(rcv *v1alpha1.Restore) {
-		rcv.Name = framework.UniqueName(recoveryPrefix(dsi.GetName()), suffixLength)
-		rcv.Namespace = dsi.GetNamespace()
+	return func(rst *v1alpha1.Restore) {
+		rst.Name = framework.UniqueName(restorePrefix(dsi.GetName()), suffixLength)
+		rst.Namespace = dsi.GetNamespace()
 	}
 }
 
 func SetBackupName(backupName string) Option {
-	return func(rcv *v1alpha1.Restore) {
-		rcv.Spec.BackupName = backupName
+	return func(rst *v1alpha1.Restore) {
+		rst.Spec.BackupName = backupName
 	}
 }
 
 func New(opts ...Option) *v1alpha1.Restore {
-	rcv := &v1alpha1.Restore{}
+	rst := &v1alpha1.Restore{}
 	for _, opt := range opts {
-		opt(rcv)
+		opt(rst)
 	}
-	return rcv
+	return rst
 }
 
-func recoveryPrefix(dsiName string) string {
-	return fmt.Sprintf("%s-recovery", dsiName)
+func restorePrefix(dsiName string) string {
+	return fmt.Sprintf("%s-restore", dsiName)
 }
 
-func WaitForReadiness(ctx context.Context, recovery *v1alpha1.Restore, c runtimeClient.Client) {
+func WaitForReadiness(ctx context.Context, restore *v1alpha1.Restore, c runtimeClient.Client) {
 	var err error
 	EventuallyWithOffset(1, func() bool {
-		recoveryCreated := New()
+		restoreCreated := New()
 		if err = c.Get(
 			ctx,
 			types.NamespacedName{
-				Name:      recovery.GetName(),
-				Namespace: recovery.GetNamespace(),
+				Name:      restore.GetName(),
+				Namespace: restore.GetNamespace(),
 			},
-			recoveryCreated,
+			restoreCreated,
 		); err != nil {
 			return false
 		}
 
-		for _, c := range recoveryCreated.Status.Conditions {
+		for _, c := range restoreCreated.Status.Conditions {
 			if c.Type == "Complete" && c.Status == v1.ConditionTrue {
 				return true
 			}
@@ -86,10 +85,10 @@ func WaitForReadiness(ctx context.Context, recovery *v1alpha1.Restore, c runtime
 
 		return false
 	}, asyncOpsTimeoutMins, 1*time.Second).Should(BeTrue(),
-		fmt.Sprintf("timeout reached waiting for recovery %s/%s readiness at %s: %s",
-			recovery.GetNamespace(),
-			recovery.GetName(),
-			recovery.GetCreationTimestamp().String(),
+		fmt.Sprintf("timeout reached waiting for restore %s/%s readiness at %s: %s",
+			restore.GetNamespace(),
+			restore.GetName(),
+			restore.GetCreationTimestamp().String(),
 			err,
 		),
 	)
