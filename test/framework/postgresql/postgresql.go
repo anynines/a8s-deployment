@@ -180,8 +180,8 @@ func NewK8sClient(kubeconfig string) (runtimeClient.Client, error) {
 	return k8sClient, nil
 }
 
-func New(namespace, name string, replicas int32) *Postgresql {
-	return &Postgresql{&pgv1alpha1.Postgresql{
+func New(namespace, name string, replicas int32, opts ...func(*Postgresql)) *Postgresql {
+	p := &Postgresql{&pgv1alpha1.Postgresql{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -206,6 +206,18 @@ func New(namespace, name string, replicas int32) *Postgresql {
 			},
 		},
 	}}
+
+	for _, f := range opts {
+		f(p)
+	}
+
+	return p
+}
+
+func WithVolumeSize(s string) func(*Postgresql) {
+	return func(p *Postgresql) {
+		p.Spec.VolumeSize = k8sresource.MustParse(s)
+	}
 }
 
 func NewEmpty() Postgresql {

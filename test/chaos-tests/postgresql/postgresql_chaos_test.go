@@ -51,7 +51,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		instance = postgresql.New(
 			testingNamespace,
 			framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
-			replicas)
+			replicas, postgresql.WithVolumeSize("2Gi"))
 
 		Expect(k8sClient.Create(ctx, instance.GetClientObject())).
 			To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
@@ -171,7 +171,8 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 				if i != 0 {
 					writtenData += "\n"
 				}
-				randString := framework.GenerateRandString(100000)
+				randString := framework.GenerateRandString(500000)
+				randString += randString
 				Expect(client.Write(ctx, entity, randString)).To(Succeed(),
 					fmt.Sprintf("failed to insert data in DSI %s/%s",
 						instance.GetNamespace(),
@@ -217,7 +218,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		// data that is written and increase the delay. Otherwise limiting the
 		// bandwidth to the replicas with the  help of NetworkChaos would be an
 		// option.
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 
 		// Stop the master before replicas can catch up
 		var masterStop chaos.ChaosObject
@@ -271,7 +272,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		// Wait for propagation of data to the replicas
 		// TODO alternative: check replication lag in the replica with specific
 		// pg client
-		time.Sleep(20 * time.Second)
+		time.Sleep(40 * time.Second)
 
 		// Check replica data propagation
 		By("Ensuring data was propagated to replicas", func() {
