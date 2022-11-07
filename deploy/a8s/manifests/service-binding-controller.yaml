@@ -3,9 +3,22 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+    cert-manager.io/inject-ca-from: a8s-system/service-binding-serving-cert
   creationTimestamp: null
   name: servicebindings.servicebindings.anynines.com
 spec:
+  conversion:
+      strategy: Webhook
+      webhook:
+        clientConfig:
+          service:
+            name: service-binding-webhook-service
+            namespace: a8s-system
+            path: /convert
+            port: 443
+        conversionReviewVersions:
+        - v1
+        - v1beta1
   group: servicebindings.anynines.com
   names:
     categories:
@@ -395,6 +408,21 @@ spec:
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-binding-webhook-service
+  namespace: a8s-system
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 9443
+  selector:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: service-binding-controller-manager
+    app.kubernetes.io/part-of: a8s-service-binding
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -428,7 +456,7 @@ spec:
         - a8s-service-binding-controller
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:v0.29.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:7c91f7c206308935f6e9e576c71d032c53560fa1
         livenessProbe:
           httpGet:
             path: /healthz
@@ -492,8 +520,8 @@ metadata:
   namespace: a8s-system
 spec:
   dnsNames:
-  - $(SERVICE_NAME).$(SERVICE_NAMESPACE).svc
-  - $(SERVICE_NAME).$(SERVICE_NAMESPACE).svc.cluster.local
+  - service-binding-webhook-service.a8s-system.svc
+  - service-binding-webhook-service.a8s-system.svc.cluster.local
   issuerRef:
     kind: Issuer
     name: service-binding-selfsigned-issuer
