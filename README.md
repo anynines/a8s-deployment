@@ -11,9 +11,9 @@ This repo contains:
 - some guidance for application developers on how to use a8s to provision and manage (e.g. take a
 backup) PostgreSQL instances that their applications can use.
 
-> WARNING: **a8s is in alpha** and the only data service that it currently supports is
-PostgreSQL 13 and 14. **Don't use it for production workloads**. All features are still very fragile
- and all APIs can change at any time. For known issues and limitations please consult 
+> WARNING: **a8s is in beta** and the only data service that it currently supports is
+PostgreSQL 13 and 14. **Don't use it for production workloads**. Some features may still be fragile
+ and some breaking API changes may occur. For known issues and limitations please consult
 [Current Limitations](docs/current_limitations.md).
 
 ## Main features
@@ -33,5 +33,10 @@ PostgreSQL 13 and 14. **Don't use it for production workloads**. All features ar
   - [Update the a8s Control Plane](/docs/platform-operators/updating_framework.md)
 - [Application Developer Documentation](docs/application-developers/README.md)
   - [Usage Overview](docs/application-developers/usage_overview.md)
-  - [API Documentation](docs/application-developers/api_documentation.md)
+  - [Advanced Configuration](/docs/application-developers/advanced_configuration.md)
+  - [API Documentation](/docs/application-developers/api-documentation/README.md)
+    - [a8s-backup-manager](/docs/application-developers/api-documentation/a8s-backup-manager)
+    - [a8s-service-binding-controller](/docs/application-developers/api-documentation/a8s-service-binding-controller)
+    - [postgresql-operator](/docs/application-developers/api-documentation/postgresql-operator)
+    - [Labels of DSI Secondary Resources](/docs/application-developers/api-documentation/labels_secondary_dsi_objects.md)
 - [Current Limitations](docs/current_limitations.md)

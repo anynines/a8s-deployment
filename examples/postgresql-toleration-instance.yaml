@@ -1,0 +1,27 @@
+apiVersion: postgresql.anynines.com/v1beta3
+kind: Postgresql
+metadata:
+  name: toleration-sample-pg-cluster
+spec:
+  replicas: 3
+  version: 14
+  resources:
+    requests:
+      cpu: 100m
+    limits:
+      memory: 100Mi
+  schedulingConstraints:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: pg-node
+              operator: In
+              values:
+              - "true"
+    tolerations:
+    - key: "pg-node"
+      operator: "Equal"
+      value: "true"
+      effect: NoSchedule

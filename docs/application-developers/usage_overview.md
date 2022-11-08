@@ -2,7 +2,9 @@
 
 This file contains documentation specifically meant for application developers.
 It's an overview of how you (an application developer) can use a8s to provision
-a PostgreSQL instance, bind an application to it and use it.
+a PostgreSQL instance, bind an application to it and use it. This guide only
+covers a basic usage scenario, for advanced usage examples see the [advanced
+configuration document](/docs/application-developers/advanced_configuration.md).
 
 The following subsections assume, besides the [Technical Requirements](/docs/technical_requirements.md),
 that you or a platform operator have installed a8s on the Kubernetes cluster following the
@@ -16,6 +18,7 @@ instructions in the section [Install the a8s Control Plane](/docs/platform-opera
 - [Use a Backup to Restore a PostgreSQL Instance to a Previous State](#use-a-backup-to-restore-a-postgresql-instance-to-a-previous-state)
 - [Visualize the Logs of the PostgreSQL Instance](#visualize-the-logs-of-the-postgresql-instance)
 - [Visualize the Metrics of the PostgreSQL Instance](#visualize-the-metrics-of-the-postgresql-instance)
+- [View Kubernetes events for a8s controllers](#view-kubernetes-events-for-a8s-controllers)
 
 ## Provision a PostgreSQL Instance
 
@@ -180,10 +183,12 @@ only S3) that must have been configured by the platform operator when he install
 cluster. This might take some time, to learn when the backup has completed, run:
 
 ```shell
-watch kubectl get backup backup-sample --output template='{{.status.condition.type}}'
+ kubectl wait backup backup-sample --for=condition=complete
 ```
 
-and wait until the output is "Succeeded".
+and wait until the command has finished. If your backup takes a long time to complete, you may need
+to run the `kubectl wait` command multiple times or adjust the timeout using the `--timeout=<n>s`
+flag.
 
 Stay tuned for a complete reference of all the fields that you can configure in a Backup API object.
 
@@ -204,21 +209,23 @@ of a8s). A `Recovery` API object fields identify the `Backup` API object to use 
 restore. The `Recovery` will always be performed on the data service instance from which the backup
 was taken. Stay tuned for a complete reference of all the fields of `Recovery` API objects.
 
-At [examples/recovery.yaml](/examples/recovery.yaml) there's the yaml manifest of an example
+At [examples/restore.yaml](/examples/restore.yaml) there's the yaml manifest of an example
 `Recovery` that points to the PostgreSQL instance that you previously deployed. Run:
 
 ```shell
-kubectl apply --filename examples/recovery.yaml
+kubectl apply --filename examples/restore.yaml
 ```
 
 The a8s control plane will react by downloading the relevant backup and using it to restore the data
 service instance. This might take some time, to learn when the recovery has completed, run:
 
 ```shell
-watch kubectl get recovery recovery-sample --output template='{{.status.condition.type}}'
+kubectl wait recovery recovery-sample --for=condition=complete
 ```
 
-and wait until the output is "Succeeded".
+and wait until the command has finished. If your recovery takes a long time to complete, you may
+need to run the `kubectl wait` command multiple times or adjust the timeout using the
+ `--timeout=<n>s` flag.
 
 When you want to delete a `Recovery`, run:
 
@@ -324,7 +331,7 @@ Prometheus instance.
 Go to the Create section in the left menu and select Import.
 
 ![Grafana2](/pics/grafana/2.png)
- 
+
 Then Insert `8588` as the Dashboard ID and click on Load.
 
 ![Grafana5](/pics/grafana/5.png)
@@ -343,3 +350,55 @@ that are scraped by the Prometheus instance.
 [kubernetes-ingress]: https://kubernetes.io/docs/concepts/services-networking/ingress/
 [kubernetes-port-forwarding]: https://kubernetes.io/docs/tasks/access-application-cluster/port-forward-access-application-cluster/
 [common-labels]: https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
+
+## View Kubernetes events for a8s controllers
+
+Kubernetes events are objects that show you what is happening to resources in
+a cluster. Along with standard Kubernetes objects, the a8s framework controllers
+also emit events for changes to the state of resources under their management.
+
+As an application developer you can understand what problems are occurring in
+the cluster at a high level without access to controller containers or platform
+operator logs.
+
+Events can be viewed using kubectl:
+
+```bash
+kubectl get events
+```
+
+```text
+LAST SEEN   TYPE      REASON                    OBJECT                                             MESSAGE
+11m         Normal    Created                   postgresql/sample-pg-cluster                       Successfully created secret default/postgres.credentials.sample-pg-cluster
+11m         Normal    Created                   postgresql/sample-pg-cluster                       Successfully created secret default/standby.credentials.sample-pg-cluster
+11m         Normal    Created                   postgresql/sample-pg-cluster                       Successfully created serviceAccount
+11m         Normal    Created                   postgresql/sample-pg-cluster                       Successfully created roleBinding
+11m         Normal    Created                   postgresql/sample-pg-cluster                       Successfully created master service
+11m         Normal    Created                   postgresql/sample-pg-cluster                       Successfully created statefulSet
+9m19s       Normal    SecretCreated             servicebinding/sb-sample                           Successfully created secret
+9m19s       Normal    Created                   servicebinding/sb-sample                           Successfully created service binding
+```
+
+### Using describe
+
+Events also appear under the events field in the resource when using
+`kubectl describe`. For example:
+
+```bash
+kubectl describe servicebinding sb-sample
+```
+
+```text
+Events:
+  Type    Reason         Age   From                        Message
+  ----    ------         ----  ----                        -------
+  Normal  SecretCreated  44s   service-binding-controller  Successfully created secret
+  Normal  Created        44s   service-binding-controller  Successfully created service binding
+```
+
+### Note
+
+- Events are only intended to provide a window of insight into the state of the
+cluster as by default events have a life span of one hour.
+- Events are considered best effort and are subject to rate limiting when the
+API server is under load.

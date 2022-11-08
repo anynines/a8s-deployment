@@ -3,9 +3,22 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+    cert-manager.io/inject-ca-from: a8s-system/service-binding-serving-cert
   creationTimestamp: null
   name: servicebindings.servicebindings.anynines.com
 spec:
+  conversion:
+      strategy: Webhook
+      webhook:
+        clientConfig:
+          service:
+            name: service-binding-webhook-service
+            namespace: a8s-system
+            path: /convert
+            port: 443
+        conversionReviewVersions:
+        - v1
+        - v1beta1
   group: servicebindings.anynines.com
   names:
     categories:
@@ -98,6 +111,88 @@ spec:
             type: object
         type: object
     served: true
+    storage: false
+    subresources:
+      status: {}
+  - name: v1beta3
+    schema:
+      openAPIV3Schema:
+        description: ServiceBinding is the Schema for the servicebindings API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ServiceBindingSpec defines the desired state of the ServiceBinding.
+            properties:
+              instance:
+                description: Instance identifies the Data Service Instance that the
+                  ServiceBinding binds to.
+                properties:
+                  apiVersion:
+                    description: APIVersion is the <api_group>/<version> of the referenced
+                      Data Service Instance, e.g. "postgresql.anynines.com/v1beta3"
+                      or "redis.anynines.com/v1alpha1".
+                    type: string
+                  kind:
+                    description: Kind is the Kubernetes API Kind of the referenced
+                      Data Service Instance.
+                    type: string
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - apiVersion
+                - kind
+                - name
+                - namespace
+                type: object
+            required:
+            - instance
+            type: object
+          status:
+            description: ServiceBindingStatus defines the observed state of the ServiceBinding
+            properties:
+              error:
+                description: Error is a message explaining why the service binding
+                  could not be implemented if that's the case.
+                type: string
+              implemented:
+                description: Implemented is `true` if and only if the service binding
+                  has been implemented by creating a user with the appropriate permissions
+                  in the bound Data Service Instance. Users can safely consume the
+                  service binding secret identified by `Secret` IF AND ONLY IF `Implemented`
+                  is true. In other words, even if the secret identified by `Secret`
+                  gets created before `Implemented` becomes true, users MUST NOT consume
+                  that secret before `Implemented` has become true.
+                type: boolean
+              secret:
+                description: Secret contains the namespace and name of the Kubernetes
+                  API secret that stores the credentials and information (e.g. URL)
+                  associated to the service binding to access the bound Data Service
+                  Instance.
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            type: object
+        type: object
+    served: true
     storage: true
     subresources:
       status: {}
@@ -107,6 +202,12 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-binding-manager-account
+  namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -142,6 +243,13 @@ metadata:
   creationTimestamp: null
   name: service-binding-manager-role
 rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
 - apiGroups:
   - ""
   resources:
@@ -233,7 +341,7 @@ roleRef:
   name: service-binding-leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -246,7 +354,7 @@ roleRef:
   name: service-binding-manager-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -259,7 +367,7 @@ roleRef:
   name: service-binding-proxy-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: v1
@@ -285,9 +393,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app.kubernetes.io/component: controller-manager
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
-    app.kubernetes.io/component: controller-manager
   name: service-binding-controller-manager-metrics-service
   namespace: a8s-system
 spec:
@@ -296,35 +404,50 @@ spec:
     port: 8443
     targetPort: https
   selector:
+    app.kubernetes.io/component: controller-manager
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-binding-webhook-service
+  namespace: a8s-system
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 9443
+  selector:
     app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: service-binding-controller-manager
+    app.kubernetes.io/part-of: a8s-service-binding
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
+    app.kubernetes.io/component: controller-manager
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
-    app.kubernetes.io/component: controller-manager
   name: service-binding-controller-manager
   namespace: a8s-system
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app.kubernetes.io/component: controller-manager
       app.kubernetes.io/name: service-binding-controller-manager
       app.kubernetes.io/part-of: a8s-service-binding
-      app.kubernetes.io/component: controller-manager
   template:
     metadata:
-      labels:
-        app.kubernetes.io/name: service-binding-controller-manager
-        app.kubernetes.io/part-of: a8s-service-binding
-        app.kubernetes.io/component: controller-manager
       annotations:
         prometheus.io/port: "8443"
         prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/component: controller-manager
+        app.kubernetes.io/name: service-binding-controller-manager
+        app.kubernetes.io/part-of: a8s-service-binding
     spec:
       containers:
       - args:
@@ -333,7 +456,7 @@ spec:
         - a8s-service-binding-controller
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:v0.23.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:7c91f7c206308935f6e9e576c71d032c53560fa1
         livenessProbe:
           httpGet:
             path: /healthz
@@ -341,6 +464,10 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 20
         name: manager
+        ports:
+        - containerPort: 9443
+          name: webhook-server
+          protocol: TCP
         readinessProbe:
           httpGet:
             path: /readyz
@@ -351,9 +478,15 @@ spec:
           limits:
             cpu: 100m
             memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: cert
+          readOnly: true
         - mountPath: /config/controller_manager_config.yaml
           name: manager-config
           subPath: controller_manager_config.yaml
@@ -369,8 +502,35 @@ spec:
           name: https
       securityContext:
         runAsUser: 65532
+      serviceAccountName: service-binding-manager-account
       terminationGracePeriodSeconds: 10
       volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: sb-webhook-server-cert
       - configMap:
           name: service-binding-manager-config
         name: manager-config
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: service-binding-serving-cert
+  namespace: a8s-system
+spec:
+  dnsNames:
+  - service-binding-webhook-service.a8s-system.svc
+  - service-binding-webhook-service.a8s-system.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: service-binding-selfsigned-issuer
+  secretName: sb-webhook-server-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: service-binding-selfsigned-issuer
+  namespace: a8s-system
+spec:
+  selfSigned: {}
