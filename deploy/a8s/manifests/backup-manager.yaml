@@ -2,10 +2,23 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
+    cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
   name: backups.backups.anynines.com
 spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: a8s-backup-webhook-service
+          namespace: a8s-system
+          path: /convert
+          port: 443
+      conversionReviewVersions:
+      - v1
+      - v1beta1
   group: backups.anynines.com
   names:
     kind: Backup
@@ -166,8 +179,6 @@ spec:
               retries:
                 description: Number of times the backup has been retried
                 type: integer
-            required:
-            - conditions
             type: object
         required:
         - spec
@@ -326,8 +337,6 @@ spec:
               retries:
                 description: Number of times the backup has been retried
                 type: integer
-            required:
-            - conditions
             type: object
         required:
         - spec
@@ -347,10 +356,23 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
+    cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
   name: restores.backups.anynines.com
 spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: a8s-backup-webhook-service
+          namespace: a8s-system
+          path: /convert
+          port: 443
+      conversionReviewVersions:
+      - v1
+      - v1beta1
   group: backups.anynines.com
   names:
     kind: Restore
@@ -516,8 +538,6 @@ spec:
                 description: RestoreID is the ID of the Restore; clients can use this
                   to poll the status of the Restore at the Pod identified by `PodToHit`.
                 type: string
-            required:
-            - conditions
             type: object
         type: object
     served: true
@@ -679,8 +699,6 @@ spec:
                 description: RestoreID is the ID of the Restore; clients can use this
                   to poll the status of the Restore at the Pod identified by `PodToHit`.
                 type: string
-            required:
-            - conditions
             type: object
         type: object
     served: true
@@ -934,7 +952,9 @@ spec:
     protocol: TCP
     targetPort: 9443
   selector:
-    control-plane: controller-manager
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: backup-manager
+    app.kubernetes.io/part-of: a8s-backup
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -976,7 +996,7 @@ spec:
               fieldPath: metadata.namespace
         - name: BACKUP_CREDENTIAL_PATH
           value: /etc/backup-store-secrets
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:v0.34.0
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:878e5ef789335feada36e27dd40733e281536aa2
         livenessProbe:
           httpGet:
             path: /healthz
