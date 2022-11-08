@@ -29,7 +29,7 @@ metadata:
   name: a8s-postgresql
   namespace: a8s-system
 spec:
-  channel: develop
+  channel: stable
   name: postgresql-operator
   sourceNamespace: a8s-system
   source: a8s-catalog
@@ -40,7 +40,7 @@ metadata:
   name: a8s-backup-and-restore
   namespace: a8s-system
 spec:
-  channel: develop
+  channel: stable
   name: a8s-backup-and-restore
   sourceNamespace: a8s-system
   source: a8s-catalog
@@ -51,7 +51,7 @@ metadata:
   name: a8s-service-binding-controller
   namespace: a8s-system
 spec:
-  channel: develop
+  channel: stable
   name: a8s-service-binding-controller
   sourceNamespace: a8s-system
   source: a8s-catalog
