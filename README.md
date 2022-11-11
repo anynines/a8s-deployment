@@ -25,7 +25,7 @@ PostgreSQL 13 and 14. **Don't use it for production workloads**. Some features m
 - Visualize the metrics of the PostgreSQL instance and other components
 
 ## Index
-
+a
 - [CHANGELOG](CHANGELOG.md)
 - [Technical Requirements](docs/technical_requirements.md)
 - [Platform Operator Documentation](docs/platform-operators/README.md)
