@@ -4,6 +4,23 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+### Migration Instructions
+If you use the extensions feature, delete the stateful set objects (**not the PostgreSQL objects**)
+for instances that use extensions. Your data will be preserved, and the stateful sets will
+automatically be recreated.
+
+### Added
+
+### Updated
+
+### Fixed
+
+### Changed
+
+- **breaking change** postgresql-operator uses an emptyDir instead of a persistent volume.
+
+
 ## [0.2.0] - 2022-11-08
 
 ### Added
