@@ -1,20 +1,23 @@
 # Install the a8s Control Plane
 
-- [Prerequisites](#prerequisites)
-  - [Configure Backups Store](#configure-backups-store)
-- [Configure Images](#configure-images)
-- [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
+- [Install the a8s Control Plane](#install-the-a8s-control-plane)
+  - [Prerequisites](#prerequisites)
+    - [Configure Backups Store](#configure-backups-store)
+  - [Configure Images](#configure-images)
+  - [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
     - [Using Static Manifests](#using-static-manifests)
-        - [Install the cert-manager](#install-the-cert-manager)
-        - [Install the Control Plane with Manifests](#install-the-control-plane-with-manifests)
+      - [Install the cert-manager](#install-the-cert-manager)
+      - [Install the Control Plane with Manifests](#install-the-control-plane-with-manifests)
     - [Using the OLM](#using-the-olm)
-        - [Install the OLM](#install-the-olm)
-        - [Install the Control Plane with OLM](#install-the-control-plane-with-olm)
-        - [Uninstalling the Control Plane](#uninstalling-the-control-plane)
-- [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
-- [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
-- [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
-- [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
+      - [Install the OLM](#install-the-olm)
+      - [Install the Control Plane with OLM](#install-the-control-plane-with-olm)
+      - [Uninstalling the Control Plane](#uninstalling-the-control-plane)
+  - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
+    - [Virtual Memory Usage](#virtual-memory-usage)
+      - [Disabling Virtual Memory Usage](#disabling-virtual-memory-usage)
+  - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
+  - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
+  - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
 
 ## Prerequisites
 
@@ -37,13 +40,13 @@ file. You MUST use the file names shown in the subsequent commands.
 
 ```shell
 # create file that stores the ID of the key
-echo <bucket-access-key-id> > deploy/a8s/backup-config/access-key-id 
+echo -n <bucket-access-key-id> > deploy/a8s/backup-config/access-key-id
 
 # create file that stores the secret value of the key
-echo <bucket-secret-access-key> > deploy/a8s/backup-config/secret-access-key 
+echo -n <bucket-secret-access-key> > deploy/a8s/backup-config/secret-access-key
 
 # create file that stores password for backup encryption
-echo <encryption password> > deploy/a8s/backup-config/encryption-password 
+echo -n <encryption password> > deploy/a8s/backup-config/encryption-password
 
 # create file with other information about the bucket
 cp deploy/a8s/backup-config/backup-store-config.yaml.template deploy/a8s/backup-config/backup-store-config.yaml 
@@ -93,7 +96,7 @@ OLM.
 
 ### Using Static Manifests
 
-#### Install the Cert-Manager
+#### Install the cert-manager
 
 The a8s framework relies on the [cert-manager][cert-manager] to generate
 TLS certificates, therefore you will first have to install it on your cluster.
