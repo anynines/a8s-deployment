@@ -25,6 +25,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
 	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	"github.com/anynines/postgresql-operator/api/v1alpha1"
 	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
 )
 
@@ -36,6 +37,8 @@ const (
 	databaseKey        = "database"
 	DbAdminUsernameKey = "username"
 	DbAdminPasswordKey = "password"
+
+	numA8SLabels = 3
 
 	// TODO: Make configurable and generalizable using Data interface
 	// testInput is data input used for testing data service functionality.
@@ -85,6 +88,9 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Expect(k8sClient.Create(ctx, instance.GetClientObject())).
 					To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
 						instance.GetNamespace(), instance.GetName()))
+			})
+
+			By("waiting for DSI to get to cluster status Running", func() {
 				dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
 			})
 
@@ -98,15 +104,32 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Expect(*sts.Spec.Replicas).To(Equal(*pg.Spec.Replicas))
 				Expect(sts.Status.ReadyReplicas).To(Equal(*pg.Spec.Replicas))
 
-				// Labels and Annotations are tested since other a8s framework
-				// components rely on them.
-				Expect(sts.Spec.Template.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
-				// TODO: find a way to avoid hardcoding
-				Expect(sts.Spec.Template.Labels).
-					To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
-				Expect(sts.Spec.Template.Labels).
-					To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
-				Expect(len(sts.Spec.Template.Labels)).To(Equal(3))
+				By("checking a8s labels added to StatefulSet", func() {
+					// TODO: find a way to avoid hardcoding
+					Expect(sts.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(sts.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(sts.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				})
+
+				By("check a8s labels are present in pod template", func() {
+					Expect(sts.Spec.Template.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(sts.Spec.Template.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(sts.Spec.Template.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				})
+
+				By("test a8s labels as the StatefulSet label selector", func() {
+					Expect(sts.Spec.Selector.MatchLabels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(sts.Spec.Selector.MatchLabels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(sts.Spec.Selector.MatchLabels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					Expect(len(sts.Spec.Selector.MatchLabels)).To(Equal(numA8SLabels))
+				})
 
 				Expect(sts.Spec.Template.Annotations).
 					To(HaveKeyWithValue("prometheus.io/port", "9187"))
@@ -128,12 +151,22 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						Namespace: instance.GetNamespace()},
 					svc)).To(Succeed())
 
-				Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
-				Expect(svc.Spec.Selector).
-					To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
-				Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
-				Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
-				Expect(len(svc.Spec.Selector)).To(Equal(4))
+				By("checking a8s labels added to Service", func() {
+					Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(svc.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(svc.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				})
+
+				By("checking a8s labels as selector", func() {
+					Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(svc.Spec.Selector).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
+					Expect(len(svc.Spec.Selector)).To(Equal(4))
+				})
 
 				Expect(svc.Spec.Type).To(Equal(corev1.ServiceTypeClusterIP))
 				Expect(svc.Spec.Ports[0].Name).To(Equal("postgresql"))
@@ -142,12 +175,21 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			})
 
 			By("creating the ServiceAccount", func() {
+				sa := &corev1.ServiceAccount{}
 				Expect(k8sClient.Get(
 					ctx,
 					types.NamespacedName{Name: instance.GetName(),
 						Namespace: instance.GetNamespace()},
-					&corev1.ServiceAccount{},
+					sa,
 				)).To(Succeed(), "failed to get serviceaccount")
+
+				By("checking a8s labels added to ServiceAccount", func() {
+					Expect(sa.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(sa.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(sa.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				})
 			})
 
 			By("creating a RoleBinding between the PostgreSQL instance service account and the Spilo role", func() {
@@ -158,6 +200,14 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						Namespace: instance.GetNamespace()},
 					rolebinding,
 				)).To(Succeed(), "failed to get rolebinding")
+
+				By("checking a8s labels added to RoleBinding", func() {
+					Expect(rolebinding.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(rolebinding.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(rolebinding.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				})
 
 				Expect(rolebinding.RoleRef.Name).To(Equal("postgresql-spilo-role"))
 				Expect(rolebinding.RoleRef.Kind).To(Equal("ClusterRole"))
@@ -399,25 +449,27 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 
 		It("Updates cpu and memory requirements and limits", func() {
 			var old pgv1alpha1.Postgresql
-			err := k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: instance.GetNamespace(),
-				Name:      instance.GetName(),
-			},
-				&old,
-			)
-			Expect(err).To(BeNil(), "failed to fetch instance resource")
+			Eventually(func(g Gomega) {
+				err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				},
+					&old,
+				)
+				g.Expect(err).To(BeNil(), "failed to fetch instance resource")
 
-			old.Spec.Resources = &corev1.ResourceRequirements{
-				Limits: map[corev1.ResourceName]k8sresource.Quantity{
-					corev1.ResourceCPU:    k8sresource.MustParse("200m"),
-					corev1.ResourceMemory: k8sresource.MustParse("200Mi"),
-				},
-				Requests: map[corev1.ResourceName]k8sresource.Quantity{
-					corev1.ResourceCPU:    k8sresource.MustParse("200m"),
-					corev1.ResourceMemory: k8sresource.MustParse("200Mi"),
-				},
-			}
-			Expect(k8sClient.Update(ctx, &old)).To(Succeed())
+				old.Spec.Resources = &corev1.ResourceRequirements{
+					Limits: map[corev1.ResourceName]k8sresource.Quantity{
+						corev1.ResourceCPU:    k8sresource.MustParse("200m"),
+						corev1.ResourceMemory: k8sresource.MustParse("200Mi"),
+					},
+					Requests: map[corev1.ResourceName]k8sresource.Quantity{
+						corev1.ResourceCPU:    k8sresource.MustParse("200m"),
+						corev1.ResourceMemory: k8sresource.MustParse("200Mi"),
+					},
+				}
+				g.Expect(k8sClient.Update(ctx, &old)).To(Succeed())
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 			Eventually(func() *corev1.ResourceRequirements {
 				sts := &appsv1.StatefulSet{}
@@ -436,16 +488,18 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 
 		It("Updates replicas", func() {
 			var old pgv1alpha1.Postgresql
-			err := k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: instance.GetNamespace(),
-				Name:      instance.GetName(),
-			},
-				&old,
-			)
-			Expect(err).To(BeNil(), "failed to fetch instance resource")
+			Eventually(func(g Gomega) {
+				err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				},
+					&old,
+				)
+				g.Expect(err).To(BeNil(), "failed to fetch instance resource")
 
-			old.Spec.Replicas = pointer.Int32(3)
-			Expect(k8sClient.Update(ctx, &old)).To(Succeed())
+				old.Spec.Replicas = pointer.Int32(3)
+				g.Expect(k8sClient.Update(ctx, &old)).To(Succeed())
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 			Eventually(func() *int32 {
 				sts := &appsv1.StatefulSet{}
@@ -460,6 +514,184 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				}
 				return sts.Spec.Replicas
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(Equal(pointer.Int32(3)))
+		})
+
+		It("Updates labels", func() {
+			var currDSI v1alpha1.Postgresql
+			Eventually(func(g Gomega) {
+				err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				}, &currDSI)
+				g.Expect(err).To(BeNil())
+
+				// The new labels are selected to represent all possible changes: there's one removal
+				// (test-label-2), one addition (test-label-4), and one value modification
+				// (test-label-1). It would be better to have separate cases, but these tests are
+				// already painfully slow and we want to replace them soon, so in the meantime this
+				// single test case was deemed good enough to ensure future changes don't break the
+				// behavior.
+				currDSI.Labels = map[string]string{
+					"test-label-1": "val3",
+					"test-label-4": "val4",
+				}
+
+				g.Expect(k8sClient.Update(ctx, &currDSI)).To(Succeed())
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+
+			By("Ensuring StatefulSet labels are updated", func() {
+				Eventually(func(g Gomega) {
+					sts := &appsv1.StatefulSet{}
+					err := k8sClient.Get(ctx,
+						types.NamespacedName{Name: instance.GetName(),
+							Namespace: instance.GetNamespace()},
+						sts)
+					g.Expect(err).To(BeNil())
+
+					g.Expect(sts.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(sts.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(sts.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(sts.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(sts.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(sts.Labels)).To(Equal(numA8SLabels + 2))
+
+					g.Expect(sts.Spec.Template.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(sts.Spec.Template.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(sts.Spec.Template.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(sts.Spec.Template.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(sts.Spec.Template.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(sts.Spec.Template.Labels)).To(Equal(numA8SLabels + 2))
+
+					By("test statefulset label selector only uses a8s-reserved labels",
+						func() {
+							g.Expect(sts.Spec.Selector.MatchLabels).
+								To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+							g.Expect(sts.Spec.Selector.MatchLabels).
+								To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+							g.Expect(sts.Spec.Selector.MatchLabels).
+								To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+							g.Expect(len(sts.Spec.Selector.MatchLabels)).To(Equal(numA8SLabels))
+						},
+					)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
+
+			By("Ensuring master service labels are updated", func() {
+				Eventually(func(g Gomega) {
+					svc := &corev1.Service{}
+					Expect(k8sClient.Get(ctx,
+						types.NamespacedName{
+							Name: postgresql.MasterService(
+								instance.GetName()),
+							Namespace: instance.GetNamespace()},
+						svc)).To(Succeed())
+					g.Expect(err).To(BeNil())
+
+					g.Expect(svc.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(svc.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(svc.Labels)).To(Equal(numA8SLabels + 3))
+
+					g.Expect(svc.Spec.Selector).
+						To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
+					g.Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(svc.Spec.Selector).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(svc.Spec.Selector)).To(Equal(numA8SLabels + 1))
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
+
+			By("Ensuring ServiceAccount labels are updated", func() {
+				Eventually(func(g Gomega) {
+					sa := &corev1.ServiceAccount{}
+					Expect(k8sClient.Get(
+						ctx,
+						types.NamespacedName{Name: instance.GetName(),
+							Namespace: instance.GetNamespace()},
+						sa,
+					)).To(Succeed(), "failed to get serviceaccount")
+
+					g.Expect(sa.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(sa.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(sa.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(sa.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(sa.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(sa.Labels)).To(Equal(numA8SLabels + 2))
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
+
+			By("Ensuring RoleBinding labels are updated", func() {
+				Eventually(func(g Gomega) {
+					rb := &rbacv1.RoleBinding{}
+					Expect(k8sClient.Get(
+						ctx,
+						types.NamespacedName{Name: instance.GetName(),
+							Namespace: instance.GetNamespace()},
+						rb,
+					)).To(Succeed(), "failed to get rolebinding")
+
+					g.Expect(rb.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(rb.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(rb.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(rb.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(rb.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(rb.Labels)).To(Equal(numA8SLabels + 2))
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
+
+			By("Ensuring admin user secret labels are updated", func() {
+				Eventually(func(g Gomega) {
+					adminSecret := &corev1.Secret{}
+					g.Expect(k8sClient.Get(
+						ctx,
+						types.NamespacedName{
+							Name:      postgresql.AdminRoleSecretName(instance.GetName()),
+							Namespace: instance.GetNamespace()},
+						adminSecret,
+					)).To(Succeed(), "failed to get admin role secret")
+
+					g.Expect(adminSecret.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(adminSecret.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(adminSecret.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(adminSecret.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(adminSecret.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(adminSecret.Labels)).To(Equal(numA8SLabels + 2))
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
+
+			By("Ensuring standby user secret labels are updated", func() {
+				Eventually(func(g Gomega) {
+					standbySecret := &corev1.Secret{}
+					g.Expect(k8sClient.Get(
+						ctx,
+						types.NamespacedName{
+							Name:      postgresql.StandbyRoleSecretName(instance.GetName()),
+							Namespace: instance.GetNamespace()},
+						standbySecret,
+					)).To(Succeed(), "failed to get admin role secret")
+
+					g.Expect(standbySecret.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(standbySecret.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(standbySecret.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(standbySecret.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(standbySecret.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(standbySecret.Labels)).To(Equal(numA8SLabels + 2))
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
 		})
 	})
 
@@ -584,6 +816,23 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				}, asyncOpsTimeoutMins).Should(BeTrue())
 			})
 
+			By("removing the Patroni leader election endpoint", func() {
+				Eventually(func() bool {
+					err := k8sClient.Get(
+						ctx,
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace()},
+						&corev1.Endpoints{},
+					)
+					if err == nil || !k8serrors.IsNotFound(err) {
+						return false
+					}
+
+					return true
+				}, asyncOpsTimeoutMins).Should(BeTrue())
+			})
+
 			By("emitting an event about the instance deletion", func() {
 				events := &corev1.EventList{}
 				Expect(k8sClient.List(ctx, events, &ctrlruntimeclient.ListOptions{
@@ -685,16 +934,17 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			})
 
 			By("testing whether data persists after primary pod deletion", func() {
-				// Fetch and delete the primary pod
-				pod, err := framework.GetPrimaryPodUsingServiceSelector(
-					ctx, instance.GetClientObject(), k8sClient)
-				Expect(err).To(BeNil(), fmt.Sprintf(
-					"failed to get primary pod using service selector for %s/%s",
-					instance.GetNamespace(), instance.GetName()))
-				Expect(k8sClient.Delete(ctx, pod)).
-					To(Succeed(), fmt.Sprintf("failed to delete pod %s/%s",
-						pod.GetNamespace(), pod.GetName()))
-				dsi.WaitForPodDeletion(ctx, pod, k8sClient)
+				By("deleting the primary pod", func() {
+					pod, err := framework.GetPrimaryPodUsingServiceSelector(
+						ctx, instance.GetClientObject(), k8sClient)
+					Expect(err).To(BeNil(), fmt.Sprintf(
+						"failed to get primary pod using service selector for %s/%s",
+						instance.GetNamespace(), instance.GetName()))
+					Expect(k8sClient.Delete(ctx, pod)).
+						To(Succeed(), fmt.Sprintf("failed to delete pod %s/%s",
+							pod.GetNamespace(), pod.GetName()))
+					dsi.WaitForPodDeletion(ctx, pod, k8sClient)
+				})
 
 				// TODO: This is only a temporary solution to an issue that was introduced
 				// by the PostgreSQL extensions feature. In order to install PostgreSQL extensions
@@ -896,6 +1146,289 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						"read data does not match data replicated in new primary")
 				}, 60*time.Second).Should(Succeed())
 			})
+		})
+	})
+
+	Context("PostgreSQL Extensions", func() {
+		const singleReplica int32 = 1
+		AfterEach(func() {
+			Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(Succeed(),
+				fmt.Sprintf("failed to delete instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+		})
+
+		It("Provisions a PostgreSQL instance without PostgreSQL extensions", func() {
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			Expect(k8sClient.Create(ctx, instance.GetClientObject())).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			sts := &appsv1.StatefulSet{}
+			Expect(k8sClient.Get(ctx,
+				types.NamespacedName{Name: instance.GetName(),
+					Namespace: instance.GetNamespace()},
+				sts)).To(Succeed(), "failed to get statefulset")
+
+			Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(0))
+		})
+
+		It("Provisions the PostgreSQL instance with one PostgreSQL extension", func() {
+			extensions := []string{"MobilityDB"}
+
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			Expect(ok).To(BeTrue(),
+				"failed to cast object interface to PostgreSQL struct")
+			pg.Spec.Extensions = extensions
+
+			Expect(k8sClient.Create(ctx, pg)).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			sts := &appsv1.StatefulSet{}
+			Expect(k8sClient.Get(ctx,
+				types.NamespacedName{Name: instance.GetName(),
+					Namespace: instance.GetNamespace()},
+				sts)).To(Succeed(), "failed to get statefulset")
+
+			Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(1))
+			Expect(sts.Spec.Template.Spec.InitContainers[0].Name).To(Equal("mobilitydb"))
+
+			Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(
+				Succeed(),
+				"failed to delete PostgreSQL instance",
+			)
+		})
+
+		It("Provisions the PostgreSQL instance with multiple PostgreSQL extensions", func() {
+			extensions := []string{"MobilityDB", "pg-qualstats"}
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			Expect(ok).To(BeTrue(),
+				"failed to cast object interface to PostgreSQL struct")
+			pg.Spec.Extensions = extensions
+
+			Expect(k8sClient.Create(ctx, pg)).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			sts := &appsv1.StatefulSet{}
+			Expect(k8sClient.Get(ctx,
+				types.NamespacedName{Name: instance.GetName(),
+					Namespace: instance.GetNamespace()},
+				sts)).To(Succeed(), "failed to get statefulset")
+
+			Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(2))
+			Expect(sts.Spec.Template.Spec.InitContainers[0].Name).To(Equal("mobilitydb"))
+			Expect(sts.Spec.Template.Spec.InitContainers[1].Name).To(Equal("pg-qualstats"))
+
+			Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(
+				Succeed(),
+				"failed to delete PostgreSQL instance",
+			)
+		})
+
+		It("Adds one PostgreSQL extension on update", func() {
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			Expect(k8sClient.Create(ctx, instance.GetClientObject())).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			var currDSI v1alpha1.Postgresql
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				}, &currDSI); err != nil {
+					return err
+				}
+
+				currDSI.Spec.Extensions = []string{"MobilityDB"}
+				return k8sClient.Update(ctx, &currDSI)
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+			Eventually(func(g Gomega) {
+				sts := &appsv1.StatefulSet{}
+				g.Expect(k8sClient.Get(ctx,
+					types.NamespacedName{Name: instance.GetName(),
+						Namespace: instance.GetNamespace()},
+					sts)).To(Succeed(), "failed to get statefulset")
+
+				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(1))
+				g.Expect(sts.Spec.Template.Spec.InitContainers[0].Name).To(Equal("mobilitydb"))
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+		})
+
+		It("Adds multiple PostgreSQL extensions on update", func() {
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			Expect(k8sClient.Create(ctx, instance.GetClientObject())).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			var currDSI v1alpha1.Postgresql
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				}, &currDSI); err != nil {
+					return err
+				}
+
+				currDSI.Spec.Extensions = []string{"MobilityDB", "pg-qualstats"}
+				return k8sClient.Update(ctx, &currDSI)
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+			Eventually(func(g Gomega) {
+				sts := &appsv1.StatefulSet{}
+				g.Expect(k8sClient.Get(ctx,
+					types.NamespacedName{Name: instance.GetName(),
+						Namespace: instance.GetNamespace()},
+					sts)).To(Succeed(), "failed to get statefulset")
+
+				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(2))
+				g.Expect(sts.Spec.Template.Spec.InitContainers[0].Name).To(Equal("mobilitydb"))
+				g.Expect(sts.Spec.Template.Spec.InitContainers[1].Name).To(Equal("pg-qualstats"))
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+		})
+
+		It("Removes one PostgreSQL extension on update", func() {
+			extensions := []string{"MobilityDB", "pg-qualstats"}
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			Expect(ok).To(BeTrue(),
+				"failed to cast object interface to PostgreSQL struct")
+			pg.Spec.Extensions = extensions
+
+			Expect(k8sClient.Create(ctx, pg)).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			var currDSI v1alpha1.Postgresql
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				}, &currDSI); err != nil {
+					return err
+				}
+
+				currDSI.Spec.Extensions = []string{"MobilityDB"}
+				return k8sClient.Update(ctx, &currDSI)
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+			Eventually(func(g Gomega) {
+				sts := &appsv1.StatefulSet{}
+				g.Expect(k8sClient.Get(ctx,
+					types.NamespacedName{Name: instance.GetName(),
+						Namespace: instance.GetNamespace()},
+					sts)).To(Succeed(), "failed to get statefulset")
+
+				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(1))
+				g.Expect(sts.Spec.Template.Spec.InitContainers[0].Name).To(Equal("mobilitydb"))
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+		})
+
+		It("Removes all PostgreSQL extensions on update", func() {
+			extensions := []string{"MobilityDB"}
+			instance, err = dsi.New(
+				dataservice,
+				testingNamespace,
+				framework.GenerateName(
+					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+				singleReplica,
+			)
+			Expect(err).To(BeNil(), "failed to generate new DSI resource")
+
+			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			Expect(ok).To(BeTrue(),
+				"failed to cast object interface to PostgreSQL struct")
+			pg.Spec.Extensions = extensions
+
+			Expect(k8sClient.Create(ctx, pg)).
+				To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
+					instance.GetNamespace(), instance.GetName()))
+			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
+
+			var currDSI v1alpha1.Postgresql
+			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      instance.GetName(),
+				}, &currDSI); err != nil {
+					return err
+				}
+
+				currDSI.Spec.Extensions = []string{}
+				return k8sClient.Update(ctx, &currDSI)
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+			Eventually(func(g Gomega) {
+				sts := &appsv1.StatefulSet{}
+				g.Expect(k8sClient.Get(ctx,
+					types.NamespacedName{Name: instance.GetName(),
+						Namespace: instance.GetNamespace()},
+					sts)).To(Succeed(), "failed to get statefulset")
+
+				// After removing all extensions the cleanup-extensions init container is still part
+				// of the statefulSet so that the extension related files are removed from the
+				// persistentVolume.
+				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(0))
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 		})
 	})
 })
