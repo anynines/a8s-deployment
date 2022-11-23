@@ -15,5 +15,3 @@ secretGenerator:
   - ./access-key-id
   - ./secret-access-key
   - ./encryption-password
-generatorOptions:
-  disableNameSuffixHash: true
