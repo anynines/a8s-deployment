@@ -14,6 +14,9 @@ automatically be recreated.
 
 ### Updated
 
+* Deletion of PostgreSQL instance pods now runs in parallel, improving the deletion time in high
+  availability setups.
+
 ### Fixed
 
 ### Changed
