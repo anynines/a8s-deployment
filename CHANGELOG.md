@@ -16,6 +16,9 @@ automatically be recreated.
 
 * Deletion of PostgreSQL instance pods now runs in parallel, improving the deletion time in high
   availability setups.
+* In the Postgresql CRD, the description of the `namespaceSelector` field (which is one of the many
+  fields that control pod affinity and anti-affinity) has been updated to reflect the fact that the
+  field has graduated from beta to stable (in Kubernetes v1.24).
 
 ### Fixed
 
