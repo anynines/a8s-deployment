@@ -25,6 +25,8 @@ automatically be recreated.
 ### Changed
 
 - **breaking change** postgresql-operator uses an emptyDir instead of a persistent volume.
+- backup\_agent has been updated, and is now using a smaller image. The new version of the
+  backup\_agent logs to stderr instead of the previously used stdout.
 
 
 ## [0.2.0] - 2022-11-08
