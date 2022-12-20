@@ -8,14 +8,14 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	backupv1alpha1 "github.com/anynines/a8s-backup-manager/api/v1alpha1"
+	backupv1beta3 "github.com/anynines/a8s-backup-manager/api/v1beta3"
 	"github.com/anynines/a8s-deployment/test/framework"
 	bkp "github.com/anynines/a8s-deployment/test/framework/backup"
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	rst "github.com/anynines/a8s-deployment/test/framework/restore"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
 )
 
 const (
@@ -35,9 +35,9 @@ var (
 	portForwardStopCh chan struct{}
 	localPort         int
 
-	sb       *sbv1alpha1.ServiceBinding
-	backup   *backupv1alpha1.Backup
-	restore  *backupv1alpha1.Restore
+	sb       *sbv1beta3.ServiceBinding
+	backup   *backupv1beta3.Backup
+	restore  *backupv1beta3.Restore
 	instance dsi.Object
 	client   dsi.DSIClient
 )
@@ -100,7 +100,7 @@ var _ = Describe("Backup", func() {
 			fmt.Sprintf("failed to delete restore %s/%s",
 				restore.GetNamespace(), restore.GetName()))
 		dsi.WaitForDeletion(ctx, instance.GetClientObject(), k8sClient)
-		//TODO: Wait for deletion for all secondary objects
+		// TODO: Wait for deletion for all secondary objects
 	})
 
 	It("Performs backup and restore of instance", func() {

@@ -14,7 +14,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -39,7 +39,7 @@ var (
 	portForwardStopCh chan struct{}
 	localPort         int
 
-	sb                 *sbv1alpha1.ServiceBinding
+	sb                 *sbv1beta3.ServiceBinding
 	serviceBindingData secret.SecretData
 	instance           *postgresql.Postgresql
 	client             dsi.DSIClient

@@ -8,8 +8,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	backupv1alpha1 "github.com/anynines/a8s-backup-manager/api/v1alpha1"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	backupv1beta3 "github.com/anynines/a8s-backup-manager/api/v1beta3"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
 
 	"github.com/anynines/a8s-deployment/test/framework"
 	bkp "github.com/anynines/a8s-deployment/test/framework/backup"
@@ -49,8 +49,8 @@ var (
 	portForwardStopCh chan struct{}
 	localPort         int
 
-	sb                 *sbv1alpha1.ServiceBinding
-	backup             *backupv1alpha1.Backup
+	sb                 *sbv1beta3.ServiceBinding
+	backup             *backupv1beta3.Backup
 	serviceBindingData secret.SecretData
 	instance           *postgresql.Postgresql
 	client             dsi.DSIClient
@@ -112,7 +112,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 			fmt.Sprintf("failed to delete service binding %s/%s",
 				sb.GetNamespace(), sb.GetName()))
 		dsi.WaitForDeletion(ctx, instance.GetClientObject(), k8sClient)
-		//TODO: Wait for deletion for all secondary objects
+		// TODO: Wait for deletion for all secondary objects
 	})
 
 	It("Backup agent crashes while processing a backup", func() {
