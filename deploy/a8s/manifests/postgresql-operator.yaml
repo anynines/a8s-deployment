@@ -4,7 +4,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/postgresql-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: postgresqls.postgresql.anynines.com
 spec:
   conversion:
@@ -2887,7 +2886,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:d2750caaa8acaae37af04b78fea7b8e49fc2d618
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:dbccf9ac7969bad2728ffc56ab45d9a7b07554ff
         livenessProbe:
           httpGet:
             path: /healthz
