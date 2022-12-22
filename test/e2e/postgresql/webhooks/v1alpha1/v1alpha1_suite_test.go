@@ -1,4 +1,4 @@
-package webhooks
+package v1alpha1
 
 import (
 	"context"
@@ -13,12 +13,17 @@ import (
 
 	//+kubebuilder:scaffold:imports
 	"github.com/anynines/a8s-deployment/test/framework"
-	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/namespace"
 	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	k8sresource "k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/pointer"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -28,6 +33,13 @@ import (
 const (
 	suffixLength        = 5
 	asyncOpsTimeoutMins = time.Minute * 5
+
+	resourceCPU = "500m"
+	resourceMem = "500Mi"
+	volumeSize  = "1G"
+	version     = 14
+
+	kind = "Postgresql"
 )
 
 var (
@@ -43,6 +55,10 @@ var (
 		pgv1alpha1.DSIKindLabelKey,
 		pgv1alpha1.ReplicationRoleLabelKey,
 	}
+
+	metav1alpha1 = metav1.TypeMeta{
+		APIVersion: pgv1alpha1.GroupVersion.String(),
+	}
 )
 
 func TestAPIs(t *testing.T) {
@@ -57,11 +73,15 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
-	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
-		framework.ConfigToVars(config)
+	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace = framework.ConfigToVars(config)
 
 	// Create Kubernetes client for interacting with the Kubernetes API
-	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
+	cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	Expect(err).To(BeNil(), "unable to build config from kubeconfig path")
+
+	pgv1alpha1.AddToScheme(scheme.Scheme)
+
+	k8sClient, err = runtimeClient.New(cfg, runtimeClient.Options{Scheme: scheme.Scheme})
 	Expect(err).To(BeNil(),
 		fmt.Sprintf("error creating Kubernetes client for dataservice %s", dataservice))
 
@@ -205,11 +225,9 @@ var _ = Describe("Validating webhook", func() {
 					reservedLabelKeyWithExtraCharAtTheBeginning := "x" + reservedLabelsKeys[0]
 					reservedLabelKeyWithExtraCharAtTheEnd := reservedLabelsKeys[1] + "a"
 					reservedLabelKeyWithoutFirstChar := reservedLabelsKeys[2][1:]
-					reservedLabelKeyWithoutLastChar :=
-						reservedLabelsKeys[3][:len(reservedLabelsKeys[3])-1]
-					reservedLabelKeyWithoutMiddleChar :=
-						reservedLabelsKeys[0][:len(reservedLabelsKeys[0])/2] +
-							reservedLabelsKeys[0][1+len(reservedLabelsKeys[0])/2:]
+					reservedLabelKeyWithoutLastChar := reservedLabelsKeys[3][:len(reservedLabelsKeys[3])-1]
+					reservedLabelKeyWithoutMiddleChar := reservedLabelsKeys[0][:len(reservedLabelsKeys[0])/2] +
+						reservedLabelsKeys[0][1+len(reservedLabelsKeys[0])/2:]
 
 					labels := map[string]string{
 						reservedLabelKeyWithExtraCharAtTheBeginning: "val1",
@@ -347,7 +365,11 @@ var _ = Describe("Validating webhook", func() {
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI); err != nil {
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					}); err != nil {
 						return err
 					}
 
@@ -369,7 +391,11 @@ var _ = Describe("Validating webhook", func() {
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI); err != nil {
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					}); err != nil {
 						return err
 					}
 
@@ -388,7 +414,11 @@ var _ = Describe("Validating webhook", func() {
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI); err != nil {
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					}); err != nil {
 						return err
 					}
 
@@ -409,7 +439,11 @@ var _ = Describe("Validating webhook", func() {
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI); err != nil {
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					}); err != nil {
 						return err
 					}
 
@@ -434,7 +468,11 @@ var _ = Describe("Validating webhook", func() {
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI); err != nil {
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					}); err != nil {
 						return err
 					}
 
@@ -462,7 +500,11 @@ var _ = Describe("Validating webhook", func() {
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI); err != nil {
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					}); err != nil {
 						return err
 					}
 
@@ -486,7 +528,11 @@ var _ = Describe("Validating webhook", func() {
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI)
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					})
 					g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 					currDSI.Labels = map[string]string{
@@ -515,7 +561,11 @@ var _ = Describe("Validating webhook", func() {
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI)
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					})
 					g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 					currDSI.Labels = map[string]string{
@@ -545,7 +595,11 @@ var _ = Describe("Validating webhook", func() {
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI)
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					})
 					g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 					currDSI.Labels = map[string]string{
@@ -577,7 +631,11 @@ var _ = Describe("Validating webhook", func() {
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI)
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					})
 					g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 					currDSI.Labels = map[string]string{
@@ -588,7 +646,6 @@ var _ = Describe("Validating webhook", func() {
 
 					err = k8sClient.Update(ctx, &currDSI)
 					g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 				Expect(err.Error()).To(ContainSubstring(reservedLabelsKeys[1]),
@@ -613,7 +670,11 @@ var _ = Describe("Validating webhook", func() {
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI)
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					})
 					g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 					currDSI.Labels = map[string]string{
@@ -623,7 +684,6 @@ var _ = Describe("Validating webhook", func() {
 
 					err = k8sClient.Update(ctx, &currDSI)
 					g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 				Expect(err.Error()).To(ContainSubstring(reservedLabelsKeys[0]),
@@ -649,7 +709,11 @@ var _ = Describe("Validating webhook", func() {
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
-					}, &currDSI)
+					}, &currDSI, &runtimeClient.GetOptions{
+						Raw: &metav1.GetOptions{
+							TypeMeta: metav1alpha1,
+						},
+					})
 					g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 					currDSI.Labels = map[string]string{
@@ -659,7 +723,6 @@ var _ = Describe("Validating webhook", func() {
 
 					err = k8sClient.Update(ctx, &currDSI)
 					g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 				Expect(err.Error()).To(ContainSubstring(reservedLabelsKeys[0]),
@@ -674,7 +737,6 @@ var _ = Describe("Validating webhook", func() {
 
 	Context("Test validation of creation with invalid storage size, name length and labels "+
 		"together", func() {
-
 		It("Rejects a DSI with storage of 1k, name longer than the max by two and a reserved label",
 			func() {
 				labels := map[string]string{
@@ -722,7 +784,11 @@ var _ = Describe("Validating webhook", func() {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI); err != nil {
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				}); err != nil {
 					return err
 				}
 
@@ -744,7 +810,11 @@ var _ = Describe("Validating webhook", func() {
 				err = k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI)
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
 				g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 				currDSI.Spec.VolumeSize = resource.MustParse("1Gi")
@@ -772,7 +842,11 @@ var _ = Describe("Validating webhook", func() {
 				err = k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI)
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
 				g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 				currDSI.Spec.VolumeSize = resource.MustParse("3k")
@@ -811,7 +885,11 @@ var _ = Describe("Validating webhook", func() {
 				err = k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI)
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
 				g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 				currDSI.Spec.VolumeSize = resource.MustParse("1Gi")
@@ -822,7 +900,6 @@ var _ = Describe("Validating webhook", func() {
 
 				err = k8sClient.Update(ctx, &currDSI)
 				g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 			Expect(err.Error()).To(ContainSubstring("spec.volumeSize"),
@@ -859,7 +936,11 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
-			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
+			Expect(k8sClient.Get(ctx, dsiNSN, dsi, &runtimeClient.GetOptions{
+				Raw: &metav1.GetOptions{
+					TypeMeta: metav1alpha1,
+				},
+			})).To(Succeed())
 			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefault))
 		})
@@ -876,7 +957,11 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
-			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
+			Expect(k8sClient.Get(ctx, dsiNSN, dsi, &runtimeClient.GetOptions{
+				Raw: &metav1.GetOptions{
+					TypeMeta: metav1alpha1,
+				},
+			})).To(Succeed())
 			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransaction))
 		})
@@ -888,7 +973,11 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
-			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
+			Expect(k8sClient.Get(ctx, dsiNSN, dsi, &runtimeClient.GetOptions{
+				Raw: &metav1.GetOptions{
+					TypeMeta: metav1alpha1,
+				},
+			})).To(Succeed())
 			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefaultWithMobilityDB))
 		})
@@ -900,7 +989,11 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
-			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
+			Expect(k8sClient.Get(ctx, dsiNSN, dsi, &runtimeClient.GetOptions{
+				Raw: &metav1.GetOptions{
+					TypeMeta: metav1alpha1,
+				},
+			})).To(Succeed())
 			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefaultWithMobilityDB))
 		})
@@ -937,7 +1030,11 @@ var _ = Describe("Defaulting webhook", func() {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI); err != nil {
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				}); err != nil {
 					return err
 				}
 
@@ -958,7 +1055,11 @@ var _ = Describe("Defaulting webhook", func() {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI); err != nil {
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				}); err != nil {
 					return err
 				}
 
@@ -987,7 +1088,11 @@ var _ = Describe("Defaulting webhook", func() {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI); err != nil {
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				}); err != nil {
 					return err
 				}
 
@@ -997,7 +1102,11 @@ var _ = Describe("Defaulting webhook", func() {
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
-			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
+			Expect(k8sClient.Get(ctx, dsiNSN, dsi, &runtimeClient.GetOptions{
+				Raw: &metav1.GetOptions{
+					TypeMeta: metav1alpha1,
+				},
+			})).To(Succeed())
 			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransaction))
 		})
@@ -1019,7 +1128,11 @@ var _ = Describe("Defaulting webhook", func() {
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI)
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
 				g.Expect(err).To(BeNil(), "failed to get DSI object")
 
 				currDSI.Spec.PostgresConfiguration.MaxLocksPerTransaction = &maxLocksPerTransaction
@@ -1043,7 +1156,11 @@ var _ = Describe("Defaulting webhook", func() {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
-				}, &currDSI); err != nil {
+				}, &currDSI, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				}); err != nil {
 					return err
 				}
 
@@ -1052,7 +1169,11 @@ var _ = Describe("Defaulting webhook", func() {
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
-			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
+			Expect(k8sClient.Get(ctx, dsiNSN, dsi, &runtimeClient.GetOptions{
+				Raw: &metav1.GetOptions{
+					TypeMeta: metav1alpha1,
+				},
+			})).To(Succeed())
 			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefault))
 		})
@@ -1072,18 +1193,32 @@ func withExtensions(extensions ...string) func(*pgv1alpha1.Postgresql) {
 }
 
 func newDSI(opts ...func(*pgv1alpha1.Postgresql)) *pgv1alpha1.Postgresql {
-	instance, err := dsi.New(
-		dataservice,
-		testingNamespace,
-		framework.GenerateName(
-			instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
-		1,
-	)
-	Expect(err).To(BeNil(), "failed to generate new DSI resource")
-
-	dsi, ok := instance.GetClientObject().(*pgv1alpha1.Postgresql)
-	Expect(ok).To(BeTrue(),
-		"failed to cast object interface to PostgreSQL struct")
+	dsi := &pgv1alpha1.Postgresql{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: framework.GenerateName(
+				instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
+			Namespace: testingNamespace,
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       kind,
+			APIVersion: pgv1alpha1.GroupVersion.String(),
+		},
+		Spec: pgv1alpha1.PostgresqlSpec{
+			Replicas:   pointer.Int32Ptr(1),
+			Version:    version,
+			VolumeSize: k8sresource.MustParse(volumeSize),
+			Resources: &corev1.ResourceRequirements{
+				Limits: map[corev1.ResourceName]k8sresource.Quantity{
+					corev1.ResourceCPU:    k8sresource.MustParse(resourceCPU),
+					corev1.ResourceMemory: k8sresource.MustParse(resourceMem),
+				},
+				Requests: map[corev1.ResourceName]k8sresource.Quantity{
+					corev1.ResourceCPU:    k8sresource.MustParse(resourceCPU),
+					corev1.ResourceMemory: k8sresource.MustParse(resourceMem),
+				},
+			},
+		},
+	}
 
 	for _, applyOption := range opts {
 		applyOption(dsi)
