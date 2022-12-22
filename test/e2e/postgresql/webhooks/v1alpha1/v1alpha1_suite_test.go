@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -15,11 +16,13 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework"
 	"github.com/anynines/a8s-deployment/test/framework/namespace"
 	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
+	pgv1beta3 "github.com/anynines/postgresql-operator/api/v1beta3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	k8sresource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/client-go/kubernetes/scheme"
@@ -1180,6 +1183,126 @@ var _ = Describe("Defaulting webhook", func() {
 	})
 })
 
+var _ = Describe("Conversion webhook", func() {
+	var (
+		v1alpha1Client runtimeClient.Client
+		v1beta3Client  runtimeClient.Client
+
+		metav1beta3 = metav1.TypeMeta{
+			APIVersion: pgv1beta3.GroupVersion.String(),
+		}
+	)
+
+	Context("v1alpha1 to v1beta3", func() {
+		BeforeEach(func() {
+			// Create Kubernetes client for interacting with the Kubernetes API
+			cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+			Expect(err).To(BeNil(), "unable to build config from kubeconfig path")
+
+			s1 := runtime.NewScheme()
+			pgv1alpha1.AddToScheme(s1)
+
+			s2 := runtime.NewScheme()
+			pgv1beta3.AddToScheme(s2)
+
+			v1alpha1Client, err = runtimeClient.New(cfg, runtimeClient.Options{Scheme: s1})
+			Expect(err).To(BeNil(), "unable to create new Kubernetes client for test")
+
+			v1beta3Client, err = runtimeClient.New(cfg, runtimeClient.Options{Scheme: s2})
+			Expect(err).To(BeNil(), "unable to create new Kubernetes client for test")
+		})
+
+		Context("Conversion from v1alpha1 to v1beta3", func() {
+			It("converts a Postgresql without labels", func() {
+				pgV1alpha1 := newDSI(withName("test-conversion-1"))
+				err := v1alpha1Client.Create(ctx, pgV1alpha1)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1beta3 := pgv1beta3.Postgresql{}
+				v1beta3Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1alpha1.GetNamespace(),
+					Name:      pgV1alpha1.GetName(),
+				}, &pgV1beta3, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1beta3,
+					},
+				})
+
+				cmpV1alpha1V1beta3(*pgV1alpha1, pgV1beta3)
+			})
+
+			It("converts a Postgresql with labels", func() {
+				labels := map[string]string{
+					"allowed-label-1": "val1",
+					"allowed-label-2": "val2",
+				}
+				pgV1alpha1 := newDSI(withName("test-conversion-2"),
+					withLabels(labels))
+
+				err := v1alpha1Client.Create(ctx, pgV1alpha1)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1beta3 := pgv1beta3.Postgresql{}
+				v1beta3Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1alpha1.GetNamespace(),
+					Name:      pgV1alpha1.GetName(),
+				}, &pgV1beta3, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1beta3,
+					},
+				})
+
+				cmpV1alpha1V1beta3(*pgV1alpha1, pgV1beta3)
+			})
+
+			It("converts a Postgresql with extensions", func() {
+				pgV1alpha1 := newDSI(withName("test-conversion-3"),
+					withExtensions("MobilityDB"))
+
+				err := v1alpha1Client.Create(ctx, pgV1alpha1)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1beta3 := pgv1beta3.Postgresql{}
+				v1beta3Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1alpha1.GetNamespace(),
+					Name:      pgV1alpha1.GetName(),
+				}, &pgV1beta3, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1beta3,
+					},
+				})
+
+				cmpV1alpha1V1beta3(*pgV1alpha1, pgV1beta3)
+			})
+
+			It("converts a Postgresql with custom configuration", func() {
+				maxLocksPerTransaction := 150
+				customConfig := pgv1alpha1.PostgresConfiguration{
+					MaxLocksPerTransaction: &maxLocksPerTransaction,
+				}
+
+				pgV1alpha1 := newDSI(withName("test-conversion-4"),
+					withCustomConfiguration(customConfig))
+
+				err := v1alpha1Client.Create(ctx, pgV1alpha1)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1beta3 := pgv1beta3.Postgresql{}
+				v1beta3Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1alpha1.GetNamespace(),
+					Name:      pgV1alpha1.GetName(),
+				}, &pgV1beta3, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1beta3,
+					},
+				})
+
+				cmpV1alpha1V1beta3(*pgV1alpha1, pgV1beta3)
+			})
+		})
+	})
+})
+
 func withCustomConfiguration(config pgv1alpha1.PostgresConfiguration) func(*pgv1alpha1.Postgresql) {
 	return func(dsi *pgv1alpha1.Postgresql) {
 		dsi.Spec.PostgresConfiguration = config
@@ -1288,3 +1411,40 @@ var _ = AfterSuite(func() {
 		To(Succeed(), "failed to delete testing namespace")
 	cancel()
 })
+
+// custom comparison of a Postgresl of api version v1alpha1 and v1beta3
+func cmpV1alpha1V1beta3(a pgv1alpha1.Postgresql, b pgv1beta3.Postgresql) {
+	Expect(a.Name).To(Equal(b.Name), "names of Postgresql objects differ")
+	Expect(a.Namespace).To(Equal(b.Namespace),
+		"namespace of Postgresql objects differ")
+
+	Expect(a.Labels).To(Equal(b.Labels), "labels of Postgresql objects differ")
+
+	Expect(a.Spec.Replicas).To(Equal(b.Spec.Replicas),
+		"replicas of Postgresql objects differ")
+
+	Expect(cmp.Diff(a.Spec.Resources, b.Spec.Resources)).To(Equal(""),
+		"resources of Postgresql objects differ")
+	Expect(cmp.Diff(a.Spec.Extensions, b.Spec.Extensions)).To(Equal(""),
+		"extensions of Postgresql objects differ")
+
+	if !(a.Spec.SchedulingConstraints == nil &&
+		b.Spec.SchedulingConstraints == nil) {
+
+		Expect(cmp.Diff(a.Spec.SchedulingConstraints.Affinity,
+			b.Spec.SchedulingConstraints.Affinity)).To(Equal(""),
+			"SchedulingConstraints.Affinity of Postgresql objects differ")
+		Expect(cmp.Diff(a.Spec.SchedulingConstraints.Tolerations,
+			b.Spec.SchedulingConstraints.Tolerations)).To(Equal(""),
+			"SchedulingConstraints.Tolerations of Postgresql objects differ")
+	}
+
+	Expect(cmp.Diff(a.Spec.Version, b.Spec.Version)).To(Equal(""),
+		"Version of Postgresql objects differ")
+	Expect(cmp.Diff(a.Spec.VolumeSize, b.Spec.VolumeSize)).To(Equal(""),
+		"VolumeSize of Postgresql objects differ")
+
+	bConfig := pgv1alpha1.PostgresConfiguration(b.Spec.Parameters)
+	Expect(cmp.Diff(a.Spec.PostgresConfiguration, bConfig)).To(Equal(""),
+		"configuration parameters of Postgresql objects differ")
+}
