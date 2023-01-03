@@ -4,7 +4,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: backups.backups.anynines.com
 spec:
   conversion:
@@ -358,7 +357,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: restores.backups.anynines.com
 spec:
   conversion:
