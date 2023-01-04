@@ -25,6 +25,8 @@ automatically be recreated.
 ### Changed
 
 - **breaking change** postgresql-operator uses an emptyDir instead of a persistent volume.
+- **breaking change**: The field `postgresConfiguration` has been renamed to
+  `parameters` in API Version `v1beta3`.
 - backup\_agent has been updated, and is now using a smaller image. The new version of the
   backup\_agent logs to stderr instead of the previously used stdout.
 

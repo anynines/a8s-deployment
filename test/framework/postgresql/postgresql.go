@@ -15,9 +15,9 @@ import (
 	"k8s.io/utils/pointer"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	backupv1alpha1 "github.com/anynines/a8s-backup-manager/api/v1alpha1"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
-	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
+	backupv1beta3 "github.com/anynines/a8s-backup-manager/api/v1beta3"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
+	pgv1beta3 "github.com/anynines/postgresql-operator/api/v1beta3"
 )
 
 const (
@@ -30,7 +30,7 @@ const (
 )
 
 type Postgresql struct {
-	*pgv1alpha1.Postgresql
+	*pgv1beta3.Postgresql
 }
 
 func (pg Postgresql) ClusterStatus() string {
@@ -39,8 +39,8 @@ func (pg Postgresql) ClusterStatus() string {
 
 // TODO: make the K8s client a field of pg rather than something to pass to its functions.
 func (pg Postgresql) StatefulSet(ctx context.Context,
-	k8sClient runtimeClient.Client) (*appsv1.StatefulSet, error) {
-
+	k8sClient runtimeClient.Client,
+) (*appsv1.StatefulSet, error) {
 	nsn := types.NamespacedName{Namespace: pg.Namespace, Name: pg.Name}
 	ss := &appsv1.StatefulSet{}
 
@@ -56,12 +56,12 @@ func (pg Postgresql) StatefulSet(ctx context.Context,
 // older DSI with same namespace, name and kind.
 // TODO: Improve robustness by checking that the pods actually belong to DSI.
 func (pg Postgresql) Pods(ctx context.Context,
-	k8sClient runtimeClient.Client) ([]corev1.Pod, error) {
-
+	k8sClient runtimeClient.Client,
+) ([]corev1.Pod, error) {
 	podsLabels := labels.Set{
-		pgv1alpha1.DSINameLabelKey:  pg.Name,
-		pgv1alpha1.DSIGroupLabelKey: "postgresql.anynines.com",
-		pgv1alpha1.DSIKindLabelKey:  "Postgresql",
+		pgv1beta3.DSINameLabelKey:  pg.Name,
+		pgv1beta3.DSIGroupLabelKey: "postgresql.anynines.com",
+		pgv1beta3.DSIKindLabelKey:  "Postgresql",
 	}
 	podsSelector, err := podsLabels.AsValidatedSelector()
 	if err != nil {
@@ -84,7 +84,7 @@ func (pg Postgresql) Pods(ctx context.Context,
 
 func (pg Postgresql) SetTolerations(ts ...corev1.Toleration) {
 	if pg.Postgresql.Spec.SchedulingConstraints == nil {
-		pg.Postgresql.Spec.SchedulingConstraints = &pgv1alpha1.PostgresqlSchedulingConstraints{}
+		pg.Postgresql.Spec.SchedulingConstraints = &pgv1beta3.PostgresqlSchedulingConstraints{}
 	}
 	pg.Postgresql.Spec.SchedulingConstraints.Tolerations = ts
 }
@@ -92,23 +92,21 @@ func (pg Postgresql) SetTolerations(ts ...corev1.Toleration) {
 func (pg Postgresql) AddRequiredPodAntiAffinityTerm(at corev1.PodAffinityTerm) {
 	pg.initPodAntiAffinity()
 	paa := pg.Postgresql.Spec.SchedulingConstraints.Affinity.PodAntiAffinity
-	paa.RequiredDuringSchedulingIgnoredDuringExecution =
-		append(paa.RequiredDuringSchedulingIgnoredDuringExecution, at)
+	paa.RequiredDuringSchedulingIgnoredDuringExecution = append(paa.RequiredDuringSchedulingIgnoredDuringExecution, at)
 }
 
 func (pg Postgresql) AddPreferredPodAntiAffinityTerm(weight int, at corev1.PodAffinityTerm) {
 	pg.initPodAntiAffinity()
 	paa := pg.Postgresql.Spec.SchedulingConstraints.Affinity.PodAntiAffinity
-	paa.PreferredDuringSchedulingIgnoredDuringExecution =
-		append(paa.PreferredDuringSchedulingIgnoredDuringExecution, corev1.WeightedPodAffinityTerm{
-			Weight:          int32(weight),
-			PodAffinityTerm: at,
-		})
+	paa.PreferredDuringSchedulingIgnoredDuringExecution = append(paa.PreferredDuringSchedulingIgnoredDuringExecution, corev1.WeightedPodAffinityTerm{
+		Weight:          int32(weight),
+		PodAffinityTerm: at,
+	})
 }
 
 func (pg Postgresql) initPodAntiAffinity() {
 	if pg.Postgresql.Spec.SchedulingConstraints == nil {
-		pg.Postgresql.Spec.SchedulingConstraints = &pgv1alpha1.PostgresqlSchedulingConstraints{}
+		pg.Postgresql.Spec.SchedulingConstraints = &pgv1beta3.PostgresqlSchedulingConstraints{}
 	}
 	if pg.Postgresql.Spec.SchedulingConstraints.Affinity == nil {
 		pg.Postgresql.Spec.SchedulingConstraints.Affinity = &corev1.Affinity{}
@@ -123,28 +121,28 @@ func (pg Postgresql) initPodAntiAffinity() {
 // type. We also need to set the APIVersion and Kind since Kubernetes will remove these fields when
 // marshalling API objects.
 func (pg Postgresql) GetClientObject() runtimeClient.Object {
-	pg.Postgresql.APIVersion = pgv1alpha1.GroupVersion.String()
+	pg.Postgresql.APIVersion = pgv1beta3.GroupVersion.String()
 	pg.Postgresql.Kind = kind
 	return pg.Postgresql
 }
 
 func (pg Postgresql) GetReplicaLabels() map[string]string {
 	return map[string]string{
-		pgv1alpha1.DSINameLabelKey:         pg.GetName(),
-		pgv1alpha1.ReplicationRoleLabelKey: "replica",
+		pgv1beta3.DSINameLabelKey:         pg.GetName(),
+		pgv1beta3.ReplicationRoleLabelKey: "replica",
 	}
 }
 
 func (pg Postgresql) GetMasterLabels() map[string]string {
 	return map[string]string{
-		pgv1alpha1.DSINameLabelKey:         pg.GetName(),
-		pgv1alpha1.ReplicationRoleLabelKey: "master",
+		pgv1beta3.DSINameLabelKey:         pg.GetName(),
+		pgv1beta3.ReplicationRoleLabelKey: "master",
 	}
 }
 
 func (pg Postgresql) CheckPatroniLabelsAssigned(ctx context.Context,
-	c runtimeClient.Client) (bool, error) {
-
+	c runtimeClient.Client,
+) (bool, error) {
 	l, err := pg.Pods(ctx, c)
 	if err != nil {
 		return false, err
@@ -169,9 +167,9 @@ func NewK8sClient(kubeconfig string) (runtimeClient.Client, error) {
 		return nil, fmt.Errorf("unable to build config from kubeconfig path: %w", err)
 	}
 
-	pgv1alpha1.AddToScheme(scheme.Scheme)
-	sbv1alpha1.AddToScheme(scheme.Scheme)
-	backupv1alpha1.AddToScheme(scheme.Scheme)
+	pgv1beta3.AddToScheme(scheme.Scheme)
+	sbv1beta3.AddToScheme(scheme.Scheme)
+	backupv1beta3.AddToScheme(scheme.Scheme)
 
 	k8sClient, err := runtimeClient.New(cfg, runtimeClient.Options{Scheme: scheme.Scheme})
 	if err != nil {
@@ -181,16 +179,16 @@ func NewK8sClient(kubeconfig string) (runtimeClient.Client, error) {
 }
 
 func New(namespace, name string, replicas int32, opts ...func(*Postgresql)) *Postgresql {
-	p := &Postgresql{&pgv1alpha1.Postgresql{
+	p := &Postgresql{&pgv1beta3.Postgresql{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       kind,
-			APIVersion: pgv1alpha1.GroupVersion.String(),
+			APIVersion: pgv1beta3.GroupVersion.String(),
 		},
-		Spec: pgv1alpha1.PostgresqlSpec{
+		Spec: pgv1beta3.PostgresqlSpec{
 			Replicas:   pointer.Int32Ptr(replicas),
 			VolumeSize: k8sresource.MustParse(volumeSize),
 			Version:    version,
@@ -221,10 +219,10 @@ func WithVolumeSize(s string) func(*Postgresql) {
 }
 
 func NewEmpty() Postgresql {
-	return Postgresql{&pgv1alpha1.Postgresql{
+	return Postgresql{&pgv1beta3.Postgresql{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       kind,
-			APIVersion: pgv1alpha1.GroupVersion.String(),
+			APIVersion: pgv1beta3.GroupVersion.String(),
 		},
 	}}
 }
@@ -246,5 +244,5 @@ func PvcName(instanceName string, index int) string {
 }
 
 func IsMaster(pod *corev1.Pod) bool {
-	return pod.Labels[pgv1alpha1.ReplicationRoleLabelKey] == "master"
+	return pod.Labels[pgv1beta3.ReplicationRoleLabelKey] == "master"
 }

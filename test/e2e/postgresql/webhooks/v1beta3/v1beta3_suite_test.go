@@ -1,4 +1,4 @@
-package webhooks
+package v1beta3
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework"
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/namespace"
-	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
+	pgv1beta3 "github.com/anynines/postgresql-operator/api/v1beta3"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,10 +38,10 @@ var (
 	k8sClient runtimeClient.Client
 
 	reservedLabelsKeys []string = []string{
-		pgv1alpha1.DSINameLabelKey,
-		pgv1alpha1.DSIGroupLabelKey,
-		pgv1alpha1.DSIKindLabelKey,
-		pgv1alpha1.ReplicationRoleLabelKey,
+		pgv1beta3.DSINameLabelKey,
+		pgv1beta3.DSIGroupLabelKey,
+		pgv1beta3.DSIKindLabelKey,
+		pgv1beta3.ReplicationRoleLabelKey,
 	}
 )
 
@@ -57,8 +57,7 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
-	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
-		framework.ConfigToVars(config)
+	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace = framework.ConfigToVars(config)
 
 	// Create Kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
@@ -78,44 +77,44 @@ var _ = Describe("Validating webhook", func() {
 		})
 
 		It("Allows a DSI with name half the maximum length", func() {
-			dsi := newDSI(withNameOfLength(pgv1alpha1.MaxNameLengthChars / 2))
+			dsi := newDSI(withNameOfLength(pgv1beta3.MaxNameLengthChars / 2))
 			err := k8sClient.Create(ctx, dsi)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Allows a DSI with name shorter than the maximum by one", func() {
-			dsi := newDSI(withNameOfLength(pgv1alpha1.MaxNameLengthChars - 1))
+			dsi := newDSI(withNameOfLength(pgv1beta3.MaxNameLengthChars - 1))
 			err := k8sClient.Create(ctx, dsi)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Allows a DSI with name as long as the maximum", func() {
-			dsi := newDSI(withNameOfLength(pgv1alpha1.MaxNameLengthChars))
+			dsi := newDSI(withNameOfLength(pgv1beta3.MaxNameLengthChars))
 			err := k8sClient.Create(ctx, dsi)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Rejects a DSI with name longer than the maximum by one", func() {
-			dsi := newDSI(withNameOfLength(pgv1alpha1.MaxNameLengthChars + 1))
+			dsi := newDSI(withNameOfLength(pgv1beta3.MaxNameLengthChars + 1))
 			err := k8sClient.Create(ctx, dsi)
 			Expect(errors.IsInvalid(err)).To(BeTrue())
 			Expect(err.Error()).To(ContainSubstring("metadata.name"),
 				"error message doesn't mention invalid field name")
-			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1alpha1.MaxNameLengthChars+1)),
+			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1beta3.MaxNameLengthChars+1)),
 				"error message doesn't mention the actual name length")
-			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1alpha1.MaxNameLengthChars)),
+			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1beta3.MaxNameLengthChars)),
 				"error message doesn't mention the maximum name length")
 		})
 
 		It("Rejects a DSI with name twice the maximum length", func() {
-			dsi := newDSI(withNameOfLength(2 * pgv1alpha1.MaxNameLengthChars))
+			dsi := newDSI(withNameOfLength(2 * pgv1beta3.MaxNameLengthChars))
 			err := k8sClient.Create(ctx, dsi)
 			Expect(errors.IsInvalid(err)).To(BeTrue())
 			Expect(err.Error()).To(ContainSubstring("metadata.name"),
 				"error message doesn't mention invalid field name")
-			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(2*pgv1alpha1.MaxNameLengthChars)),
+			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(2*pgv1beta3.MaxNameLengthChars)),
 				"error message doesn't mention the actual name length")
-			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1alpha1.MaxNameLengthChars)),
+			Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1beta3.MaxNameLengthChars)),
 				"error message doesn't mention the maximum name length")
 		})
 	})
@@ -151,7 +150,7 @@ var _ = Describe("Validating webhook", func() {
 			Expect(errors.IsInvalid(err)).To(BeTrue())
 			Expect(err.Error()).To(ContainSubstring("spec.volumeSize"),
 				"error message doesn't mention name of the invalid field")
-			Expect(err.Error()).To(ContainSubstring(pgv1alpha1.MinVolumeSize),
+			Expect(err.Error()).To(ContainSubstring(pgv1beta3.MinVolumeSize),
 				"error message doesn't mention the minimum storage size")
 			Expect(err.Error()).To(ContainSubstring("1Mi"),
 				"error message doesn't mention the specified storage size")
@@ -163,7 +162,7 @@ var _ = Describe("Validating webhook", func() {
 			Expect(errors.IsInvalid(err)).To(BeTrue())
 			Expect(err.Error()).To(ContainSubstring("spec.volumeSize"),
 				"error message doesn't mention name of the invalid field")
-			Expect(err.Error()).To(ContainSubstring(pgv1alpha1.MinVolumeSize),
+			Expect(err.Error()).To(ContainSubstring(pgv1beta3.MinVolumeSize),
 				"error message doesn't mention the minimum storage size")
 			Expect(err.Error()).To(ContainSubstring("1k"),
 				"error message doesn't mention the specified storage size")
@@ -171,7 +170,7 @@ var _ = Describe("Validating webhook", func() {
 	})
 
 	Context("Labels validation on creation", func() {
-		var dsi *pgv1alpha1.Postgresql
+		var dsi *pgv1beta3.Postgresql
 
 		Context("Valid labels", func() {
 			AfterEach(func() {
@@ -205,11 +204,9 @@ var _ = Describe("Validating webhook", func() {
 					reservedLabelKeyWithExtraCharAtTheBeginning := "x" + reservedLabelsKeys[0]
 					reservedLabelKeyWithExtraCharAtTheEnd := reservedLabelsKeys[1] + "a"
 					reservedLabelKeyWithoutFirstChar := reservedLabelsKeys[2][1:]
-					reservedLabelKeyWithoutLastChar :=
-						reservedLabelsKeys[3][:len(reservedLabelsKeys[3])-1]
-					reservedLabelKeyWithoutMiddleChar :=
-						reservedLabelsKeys[0][:len(reservedLabelsKeys[0])/2] +
-							reservedLabelsKeys[0][1+len(reservedLabelsKeys[0])/2:]
+					reservedLabelKeyWithoutLastChar := reservedLabelsKeys[3][:len(reservedLabelsKeys[3])-1]
+					reservedLabelKeyWithoutMiddleChar := reservedLabelsKeys[0][:len(reservedLabelsKeys[0])/2] +
+						reservedLabelsKeys[0][1+len(reservedLabelsKeys[0])/2:]
 
 					labels := map[string]string{
 						reservedLabelKeyWithExtraCharAtTheBeginning: "val1",
@@ -327,7 +324,7 @@ var _ = Describe("Validating webhook", func() {
 	})
 
 	Context("Labels validation on update", func() {
-		var dsi *pgv1alpha1.Postgresql
+		var dsi *pgv1beta3.Postgresql
 
 		AfterEach(func() {
 			Expect(k8sClient.Delete(ctx, dsi)).To(Succeed(), "failed to delete DSI after test")
@@ -343,7 +340,7 @@ var _ = Describe("Validating webhook", func() {
 				Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 				Eventually(func() error {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -365,7 +362,7 @@ var _ = Describe("Validating webhook", func() {
 				Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 				Eventually(func() error {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -384,7 +381,7 @@ var _ = Describe("Validating webhook", func() {
 				Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 				Eventually(func() error {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -405,7 +402,7 @@ var _ = Describe("Validating webhook", func() {
 				Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 				Eventually(func() error {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -430,7 +427,7 @@ var _ = Describe("Validating webhook", func() {
 				Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 				Eventually(func() error {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -458,7 +455,7 @@ var _ = Describe("Validating webhook", func() {
 				Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 				Eventually(func() error {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					if err := k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -482,7 +479,7 @@ var _ = Describe("Validating webhook", func() {
 
 				var err error
 				Eventually(func(g Gomega) {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -511,7 +508,7 @@ var _ = Describe("Validating webhook", func() {
 
 				var err error
 				Eventually(func(g Gomega) {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -541,7 +538,7 @@ var _ = Describe("Validating webhook", func() {
 
 				var err error
 				Eventually(func(g Gomega) {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -573,7 +570,7 @@ var _ = Describe("Validating webhook", func() {
 
 				var err error
 				Eventually(func(g Gomega) {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -588,7 +585,6 @@ var _ = Describe("Validating webhook", func() {
 
 					err = k8sClient.Update(ctx, &currDSI)
 					g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 				Expect(err.Error()).To(ContainSubstring(reservedLabelsKeys[1]),
@@ -609,7 +605,7 @@ var _ = Describe("Validating webhook", func() {
 
 				var err error
 				Eventually(func(g Gomega) {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -623,7 +619,6 @@ var _ = Describe("Validating webhook", func() {
 
 					err = k8sClient.Update(ctx, &currDSI)
 					g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 				Expect(err.Error()).To(ContainSubstring(reservedLabelsKeys[0]),
@@ -645,7 +640,7 @@ var _ = Describe("Validating webhook", func() {
 
 				var err error
 				Eventually(func(g Gomega) {
-					var currDSI pgv1alpha1.Postgresql
+					var currDSI pgv1beta3.Postgresql
 					err = k8sClient.Get(ctx, types.NamespacedName{
 						Namespace: dsi.GetNamespace(),
 						Name:      dsi.GetName(),
@@ -659,7 +654,6 @@ var _ = Describe("Validating webhook", func() {
 
 					err = k8sClient.Update(ctx, &currDSI)
 					g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 				Expect(err.Error()).To(ContainSubstring(reservedLabelsKeys[0]),
@@ -674,27 +668,26 @@ var _ = Describe("Validating webhook", func() {
 
 	Context("Test validation of creation with invalid storage size, name length and labels "+
 		"together", func() {
-
 		It("Rejects a DSI with storage of 1k, name longer than the max by two and a reserved label",
 			func() {
 				labels := map[string]string{
 					reservedLabelsKeys[3]: "val1",
 					"allowed-label":       "val2",
 				}
-				dsi := newDSI(withNameOfLength(pgv1alpha1.MaxNameLengthChars+2),
+				dsi := newDSI(withNameOfLength(pgv1beta3.MaxNameLengthChars+2),
 					withStorageSize("1k"),
 					withLabels(labels))
 				err := k8sClient.Create(ctx, dsi)
 				Expect(errors.IsInvalid(err)).To(BeTrue())
 				Expect(err.Error()).To(ContainSubstring("metadata.name"),
 					"error message doesn't mention invalid field name")
-				Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1alpha1.MaxNameLengthChars+2)),
+				Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1beta3.MaxNameLengthChars+2)),
 					"error message doesn't mention the actual name length")
-				Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1alpha1.MaxNameLengthChars)),
+				Expect(err.Error()).To(ContainSubstring(fmt.Sprint(pgv1beta3.MaxNameLengthChars)),
 					"error message doesn't mention the maximum name length")
 				Expect(err.Error()).To(ContainSubstring("spec.volumeSize"),
 					"error message doesn't mention name of the invalid field")
-				Expect(err.Error()).To(ContainSubstring(pgv1alpha1.MinVolumeSize),
+				Expect(err.Error()).To(ContainSubstring(pgv1beta3.MinVolumeSize),
 					"error message doesn't mention the minimum storage size")
 				Expect(err.Error()).To(ContainSubstring("1k"),
 					"error message doesn't mention the specified storage size")
@@ -718,7 +711,7 @@ var _ = Describe("Validating webhook", func() {
 			// Update the replicas from 1 to 3 because we just want to update something different
 			// than the resources.
 			Eventually(func() error {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -740,7 +733,7 @@ var _ = Describe("Validating webhook", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func(g Gomega) {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				err = k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -768,7 +761,7 @@ var _ = Describe("Validating webhook", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func(g Gomega) {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				err = k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -791,7 +784,7 @@ var _ = Describe("Validating webhook", func() {
 	})
 
 	Context("Update validation with storage size and labels both invalid", func() {
-		var dsi *pgv1alpha1.Postgresql
+		var dsi *pgv1beta3.Postgresql
 
 		AfterEach(func() {
 			Expect(k8sClient.Delete(ctx, dsi)).To(Succeed(), "failed to delete DSI after test")
@@ -807,7 +800,7 @@ var _ = Describe("Validating webhook", func() {
 
 			var err error
 			Eventually(func(g Gomega) {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				err = k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -822,7 +815,6 @@ var _ = Describe("Validating webhook", func() {
 
 				err = k8sClient.Update(ctx, &currDSI)
 				g.Expect(errors.IsInvalid(err)).To(BeTrue())
-
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 			Expect(err.Error()).To(ContainSubstring("spec.volumeSize"),
@@ -848,7 +840,7 @@ const (
 
 var _ = Describe("Defaulting webhook", func() {
 	Context("Defaulting of configuration", func() {
-		var dsi *pgv1alpha1.Postgresql
+		var dsi *pgv1beta3.Postgresql
 
 		AfterEach(func() {
 			Expect(k8sClient.Delete(ctx, dsi)).To(Succeed(), "failed to delete DSI after test")
@@ -860,13 +852,13 @@ var _ = Describe("Defaulting webhook", func() {
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefault))
 		})
 
 		It("Does not apply defaulting when maxLocksPerTransaction is set", func() {
 			maxLocksPerTransaction := 150
-			customConfig := pgv1alpha1.PostgresConfiguration{
+			customConfig := pgv1beta3.PostgresqlParameters{
 				MaxLocksPerTransaction: &maxLocksPerTransaction,
 			}
 
@@ -877,7 +869,7 @@ var _ = Describe("Defaulting webhook", func() {
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransaction))
 		})
 
@@ -889,7 +881,7 @@ var _ = Describe("Defaulting webhook", func() {
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefaultWithMobilityDB))
 		})
 
@@ -901,7 +893,7 @@ var _ = Describe("Defaulting webhook", func() {
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefaultWithMobilityDB))
 		})
 	})
@@ -909,7 +901,7 @@ var _ = Describe("Defaulting webhook", func() {
 	Context("Creation of an invalid PostgreSQL instance", func() {
 		It("Fails if the custom configuration is out of range", func() {
 			maxLocksPerTransaction := 5
-			customConfig := pgv1alpha1.PostgresConfiguration{
+			customConfig := pgv1beta3.PostgresqlParameters{
 				MaxLocksPerTransaction: &maxLocksPerTransaction,
 			}
 
@@ -922,7 +914,7 @@ var _ = Describe("Defaulting webhook", func() {
 	})
 
 	Context("Update of custom configuration", func() {
-		var dsi *pgv1alpha1.Postgresql
+		var dsi *pgv1beta3.Postgresql
 
 		AfterEach(func() {
 			Expect(k8sClient.Delete(ctx, dsi)).To(Succeed(), "failed to delete DSI after test")
@@ -933,7 +925,7 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			Eventually(func() error {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -954,7 +946,7 @@ var _ = Describe("Defaulting webhook", func() {
 
 			maxLocksPerTransaction := 200
 			Eventually(func() error {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -962,20 +954,20 @@ var _ = Describe("Defaulting webhook", func() {
 					return err
 				}
 
-				currDSI.Spec.PostgresConfiguration.MaxLocksPerTransaction = &maxLocksPerTransaction
+				currDSI.Spec.Parameters.MaxLocksPerTransaction = &maxLocksPerTransaction
 
 				return k8sClient.Update(ctx, &currDSI)
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransaction))
 		})
 
 		It("Allows a DSI with MaxLocksPerTransaction being updated", func() {
 			maxLocksPerTransaction := 150
-			customConfig := pgv1alpha1.PostgresConfiguration{
+			customConfig := pgv1beta3.PostgresqlParameters{
 				MaxLocksPerTransaction: &maxLocksPerTransaction,
 			}
 
@@ -983,7 +975,7 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			Eventually(func() error {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -992,19 +984,19 @@ var _ = Describe("Defaulting webhook", func() {
 				}
 
 				maxLocksPerTransaction = 200
-				currDSI.Spec.PostgresConfiguration.MaxLocksPerTransaction = &maxLocksPerTransaction
+				currDSI.Spec.Parameters.MaxLocksPerTransaction = &maxLocksPerTransaction
 				return k8sClient.Update(ctx, &currDSI)
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransaction))
 		})
 
 		It("Fails if the updated custom configuration is out of range", func() {
 			maxLocksPerTransaction := 150
-			customConfig := pgv1alpha1.PostgresConfiguration{
+			customConfig := pgv1beta3.PostgresqlParameters{
 				MaxLocksPerTransaction: &maxLocksPerTransaction,
 			}
 
@@ -1015,14 +1007,14 @@ var _ = Describe("Defaulting webhook", func() {
 			maxLocksPerTransaction = 5
 
 			Eventually(func(g Gomega) {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
 				}, &currDSI)
 				g.Expect(err).To(BeNil(), "failed to get DSI object")
 
-				currDSI.Spec.PostgresConfiguration.MaxLocksPerTransaction = &maxLocksPerTransaction
+				currDSI.Spec.Parameters.MaxLocksPerTransaction = &maxLocksPerTransaction
 
 				err = k8sClient.Update(ctx, &currDSI)
 				g.Expect(errors.IsInvalid(err)).To(BeTrue())
@@ -1031,7 +1023,7 @@ var _ = Describe("Defaulting webhook", func() {
 
 		It("Succeeds if the custom configuration is removed from the CR", func() {
 			maxLocksPerTransaction := 150
-			customConfig := pgv1alpha1.PostgresConfiguration{
+			customConfig := pgv1beta3.PostgresqlParameters{
 				MaxLocksPerTransaction: &maxLocksPerTransaction,
 			}
 
@@ -1039,7 +1031,7 @@ var _ = Describe("Defaulting webhook", func() {
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
 			Eventually(func() error {
-				var currDSI pgv1alpha1.Postgresql
+				var currDSI pgv1beta3.Postgresql
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: dsi.GetNamespace(),
 					Name:      dsi.GetName(),
@@ -1047,31 +1039,31 @@ var _ = Describe("Defaulting webhook", func() {
 					return err
 				}
 
-				currDSI.Spec.PostgresConfiguration.MaxLocksPerTransaction = nil
+				currDSI.Spec.Parameters.MaxLocksPerTransaction = nil
 				return k8sClient.Update(ctx, &currDSI)
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			dsiNSN := types.NamespacedName{Namespace: dsi.Namespace, Name: dsi.Name}
 			Expect(k8sClient.Get(ctx, dsiNSN, dsi)).To(Succeed())
-			Expect(*dsi.Spec.PostgresConfiguration.MaxLocksPerTransaction).
+			Expect(*dsi.Spec.Parameters.MaxLocksPerTransaction).
 				To(Equal(maxLocksPerTransactionDefault))
 		})
 	})
 })
 
-func withCustomConfiguration(config pgv1alpha1.PostgresConfiguration) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
-		dsi.Spec.PostgresConfiguration = config
+func withCustomConfiguration(config pgv1beta3.PostgresqlParameters) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
+		dsi.Spec.Parameters = config
 	}
 }
 
-func withExtensions(extensions ...string) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
+func withExtensions(extensions ...string) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Spec.Extensions = extensions
 	}
 }
 
-func newDSI(opts ...func(*pgv1alpha1.Postgresql)) *pgv1alpha1.Postgresql {
+func newDSI(opts ...func(*pgv1beta3.Postgresql)) *pgv1beta3.Postgresql {
 	instance, err := dsi.New(
 		dataservice,
 		testingNamespace,
@@ -1081,7 +1073,7 @@ func newDSI(opts ...func(*pgv1alpha1.Postgresql)) *pgv1alpha1.Postgresql {
 	)
 	Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
-	dsi, ok := instance.GetClientObject().(*pgv1alpha1.Postgresql)
+	dsi, ok := instance.GetClientObject().(*pgv1beta3.Postgresql)
 	Expect(ok).To(BeTrue(),
 		"failed to cast object interface to PostgreSQL struct")
 
@@ -1091,32 +1083,32 @@ func newDSI(opts ...func(*pgv1alpha1.Postgresql)) *pgv1alpha1.Postgresql {
 	return dsi
 }
 
-func withName(name string) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
+func withName(name string) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Name = name
 	}
 }
 
-func withNameOfLength(length int) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
+func withNameOfLength(length int) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Name = nameOfLength(length)
 	}
 }
 
-func withStorageSize(size string) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
+func withStorageSize(size string) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Spec.VolumeSize = resource.MustParse(size)
 	}
 }
 
-func withReplicas(r int32) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
+func withReplicas(r int32) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Spec.Replicas = &r
 	}
 }
 
-func withLabels(l map[string]string) func(*pgv1alpha1.Postgresql) {
-	return func(dsi *pgv1alpha1.Postgresql) {
+func withLabels(l map[string]string) func(*pgv1beta3.Postgresql) {
+	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Labels = l
 	}
 }

@@ -24,9 +24,9 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
-	"github.com/anynines/postgresql-operator/api/v1alpha1"
-	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
+	"github.com/anynines/postgresql-operator/api/v1beta3"
+	pgv1beta3 "github.com/anynines/postgresql-operator/api/v1beta3"
 )
 
 const (
@@ -55,10 +55,10 @@ var (
 	localPort         int
 	ok                bool
 
-	sb       *sbv1alpha1.ServiceBinding
+	sb       *sbv1beta3.ServiceBinding
 	instance dsi.Object
 	client   dsi.DSIClient
-	pg       *pgv1alpha1.Postgresql
+	pg       *pgv1beta3.Postgresql
 )
 
 var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
@@ -81,7 +81,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 
 				// Cast interface to concrete struct so that we can access fields
 				// directly
-				pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+				pg, ok = instance.GetClientObject().(*pgv1beta3.Postgresql)
 				Expect(ok).To(BeTrue(),
 					"failed to cast object interface to PostgreSQL struct")
 
@@ -448,7 +448,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Updates cpu and memory requirements and limits", func() {
-			var old pgv1alpha1.Postgresql
+			var old pgv1beta3.Postgresql
 			Eventually(func(g Gomega) {
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),
@@ -487,7 +487,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Updates replicas", func() {
-			var old pgv1alpha1.Postgresql
+			var old pgv1beta3.Postgresql
 			Eventually(func(g Gomega) {
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),
@@ -517,7 +517,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Updates labels", func() {
-			var currDSI v1alpha1.Postgresql
+			var currDSI v1beta3.Postgresql
 			Eventually(func(g Gomega) {
 				err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),
@@ -707,7 +707,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
-			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			pg, ok = instance.GetClientObject().(*pgv1beta3.Postgresql)
 			Expect(ok).To(BeTrue(),
 				"failed to cast instance object interface to PostgreSQL struct")
 
@@ -1194,7 +1194,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
-			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			pg, ok = instance.GetClientObject().(*pgv1beta3.Postgresql)
 			Expect(ok).To(BeTrue(),
 				"failed to cast object interface to PostgreSQL struct")
 			pg.Spec.Extensions = extensions
@@ -1230,7 +1230,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
-			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			pg, ok = instance.GetClientObject().(*pgv1beta3.Postgresql)
 			Expect(ok).To(BeTrue(),
 				"failed to cast object interface to PostgreSQL struct")
 			pg.Spec.Extensions = extensions
@@ -1271,7 +1271,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					instance.GetNamespace(), instance.GetName()))
 			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
 
-			var currDSI v1alpha1.Postgresql
+			var currDSI v1beta3.Postgresql
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),
@@ -1311,7 +1311,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					instance.GetNamespace(), instance.GetName()))
 			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
 
-			var currDSI v1alpha1.Postgresql
+			var currDSI v1beta3.Postgresql
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),
@@ -1348,7 +1348,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
-			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			pg, ok = instance.GetClientObject().(*pgv1beta3.Postgresql)
 			Expect(ok).To(BeTrue(),
 				"failed to cast object interface to PostgreSQL struct")
 			pg.Spec.Extensions = extensions
@@ -1358,7 +1358,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					instance.GetNamespace(), instance.GetName()))
 			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
 
-			var currDSI v1alpha1.Postgresql
+			var currDSI v1beta3.Postgresql
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),
@@ -1394,7 +1394,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
-			pg, ok = instance.GetClientObject().(*pgv1alpha1.Postgresql)
+			pg, ok = instance.GetClientObject().(*pgv1beta3.Postgresql)
 			Expect(ok).To(BeTrue(),
 				"failed to cast object interface to PostgreSQL struct")
 			pg.Spec.Extensions = extensions
@@ -1404,7 +1404,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					instance.GetNamespace(), instance.GetName()))
 			dsi.WaitForReadiness(ctx, instance.GetClientObject(), k8sClient)
 
-			var currDSI v1alpha1.Postgresql
+			var currDSI v1beta3.Postgresql
 			Eventually(func() error {
 				if err := k8sClient.Get(ctx, types.NamespacedName{
 					Namespace: instance.GetNamespace(),

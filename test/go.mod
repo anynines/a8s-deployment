@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/anynines/a8s-backup-manager v0.34.0
 	github.com/anynines/a8s-service-binding-controller v0.29.0
-	github.com/anynines/postgresql-operator v0.59.1-0.20221206140100-8dc82ca8e22b
+	github.com/anynines/postgresql-operator v0.68.0
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/jackc/pgx/v4 v4.17.2
@@ -55,7 +55,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.5.9
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect

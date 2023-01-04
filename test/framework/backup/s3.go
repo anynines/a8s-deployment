@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/anynines/a8s-backup-manager/api/v1alpha1"
+	"github.com/anynines/a8s-backup-manager/api/v1beta3"
 )
 
 const (
@@ -40,7 +40,7 @@ type S3Client struct {
 	bucketName string
 }
 
-func (c S3Client) HasPartialBackupData(ctx context.Context, bkp v1alpha1.Backup) (bool, error) {
+func (c S3Client) HasPartialBackupData(ctx context.Context, bkp v1beta3.Backup) (bool, error) {
 	for object := range c.client.ListObjects(ctx,
 		c.bucketName,
 		minio.ListObjectsOptions{}) {

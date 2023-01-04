@@ -17,7 +17,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/postgresql"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
-	"github.com/anynines/postgresql-operator/api/v1alpha1"
+	"github.com/anynines/postgresql-operator/api/v1beta3"
 )
 
 const (
@@ -57,7 +57,7 @@ var (
 
 	instance        dsi.Object
 	client          dsi.DSIClient
-	pg              *v1alpha1.Postgresql
+	pg              *v1beta3.Postgresql
 	adminSecretData secret.SecretData
 )
 
@@ -136,7 +136,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 			})
 
 			By("checking that the defaults are set correctly", func() {
-				var expectedConfig = []struct {
+				expectedConfig := []struct {
 					parameter, value string
 				}{
 					{ArchiveTimeout, strconv.Itoa(defaultArchiveTimeoutSeconds)},
@@ -187,7 +187,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 
 				// Cast interface to concrete struct so that we can access fields
 				// directly
-				pg, ok = instance.GetClientObject().(*v1alpha1.Postgresql)
+				pg, ok = instance.GetClientObject().(*v1beta3.Postgresql)
 				Expect(ok).To(BeTrue(),
 					"failed to cast object interface to PostgreSQL struct")
 
@@ -223,29 +223,29 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 			})
 
 			By("checking that the custom configuration is set correctly", func() {
-				var expectedConfig = []struct {
+				expectedConfig := []struct {
 					parameter, value string
 				}{
-					{ArchiveTimeout, strconv.Itoa(pg.Spec.PostgresConfiguration.ArchiveTimeoutSeconds) + "s"},
-					{TempFileLimit, strconv.Itoa(pg.Spec.PostgresConfiguration.TempFileLimitKiloBytes)},
-					{TrackIOTiming, pg.Spec.PostgresConfiguration.TrackIOTiming},
-					{StatementTimeout, strconv.Itoa(pg.Spec.PostgresConfiguration.StatementTimeoutMillis) + "ms"},
-					{ClientMinMessages, pg.Spec.PostgresConfiguration.ClientMinMessages},
-					{LogMinMessages, pg.Spec.PostgresConfiguration.LogMinMessages},
-					{LogMinErrorStatement, pg.Spec.PostgresConfiguration.LogMinErrorStatement},
-					{LogStatement, pg.Spec.PostgresConfiguration.LogStatement},
-					{LogErrorVerbosity, strings.ToLower(pg.Spec.PostgresConfiguration.LogErrorVerbosity)},
-					{SSLCiphers, pg.Spec.PostgresConfiguration.SSLCiphers},
-					{SSLMinProtocolVersion, pg.Spec.PostgresConfiguration.SSLMinProtocolVersion},
-					{WALWriterDelay, strconv.Itoa(pg.Spec.PostgresConfiguration.WALWriterDelayMillis) + "ms"},
-					{SynchronousCommit, pg.Spec.PostgresConfiguration.SynchronousCommit},
-					{MaxConnections, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxConnections)},
+					{ArchiveTimeout, strconv.Itoa(pg.Spec.Parameters.ArchiveTimeoutSeconds) + "s"},
+					{TempFileLimit, strconv.Itoa(pg.Spec.Parameters.TempFileLimitKiloBytes)},
+					{TrackIOTiming, pg.Spec.Parameters.TrackIOTiming},
+					{StatementTimeout, strconv.Itoa(pg.Spec.Parameters.StatementTimeoutMillis) + "ms"},
+					{ClientMinMessages, pg.Spec.Parameters.ClientMinMessages},
+					{LogMinMessages, pg.Spec.Parameters.LogMinMessages},
+					{LogMinErrorStatement, pg.Spec.Parameters.LogMinErrorStatement},
+					{LogStatement, pg.Spec.Parameters.LogStatement},
+					{LogErrorVerbosity, strings.ToLower(pg.Spec.Parameters.LogErrorVerbosity)},
+					{SSLCiphers, pg.Spec.Parameters.SSLCiphers},
+					{SSLMinProtocolVersion, pg.Spec.Parameters.SSLMinProtocolVersion},
+					{WALWriterDelay, strconv.Itoa(pg.Spec.Parameters.WALWriterDelayMillis) + "ms"},
+					{SynchronousCommit, pg.Spec.Parameters.SynchronousCommit},
+					{MaxConnections, strconv.Itoa(pg.Spec.Parameters.MaxConnections)},
 					// SharedBuffers is not being set or updated.
 					// https://github.com/anynines/postgresql-operator/issues/75
 					// {SharedBuffers, "200MB"}, // 2024 is converted to 200MB
-					{MaxReplicationSlots, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxReplicationSlots)},
-					{MaxWALSenders, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxWALSenders)},
-					{MaxLocksPerTransaction, strconv.Itoa(*pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
+					{MaxReplicationSlots, strconv.Itoa(pg.Spec.Parameters.MaxReplicationSlots)},
+					{MaxWALSenders, strconv.Itoa(pg.Spec.Parameters.MaxWALSenders)},
+					{MaxLocksPerTransaction, strconv.Itoa(*pg.Spec.Parameters.MaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -309,7 +309,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					To(Succeed(), fmt.Sprintf("failed to get instance %s/%s",
 						instance.GetNamespace(), instance.GetName()))
 
-				pg, ok = newInstance.GetClientObject().(*v1alpha1.Postgresql)
+				pg, ok = newInstance.GetClientObject().(*v1beta3.Postgresql)
 				Expect(ok).To(BeTrue(),
 					"failed to cast object interface to PostgreSQL struct")
 
@@ -348,7 +348,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					// parameter in the table driven tests below for the sake
 					// of verbosity.
 					probeErr := client.CheckParameter(ctx, ArchiveTimeout,
-						strconv.Itoa(pg.Spec.PostgresConfiguration.ArchiveTimeoutSeconds)+"s")
+						strconv.Itoa(pg.Spec.Parameters.ArchiveTimeoutSeconds)+"s")
 
 					if probeErr != nil {
 						close(portForwardStopCh)
@@ -361,29 +361,29 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 			})
 
 			By("checking that the custom config is set correctly", func() {
-				var expectedConfig = []struct {
+				expectedConfig := []struct {
 					parameter, value string
 				}{
-					{ArchiveTimeout, strconv.Itoa(pg.Spec.PostgresConfiguration.ArchiveTimeoutSeconds) + "s"},
-					{TempFileLimit, strconv.Itoa(pg.Spec.PostgresConfiguration.TempFileLimitKiloBytes)},
-					{TrackIOTiming, pg.Spec.PostgresConfiguration.TrackIOTiming},
-					{StatementTimeout, strconv.Itoa(pg.Spec.PostgresConfiguration.StatementTimeoutMillis) + "ms"},
-					{ClientMinMessages, pg.Spec.PostgresConfiguration.ClientMinMessages},
-					{LogMinMessages, pg.Spec.PostgresConfiguration.LogMinMessages},
-					{LogMinErrorStatement, pg.Spec.PostgresConfiguration.LogMinErrorStatement},
-					{LogStatement, pg.Spec.PostgresConfiguration.LogStatement},
-					{LogErrorVerbosity, strings.ToLower(pg.Spec.PostgresConfiguration.LogErrorVerbosity)},
-					{SSLCiphers, pg.Spec.PostgresConfiguration.SSLCiphers},
-					{SSLMinProtocolVersion, pg.Spec.PostgresConfiguration.SSLMinProtocolVersion},
-					{WALWriterDelay, strconv.Itoa(pg.Spec.PostgresConfiguration.WALWriterDelayMillis) + "ms"},
-					{SynchronousCommit, pg.Spec.PostgresConfiguration.SynchronousCommit},
-					{MaxConnections, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxConnections)},
+					{ArchiveTimeout, strconv.Itoa(pg.Spec.Parameters.ArchiveTimeoutSeconds) + "s"},
+					{TempFileLimit, strconv.Itoa(pg.Spec.Parameters.TempFileLimitKiloBytes)},
+					{TrackIOTiming, pg.Spec.Parameters.TrackIOTiming},
+					{StatementTimeout, strconv.Itoa(pg.Spec.Parameters.StatementTimeoutMillis) + "ms"},
+					{ClientMinMessages, pg.Spec.Parameters.ClientMinMessages},
+					{LogMinMessages, pg.Spec.Parameters.LogMinMessages},
+					{LogMinErrorStatement, pg.Spec.Parameters.LogMinErrorStatement},
+					{LogStatement, pg.Spec.Parameters.LogStatement},
+					{LogErrorVerbosity, strings.ToLower(pg.Spec.Parameters.LogErrorVerbosity)},
+					{SSLCiphers, pg.Spec.Parameters.SSLCiphers},
+					{SSLMinProtocolVersion, pg.Spec.Parameters.SSLMinProtocolVersion},
+					{WALWriterDelay, strconv.Itoa(pg.Spec.Parameters.WALWriterDelayMillis) + "ms"},
+					{SynchronousCommit, pg.Spec.Parameters.SynchronousCommit},
+					{MaxConnections, strconv.Itoa(pg.Spec.Parameters.MaxConnections)},
 					// SharedBuffers is not being set or updated.
 					// https://github.com/anynines/postgresql-operator/issues/75
 					// {SharedBuffers, "200MB"}, // 2024 is converted to 200MB
-					{MaxReplicationSlots, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxReplicationSlots)},
-					{MaxWALSenders, strconv.Itoa(pg.Spec.PostgresConfiguration.MaxWALSenders)},
-					{MaxLocksPerTransaction, strconv.Itoa(*pg.Spec.PostgresConfiguration.MaxLocksPerTransaction)},
+					{MaxReplicationSlots, strconv.Itoa(pg.Spec.Parameters.MaxReplicationSlots)},
+					{MaxWALSenders, strconv.Itoa(pg.Spec.Parameters.MaxWALSenders)},
+					{MaxLocksPerTransaction, strconv.Itoa(*pg.Spec.Parameters.MaxLocksPerTransaction)},
 				}
 
 				for _, setting := range expectedConfig {
@@ -398,7 +398,6 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(Succeed(),
 						fmt.Sprintf("unable to check custom config is set correctly on update for %s/%s",
 							instance.GetNamespace(), instance.GetName()))
-
 				}
 			})
 
@@ -413,7 +412,8 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 						FieldSelector: fields.AndSelectors(
 							fields.OneTermEqualSelector("reason", "Updated"),
 							fields.OneTermEqualSelector("involvedObject.uid",
-								string(instance.GetUID())))})).To(Succeed(),
+								string(instance.GetUID()))),
+					})).To(Succeed(),
 						"failed to list events emitted for the config update of the DSI")
 
 					return len(events.Items) > 0
@@ -441,27 +441,27 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 	})
 })
 
-func setCustomPostgresConfig(pg *v1alpha1.Postgresql) {
+func setCustomPostgresConfig(pg *v1beta3.Postgresql) {
 	maxLocksPerTransaction := 120
 
-	pg.Spec.PostgresConfiguration.MaxConnections = 101
-	pg.Spec.PostgresConfiguration.MaxLocksPerTransaction = &maxLocksPerTransaction
+	pg.Spec.Parameters.MaxConnections = 101
+	pg.Spec.Parameters.MaxLocksPerTransaction = &maxLocksPerTransaction
 	// SharedBuffers is not being set or updated.
 	// https://github.com/anynines/postgresql-operator/issues/75
-	pg.Spec.PostgresConfiguration.SharedBuffers = 200
-	pg.Spec.PostgresConfiguration.MaxReplicationSlots = 11
-	pg.Spec.PostgresConfiguration.MaxWALSenders = 11
-	pg.Spec.PostgresConfiguration.StatementTimeoutMillis = 2147483647
-	pg.Spec.PostgresConfiguration.SSLCiphers = "high:medium:+3des:!anull"
-	pg.Spec.PostgresConfiguration.SSLMinProtocolVersion = "TLSv1.2"
-	pg.Spec.PostgresConfiguration.TempFileLimitKiloBytes = 0
-	pg.Spec.PostgresConfiguration.WALWriterDelayMillis = 201
-	pg.Spec.PostgresConfiguration.SynchronousCommit = "off"
-	pg.Spec.PostgresConfiguration.TrackIOTiming = "on"
-	pg.Spec.PostgresConfiguration.ArchiveTimeoutSeconds = 10
-	pg.Spec.PostgresConfiguration.ClientMinMessages = "warning"
-	pg.Spec.PostgresConfiguration.LogMinMessages = "notice"
-	pg.Spec.PostgresConfiguration.LogMinErrorStatement = "warning"
-	pg.Spec.PostgresConfiguration.LogStatement = "all"
-	pg.Spec.PostgresConfiguration.LogErrorVerbosity = "DEFAULT"
+	pg.Spec.Parameters.SharedBuffers = 200
+	pg.Spec.Parameters.MaxReplicationSlots = 11
+	pg.Spec.Parameters.MaxWALSenders = 11
+	pg.Spec.Parameters.StatementTimeoutMillis = 2147483647
+	pg.Spec.Parameters.SSLCiphers = "high:medium:+3des:!anull"
+	pg.Spec.Parameters.SSLMinProtocolVersion = "TLSv1.2"
+	pg.Spec.Parameters.TempFileLimitKiloBytes = 0
+	pg.Spec.Parameters.WALWriterDelayMillis = 201
+	pg.Spec.Parameters.SynchronousCommit = "off"
+	pg.Spec.Parameters.TrackIOTiming = "on"
+	pg.Spec.Parameters.ArchiveTimeoutSeconds = 10
+	pg.Spec.Parameters.ClientMinMessages = "warning"
+	pg.Spec.Parameters.LogMinMessages = "notice"
+	pg.Spec.Parameters.LogMinErrorStatement = "warning"
+	pg.Spec.Parameters.LogStatement = "all"
+	pg.Spec.Parameters.LogErrorVerbosity = "DEFAULT"
 }
