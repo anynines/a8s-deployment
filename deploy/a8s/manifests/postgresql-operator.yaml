@@ -1323,6 +1323,13 @@ spec:
           spec:
             description: PostgresqlSpec defines the desired state of Postgresql.
             properties:
+              enableReadOnlyService:
+                default: false
+                description: EnableReadOnlyService enables the creation of a read-only
+                  service. A read-only service is meant for read operations and allows
+                  for load-balancing across different PostgreSQL cluster members.
+                  By default this feature is disabled.
+                type: boolean
               extensions:
                 description: Extensions defines a list of PostgreSQL extensions which
                   should be installed. Installing means that the binaries and libraries
@@ -1537,6 +1544,18 @@ spec:
                     minimum: 1
                     type: integer
                 type: object
+              readOnlyTargetNodes:
+                default: replicas
+                description: ReadOnlyTargetNodes specifies the target PostgreSQL cluster
+                  members which the read-only service points to. "replicas" means
+                  that only the PostgreSQL cluster replicas are used for the read-only
+                  service. "all" means that the read-only service points to all PostgreSQL
+                  cluster members. By default this feature only points to the PostgreSQL
+                  cluster replicas.
+                enum:
+                - replicas
+                - all
+                type: string
               replicas:
                 default: 1
                 description: Replicas is the number of replicas of the data service
@@ -2887,7 +2906,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:ea647e0ab767ed1982b7b0e538702f146c15bc67
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:aba66fd53b5149bcb12cd49baf236b2aa2d87b9b
         livenessProbe:
           httpGet:
             path: /healthz
@@ -2980,14 +2999,14 @@ webhooks:
     service:
       name: postgresql-webhook-service
       namespace: a8s-system
-      path: /mutate-postgresql-anynines-com-v1alpha1-postgresql
+      path: /mutate-postgresql-anynines-com-v1beta3-postgresql
   failurePolicy: Fail
   name: mpostgresql.kb.io
   rules:
   - apiGroups:
     - postgresql.anynines.com
     apiVersions:
-    - v1alpha1
+    - v1beta3
     operations:
     - CREATE
     - UPDATE
@@ -3008,14 +3027,14 @@ webhooks:
     service:
       name: postgresql-webhook-service
       namespace: a8s-system
-      path: /validate-postgresql-anynines-com-v1alpha1-postgresql
+      path: /validate-postgresql-anynines-com-v1beta3-postgresql
   failurePolicy: Fail
   name: vpostgresql.kb.io
   rules:
   - apiGroups:
     - postgresql.anynines.com
     apiVersions:
-    - v1alpha1
+    - v1beta3
     operations:
     - CREATE
     - UPDATE
