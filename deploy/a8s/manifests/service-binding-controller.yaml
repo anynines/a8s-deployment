@@ -456,7 +456,7 @@ spec:
         - a8s-service-binding-controller
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:02734f2af395612fb27db2862d8ada2b52cf59db
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:88b03ca815b934aad31ad370973979d5d3fc48ef
         livenessProbe:
           httpGet:
             path: /healthz
