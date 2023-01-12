@@ -1,10 +1,11 @@
 apiVersion: v1
 data:
   backupAgentImage: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:781ca7b6e9bb4af66aeedb5046b50dc1c2b6c638
-  spiloImage: registry.opensource.zalan.do/acid/spilo-14:2.1-p6
-  extensionImageRegistry: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator/postgresql-extensions
   extensionCleanupImage: alpine:3.16.0
+  extensionImageRegistry: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator/postgresql-extensions
+  spiloImage: registry.opensource.zalan.do/acid/spilo-14:2.1-p6
 kind: ConfigMap
 metadata:
   name: postgresql-images
   namespace: a8s-system
+
