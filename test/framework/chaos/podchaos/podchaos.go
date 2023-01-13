@@ -12,8 +12,10 @@ import (
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type PodChaos chmv1alpha1.PodChaos
-type PodSelector = chmv1alpha1.PodSelector
+type (
+	PodChaos    chmv1alpha1.PodChaos
+	PodSelector = chmv1alpha1.PodSelector
+)
 
 const (
 	CRDName         string = "podchaos.chaos-mesh.org"
@@ -99,8 +101,8 @@ func (pc PodChaos) KubernetesObject() client.Object {
 
 // NewPodLabelSelector returns a new PodSelector configured using labels and provided options.
 func NewPodLabelSelector(labels map[string]string,
-	opts ...func(*PodSelector)) *PodSelector {
-
+	opts ...func(*PodSelector),
+) *PodSelector {
 	podSelector := &chmv1alpha1.PodSelector{
 		Selector: chmv1alpha1.PodSelectorSpec{
 			GenericSelectorSpec: chmv1alpha1.GenericSelectorSpec{
