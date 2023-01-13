@@ -12,6 +12,10 @@ automatically be recreated.
 
 ### Added
 
+* Add optional read-only service to the PostgreSQL-Operator. The read-only service can be used
+  to distribute the load of read operations across the PostgreSQL instance. It can be enabled via
+  the optional `enableReadOnlyService` field on the Custom Resource.
+
 ### Updated
 
 * Deletion of PostgreSQL instance pods now runs in parallel, improving the deletion time in high
@@ -29,6 +33,7 @@ automatically be recreated.
   `parameters` in API Version `v1beta3`.
 - backup\_agent has been updated, and is now using a smaller image. The new version of the
   backup\_agent logs to stderr instead of the previously used stdout.
+- Defaulting webhooks have been moved to API version `v1beta3`.
 
 
 ## [0.2.0] - 2022-11-08
