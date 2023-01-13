@@ -313,28 +313,15 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				sort.Slice(instanceEvents.Items, func(i, j int) bool {
 					return instanceEvents.Items[i].Message <= instanceEvents.Items[j].Message
 				})
-				masterSvcEvent := instanceEvents.Items[0]
-				roleBindingEvent := instanceEvents.Items[1]
-				adminSecretEvent := instanceEvents.Items[2]
-				standbySecretsEvent := instanceEvents.Items[3]
+
+				log.Printf("\n\n\n %+v \n\n\n", instanceEvents)
+
+				roleBindingEvent := instanceEvents.Items[0]
+				adminSecretEvent := instanceEvents.Items[1]
+				standbySecretsEvent := instanceEvents.Items[2]
+				masterSvcEvent := instanceEvents.Items[3]
 				svcAccountEvent := instanceEvents.Items[4]
 				ssetEvent := instanceEvents.Items[5]
-
-				By("emitting an event for the creation of the master service", func() {
-					Expect(masterSvcEvent.Message).To(Equal("Successfully created master service"),
-						"wrong event message")
-					Expect(masterSvcEvent.Type).To(Equal(corev1.EventTypeNormal),
-						"wrong event type")
-					Expect(masterSvcEvent.Reason).To(Equal("Created"), "wrong event reason")
-					Expect(masterSvcEvent.Count).To(Equal(int32(1)), "wrong event count")
-					Expect(masterSvcEvent.Source.Component).To(Equal("postgresql-controller"),
-						"wrong event source.component")
-					Expect(masterSvcEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
-						"wrong event involvedObject.kind")
-					Expect(masterSvcEvent.InvolvedObject.APIVersion).
-						To(Equal("postgresql.anynines.com/v1beta3"),
-							"wrong event involvedObject.apiVersion")
-				})
 
 				By("emitting an event for the creation of the roleBinding", func() {
 					Expect(roleBindingEvent.Message).To(Equal("Successfully created roleBinding"),
@@ -388,6 +375,24 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(standbySecretsEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(standbySecretsEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1beta3"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the master service", func() {
+					Expect(masterSvcEvent.Message).To(Equal(fmt.Sprintf("Successfully created service: %s/%s-master",
+						pg.Namespace,
+						pg.Name)),
+						"wrong event message")
+					Expect(masterSvcEvent.Type).To(Equal(corev1.EventTypeNormal),
+						"wrong event type")
+					Expect(masterSvcEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(masterSvcEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(masterSvcEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(masterSvcEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(masterSvcEvent.InvolvedObject.APIVersion).
 						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
