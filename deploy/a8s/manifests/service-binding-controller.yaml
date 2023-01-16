@@ -2,23 +2,22 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
     cert-manager.io/inject-ca-from: a8s-system/service-binding-serving-cert
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.4.1
   name: servicebindings.servicebindings.anynines.com
 spec:
   conversion:
-      strategy: Webhook
-      webhook:
-        clientConfig:
-          service:
-            name: service-binding-webhook-service
-            namespace: a8s-system
-            path: /convert
-            port: 443
-        conversionReviewVersions:
-        - v1
-        - v1beta1
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        service:
+          name: service-binding-webhook-service
+          namespace: a8s-system
+          path: /convert
+          port: 443
+      conversionReviewVersions:
+      - v1
+      - v1beta1
   group: servicebindings.anynines.com
   names:
     categories:
@@ -161,7 +160,7 @@ spec:
             - instance
             type: object
           status:
-            description: ServiceBindingStatus defines the observed state of the ServiceBinding
+            description: ServiceBindingStatus defines the observed state of the ServiceBinding.
             properties:
               error:
                 description: Error is a message explaining why the service binding
@@ -456,7 +455,7 @@ spec:
         - a8s-service-binding-controller
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:73f0dd244c395b0d972de98d4215ea1aee673e09
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:6c3464e51ca7dbfdcd7f5f27d6dd36e673d4a31d
         livenessProbe:
           httpGet:
             path: /healthz
@@ -534,3 +533,4 @@ metadata:
   namespace: a8s-system
 spec:
   selfSigned: {}
+
