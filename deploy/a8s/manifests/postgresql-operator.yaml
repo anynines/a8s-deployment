@@ -4,7 +4,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/postgresql-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: postgresqls.postgresql.anynines.com
 spec:
   conversion:
@@ -287,6 +286,24 @@ spec:
                   one at a time, which could potentially lead to downtime if something
                   goes wrong during the update.
                 properties:
+                  claims:
+                    description: "Claims lists the names of resources, defined in
+                      spec.resourceClaims, that are used by this container. \n This
+                      is an alpha field and requires enabling the DynamicResourceAllocation
+                      feature gate. \n This field is immutable."
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: Name must match the name of one entry in pod.spec.resourceClaims
+                            of the Pod where this field is used. It makes that resource
+                            available inside a container.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: set
                   limits:
                     additionalProperties:
                       anyOf:
@@ -1328,7 +1345,8 @@ spec:
                 description: EnableReadOnlyService enables the creation of a read-only
                   service. A read-only service is meant for read operations and allows
                   for load-balancing across different PostgreSQL cluster members.
-                  By default this feature is disabled.
+                  Stale reads are possible when reading from this service. By default
+                  this feature is disabled.
                 type: boolean
               extensions:
                 description: Extensions defines a list of PostgreSQL extensions which
@@ -1581,6 +1599,24 @@ spec:
                   one at a time, which could potentially lead to downtime if something
                   goes wrong during the update.
                 properties:
+                  claims:
+                    description: "Claims lists the names of resources, defined in
+                      spec.resourceClaims, that are used by this container. \n This
+                      is an alpha field and requires enabling the DynamicResourceAllocation
+                      feature gate. \n This field is immutable."
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: Name must match the name of one entry in pod.spec.resourceClaims
+                            of the Pod where this field is used. It makes that resource
+                            available inside a container.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: set
                   limits:
                     additionalProperties:
                       anyOf:
@@ -2904,9 +2940,10 @@ spec:
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
+        - test
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:aba66fd53b5149bcb12cd49baf236b2aa2d87b9b
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:6c5714de0e18e0cfe1983fed3ed7a86205aedff4
         livenessProbe:
           httpGet:
             path: /healthz
@@ -2961,7 +2998,7 @@ spec:
           secretName: pg-webhook-server-cert
       - configMap:
           defaultMode: 420
-          name: postgresql-images
+          name: test
         name: image-config
 ---
 apiVersion: cert-manager.io/v1
@@ -3041,3 +3078,4 @@ webhooks:
     resources:
     - postgresqls
   sideEffects: None
+
