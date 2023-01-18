@@ -1,6 +1,6 @@
 # a8s-deployment
 
-a8s is a Kubernetes-native platform for lifecycle automation of data services.
+a8s is a Kubernetes-native platform for lifecycle automation of data services. Test
 
 This repo contains:
 
