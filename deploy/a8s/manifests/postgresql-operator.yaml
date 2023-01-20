@@ -2880,6 +2880,7 @@ metadata:
     app.kubernetes.io/component: controller-manager
     app.kubernetes.io/name: postgresql-controller-manager
     app.kubernetes.io/part-of: a8s-postgres
+    mol.test/is-test: "true"
   name: postgresql-controller-manager
   namespace: a8s-system
 spec:
