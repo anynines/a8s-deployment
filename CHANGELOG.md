@@ -28,6 +28,8 @@ automatically be recreated.
 
 ### Changed
 
+- Protect serviceBinding secret against accidental or unwanted updates by
+  making the secret immutable.
 - **breaking change** postgresql-operator uses an emptyDir instead of a persistent volume.
 - **breaking change**: The field `postgresConfiguration` has been renamed to
   `parameters` in API Version `v1beta3`.
