@@ -2887,7 +2887,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:be4176ee1696d398ebdd5e6743c3801195d216c7
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:b8f6b94966ab87b05f36988493cfe7b663b3a563
         livenessProbe:
           httpGet:
             path: /healthz
