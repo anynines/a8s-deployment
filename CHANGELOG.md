@@ -12,6 +12,8 @@ automatically be recreated.
 
 ### Added
 
+* Protect serviceBinding secret against accidental or unwanted deletion by adding a finalizer.
+
 * Add optional read-only service to the PostgreSQL-Operator. The read-only service can be used
   to distribute the load of read operations across the PostgreSQL instance. It can be enabled via
   the optional `enableReadOnlyService` field on the Custom Resource.
