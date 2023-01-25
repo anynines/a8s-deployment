@@ -2943,7 +2943,7 @@ spec:
         - test
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:1d6a66716c47a986ee7b2235a15d4630a851c46c
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:86c1e10ad7b93c1447c7b84cccec74d47c320200
         livenessProbe:
           httpGet:
             path: /healthz
