@@ -4,7 +4,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/postgresql-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: postgresqls.postgresql.anynines.com
 spec:
   conversion:
