@@ -49,7 +49,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `serviceInstance` _[ServiceInstanceRef](#serviceinstanceref)_ | ServiceInstance identifies the Data Service Instance to backup. |
-| `maxRetries` _string_ | How many times the backup will be retried before aborting. Allowed values: any positive integer, or "Infinite" |
+| `maxRetries` _string_ | How many test times the backup will be retried before aborting. Allowed values: any positive integer, or "Infinite" |
 
 #### BackupStatus
 
