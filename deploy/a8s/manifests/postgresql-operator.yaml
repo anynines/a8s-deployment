@@ -4,7 +4,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/postgresql-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: postgresqls.postgresql.anynines.com
 spec:
   conversion:
@@ -149,6 +148,7 @@ spec:
                       connections to the database server. Updating MaxConnections
                       will trigger a restart of the PostgreSQL instance.
                     maximum: 262143
+                    minimum: 1
                     type: integer
                   maxLocksPerTransaction:
                     description: MaxLocksPerTransaction sets the maximum number of
@@ -173,6 +173,8 @@ spec:
                     description: MaxReplicationSlots specifies the maximum number
                       of replication slots that the server can support. Updating MaxReplicationSlots
                       will trigger a restart of the PostgreSQL instance.
+                    maximum: 262143
+                    minimum: 0
                     type: integer
                   maxWALSenders:
                     default: 10
@@ -185,6 +187,8 @@ spec:
                       should be set slightly higher than the maximum number of expected
                       clients so disconnected clients can immediately reconnect. Updating
                       MaxWALSenders will trigger a restart of the PostgreSQL instance.
+                    maximum: 262143
+                    minimum: 0
                     type: integer
                   sharedBuffers:
                     default: 1024
@@ -195,6 +199,8 @@ spec:
                       least 128 kilobytes. However, settings significantly higher
                       than the minimum are usually needed for good performance. Updating
                       SharedBuffers will trigger a restart of the PostgreSQL instance.
+                    maximum: 1073741823
+                    minimum: 16
                     type: integer
                   sslCiphers:
                     default: HIGH:MEDIUM:+3DES:!aNULL
@@ -220,6 +226,7 @@ spec:
                       out will also be logged. A value of zero (the default) turns
                       this off.
                     maximum: 2147483647
+                    minimum: 0
                     type: integer
                   synchronousCommit:
                     default: "on"
@@ -287,6 +294,26 @@ spec:
                   one at a time, which could potentially lead to downtime if something
                   goes wrong during the update.
                 properties:
+                  claims:
+                    description: "Claims lists the names of resources, defined in
+                      spec.resourceClaims, that are used by this container. \n This
+                      is an alpha field and requires enabling the DynamicResourceAllocation
+                      feature gate. \n This field is immutable."
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: Name must match the name of one entry in pod.spec.resourceClaims
+                            of the Pod where this field is used. It makes that resource
+                            available inside a container.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
                   limits:
                     additionalProperties:
                       anyOf:
@@ -319,7 +346,7 @@ spec:
                   subfields of SchedulingConstraints allow you to express constraints
                   such as "Pods of this Postgresql instance MUST be scheduled to different
                   availability zones", or "Pods of this Postgresql instance SHOULD
-                  preferrably (but not mandatorily) be scheduled to nodes that have
+                  preferably (but not mandatorily) be scheduled to nodes that have
                   a SSD", and many more. As a warning, the subfields of SchedulingConstraints
                   can interfere with each other, so when you set one of them you should
                   consider how it will interact with the values that you set for other
@@ -1328,7 +1355,8 @@ spec:
                 description: EnableReadOnlyService enables the creation of a read-only
                   service. A read-only service is meant for read operations and allows
                   for load-balancing across different PostgreSQL cluster members.
-                  By default this feature is disabled.
+                  Stale reads are possible when reading from this service. By default
+                  this feature is disabled.
                 type: boolean
               extensions:
                 description: Extensions defines a list of PostgreSQL extensions which
@@ -1431,6 +1459,7 @@ spec:
                       connections to the database server. Updating MaxConnections
                       will trigger a restart of the PostgreSQL instance.
                     maximum: 262143
+                    minimum: 1
                     type: integer
                   maxLocksPerTransaction:
                     description: MaxLocksPerTransaction sets the maximum number of
@@ -1455,6 +1484,8 @@ spec:
                     description: MaxReplicationSlots specifies the maximum number
                       of replication slots that the server can support. Updating MaxReplicationSlots
                       will trigger a restart of the PostgreSQL instance.
+                    maximum: 262143
+                    minimum: 0
                     type: integer
                   maxWALSenders:
                     default: 10
@@ -1467,6 +1498,8 @@ spec:
                       should be set slightly higher than the maximum number of expected
                       clients so disconnected clients can immediately reconnect. Updating
                       MaxWALSenders will trigger a restart of the PostgreSQL instance.
+                    maximum: 262143
+                    minimum: 0
                     type: integer
                   sharedBuffers:
                     default: 1024
@@ -1477,6 +1510,8 @@ spec:
                       least 128 kilobytes. However, settings significantly higher
                       than the minimum are usually needed for good performance. Updating
                       SharedBuffers will trigger a restart of the PostgreSQL instance.
+                    maximum: 1073741823
+                    minimum: 16
                     type: integer
                   sslCiphers:
                     default: HIGH:MEDIUM:+3DES:!aNULL
@@ -1502,6 +1537,7 @@ spec:
                       out will also be logged. A value of zero (the default) turns
                       this off.
                     maximum: 2147483647
+                    minimum: 0
                     type: integer
                   synchronousCommit:
                     default: "on"
@@ -1581,6 +1617,26 @@ spec:
                   one at a time, which could potentially lead to downtime if something
                   goes wrong during the update.
                 properties:
+                  claims:
+                    description: "Claims lists the names of resources, defined in
+                      spec.resourceClaims, that are used by this container. \n This
+                      is an alpha field and requires enabling the DynamicResourceAllocation
+                      feature gate. \n This field is immutable."
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: Name must match the name of one entry in pod.spec.resourceClaims
+                            of the Pod where this field is used. It makes that resource
+                            available inside a container.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
                   limits:
                     additionalProperties:
                       anyOf:
@@ -2906,7 +2962,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:aba66fd53b5149bcb12cd49baf236b2aa2d87b9b
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:86c1e10ad7b93c1447c7b84cccec74d47c320200
         livenessProbe:
           httpGet:
             path: /healthz
@@ -3041,3 +3097,4 @@ webhooks:
     resources:
     - postgresqls
   sideEffects: None
+
