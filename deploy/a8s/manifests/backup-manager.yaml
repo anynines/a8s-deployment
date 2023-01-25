@@ -4,7 +4,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: backups.backups.anynines.com
 spec:
   conversion:
@@ -358,7 +357,6 @@ metadata:
   annotations:
     cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
-  creationTimestamp: null
   name: restores.backups.anynines.com
 spec:
   conversion:
@@ -996,7 +994,7 @@ spec:
               fieldPath: metadata.namespace
         - name: BACKUP_CREDENTIAL_PATH
           value: /etc/backup-store-secrets
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:878e5ef789335feada36e27dd40733e281536aa2
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:9a2a16e624c9ea3757de643038c5b09d17c26538
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1081,3 +1079,4 @@ metadata:
   namespace: a8s-system
 spec:
   selfSigned: {}
+
