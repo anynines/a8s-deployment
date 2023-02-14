@@ -39,8 +39,7 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
-	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
-		framework.ConfigToVars(config)
+	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace = framework.ConfigToVars(config)
 
 	Expect(strings.ToLower(dataservice) == "postgresql").To(BeTrue(),
 		"This test suite only supports PostgreSQL")
@@ -58,7 +57,6 @@ var _ = BeforeSuite(func() {
 
 	Expect(namespace.CreateIfNotExists(ctx, testingNamespace, k8sClient)).
 		To(Succeed(), "failed to create testing namespace")
-
 })
 
 var _ = AfterSuite(func() {

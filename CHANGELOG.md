@@ -17,6 +17,10 @@ automatically be recreated.
 * Add optional read-only service to the PostgreSQL-Operator. The read-only service can be used
   to distribute the load of read operations across the PostgreSQL instance. It can be enabled via
   the optional `enableReadOnlyService` field on the Custom Resource.
+* Add field spec.resources.claims to the PostgreSQL CRD to allow configuring
+  dynamic resources for the PostgreSQL instance Pods. This feature is in alpha,
+  is implemented only on K8s clusters with version 1.26 or higher and the
+  feature gate DynamicResourceAllocation enabled.
 
 ### Updated
 
@@ -25,6 +29,27 @@ automatically be recreated.
 * In the Postgresql CRD, the description of the `namespaceSelector` field (which is one of the many
   fields that control pod affinity and anti-affinity) has been updated to reflect the fact that the
   field has graduated from beta to stable (in Kubernetes v1.24).
+* **Breaking change:** For both v1alpha1 and v1beta3 versions of the PostgreSQL
+  CRD:
+  * spec.parameters.maxConnections has a minimum value of 1 and a maximum value
+    of 262143 enforced.
+  * spec.parameters.maxReplicationSlots has a minimum value of 0 and a maximum
+    value of 262143 enforced.
+  * spec.parameters.maxWALSenders has a minimum value of 0 and a maximum value
+    of 262143 enforced.
+  * spec.parameters.sharedBuffers has a minimum value of 16 and a maximum value
+    1073741823 of enforced.
+  * spec.parameters.statementTimeoutMillis has a minimum value of 0 and a
+    maximum 2147483647 value  of enforced.
+
+  Attempts to create a PostgreSQL API object with one or more values not
+  compliant with the min and max listed above will be rejected with an error by
+  the K8s API server.
+* Make the secrets that store the credentials of the admin and replication roles
+  of each PostgreSQL instance immutable. Preventing changes to credentials
+  protects against accidental (or unwanted) updates that could cause service
+  outages and improves performance by significantly reducing load on
+  kube-apiserver for clusters that make extensive use of secrets.
 
 ### Fixed
 

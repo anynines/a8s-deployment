@@ -24,7 +24,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | `backups.anynines.com/v1alpha1`
 | `kind` _string_ | `Backup`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[BackupSpec](#backupspec)_ |  |
 | `status` _[BackupStatus](#backupstatus)_ |  |
 
@@ -36,7 +36,7 @@ BackupList contains a list of Backup
 | --- | --- |
 | `apiVersion` _string_ | `backups.anynines.com/v1alpha1`
 | `kind` _string_ | `BackupList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `items` _[Backup](#backup) array_ |  |
 
 #### BackupSpec
@@ -60,8 +60,8 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Backup can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "UploadedToS3", "Terminating". |
-| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Backup can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "UploadedToS3", "Terminating". |
+| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
 | `retries` _integer_ | Number of times the backup has been retried |
 | `podUsedNamespacedName` _string_ | PodUsedNamespacedName is the namespaced name of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedID` (below) via a PodRef. |
 | `podUsedUID` _UID_ | PodUsedUID is the UID of the DSI Pod to which the backup request was sent. TODO: Represent this jointly with `PodUsedNamespacedName` (above) via a PodRef. |
@@ -91,7 +91,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | `backups.anynines.com/v1alpha1`
 | `kind` _string_ | `Restore`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[RestoreSpec](#restorespec)_ |  |
 | `status` _[RestoreStatus](#restorestatus)_ |  |
 
@@ -103,7 +103,7 @@ RestoreList contains a list of Restore.
 | --- | --- |
 | `apiVersion` _string_ | `backups.anynines.com/v1alpha1`
 | `kind` _string_ | `RestoreList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `items` _[Restore](#restore) array_ |  |
 
 #### RestoreSpec
@@ -127,8 +127,8 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
-| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Restore can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "Terminating". |
+| `lastObservationTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#time-v1-meta)_ | LastObservationTime is the timestamp of the last time the Condition was observed to be true. |
+| `conditions` _[Condition](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#condition-v1-meta) array_ | Conditions include a set of not mutually exclusive states the Restore can be in, as well as the last observed time stamp for these conditions. They include "Ready", "InProgress", "Terminating". |
 | `podToPoll` _[PodRef](#podref)_ | The Pod to poll to learn the status of the Restore, if the restore is in Progress. |
 | `restoreID` _string_ | RestoreID is the ID of the Restore; clients can use this to poll the status of the Restore at the Pod identified by `PodToHit`. |
 

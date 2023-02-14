@@ -48,7 +48,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | `servicebindings.anynines.com/v1alpha1`
 | `kind` _string_ | `ServiceBinding`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[ServiceBindingSpec](#servicebindingspec)_ |  |
 | `status` _[ServiceBindingStatus](#servicebindingstatus)_ |  |
 
@@ -60,7 +60,7 @@ ServiceBindingList contains a list of ServiceBinding
 | --- | --- |
 | `apiVersion` _string_ | `servicebindings.anynines.com/v1alpha1`
 | `kind` _string_ | `ServiceBindingList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `items` _[ServiceBinding](#servicebinding) array_ |  |
 
 #### ServiceBindingSpec
