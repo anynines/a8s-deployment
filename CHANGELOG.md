@@ -51,6 +51,10 @@ automatically be recreated.
   protects against accidental (or unwanted) updates that could cause service
   outages and improves performance by significantly reducing load on
   kube-apiserver for clusters that make extensive use of secrets.
+* Make service binding secrets immutable. Preventing changes to credentials
+  protects against accidental (or unwanted) updates that could cause service
+  outages and improves performance by significantly reducing load on
+  kube-apiserver for clusters that make extensive use of secrets.
 
 ### Fixed
 
