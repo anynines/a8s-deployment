@@ -6,14 +6,15 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Migration Instructions
-If you use the extensions feature, delete the stateful set objects (**not the PostgreSQL objects**)
+* If you use the extensions feature, delete the stateful set objects (**not the PostgreSQL objects**)
 for instances that use extensions. Your data will be preserved, and the stateful sets will
 automatically be recreated.
+* Remove old finalizer `postgresql.operator.a8s.anynines.com` from all PostgreSQL objects. 
 
 ### Added
 
+* Protect PostgreSQL secrets against accidental or unwanted deletion by adding a finalizer.
 * Protect serviceBinding secret against accidental or unwanted deletion by adding a finalizer.
-
 * Add optional read-only service to the PostgreSQL-Operator. The read-only service can be used
   to distribute the load of read operations across the PostgreSQL instance. It can be enabled via
   the optional `enableReadOnlyService` field on the Custom Resource.
@@ -55,6 +56,8 @@ automatically be recreated.
 
 ### Changed
 
+- Postgresql-controllers finalizer has been updated from `postgresql.operator.a8s.anynines.com`
+  to `a8s.anynines.com/postgresql.operator`.
 - **breaking change** postgresql-operator uses an emptyDir instead of a persistent volume.
 - **breaking change**: The field `postgresConfiguration` has been renamed to
   `parameters` in API Version `v1beta3`.
