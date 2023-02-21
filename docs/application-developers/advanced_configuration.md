@@ -20,7 +20,7 @@ resource and/or make PostgreSQL instances more resilient against failures by
 setting up highly available instances. In general, these settings are exposed
 through the `spec.schedulingConstraints` field for example in the `Postgresql`
 objects (see [API
-Documentation](/docs/application-developers/api-documentation/api_reference.md#postgresqlschedulingconstraints)). 
+Documentation](/docs/application-developers/api-documentation/postgresql-operator/v1beta3.md#postgresqlschedulingconstraints)).
 
 Subfields of `schedulingConstraints` allow you to configure
 [tolerations][taints-and-tolerations], [node

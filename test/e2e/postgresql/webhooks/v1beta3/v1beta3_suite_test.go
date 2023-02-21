@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -15,10 +16,15 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework"
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/namespace"
+	pgv1alpha1 "github.com/anynines/postgresql-operator/api/v1alpha1"
 	pgv1beta3 "github.com/anynines/postgresql-operator/api/v1beta3"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/utils/pointer"
 	runtimeClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -1051,6 +1057,557 @@ var _ = Describe("Defaulting webhook", func() {
 	})
 })
 
+var _ = Describe("Conversion webhook", func() {
+	var (
+		v1alpha1Client runtimeClient.Client
+		v1beta3Client  runtimeClient.Client
+
+		metav1alpha1 = metav1.TypeMeta{
+			APIVersion: pgv1alpha1.GroupVersion.String(),
+		}
+	)
+
+	Context("v1beta3 to v1alpha1", func() {
+		BeforeEach(func() {
+			// Create Kubernetes client for interacting with the Kubernetes API
+			cfg, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+			Expect(err).To(BeNil(), "unable to build config from kubeconfig path")
+
+			s1 := runtime.NewScheme()
+			pgv1alpha1.AddToScheme(s1)
+
+			s2 := runtime.NewScheme()
+			pgv1beta3.AddToScheme(s2)
+
+			v1alpha1Client, err = runtimeClient.New(cfg, runtimeClient.Options{Scheme: s1})
+			Expect(err).To(BeNil(), "unable to create new Kubernetes client for test")
+
+			v1beta3Client, err = runtimeClient.New(cfg, runtimeClient.Options{Scheme: s2})
+			Expect(err).To(BeNil(), "unable to create new Kubernetes client for test")
+		})
+
+		Context("Conversion from v1beta3 to v1alpha1 during create request", func() {
+			It("converts a Postgresql resource without labels", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-1"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with labels", func() {
+				labels := map[string]string{
+					"allowed-label-1": "val1",
+					"allowed-label-2": "val2",
+				}
+				pgV1beta3 := newDSI(withName("test-conversion-2"),
+					withLabels(labels))
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with extensions", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-3"),
+					withExtensions("MobilityDB"))
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with custom configuration", func() {
+				maxLocksPerTransaction := 150
+				customConfig := pgv1beta3.PostgresqlParameters{
+					MaxLocksPerTransaction: &maxLocksPerTransaction,
+				}
+
+				pgV1beta3 := newDSI(withName("test-conversion-4"),
+					withCustomConfiguration(customConfig))
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with custom storage size", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-5"),
+					withStorageSize("1.5Gi"))
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with custom resource requirements", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-6"),
+					withCPURequest("1"),
+					withCPULimit("1"),
+					withMemoryRequest("1Gi"),
+					withMemoryLimit("1Gi"),
+				)
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with custom replicas", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-7"),
+					withReplicas(2),
+				)
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("converts a Postgresql resource with scheduling constraints", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-8"))
+
+				pgV1beta3.Spec.SchedulingConstraints = &pgv1beta3.PostgresqlSchedulingConstraints{
+					Affinity: &corev1.Affinity{
+						PodAntiAffinity: &corev1.PodAntiAffinity{
+							PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
+								{
+									PodAffinityTerm: corev1.PodAffinityTerm{
+										LabelSelector: &metav1.LabelSelector{
+											MatchLabels: map[string]string{
+												"app": "dummy",
+											},
+										},
+									},
+									Weight: 1,
+								},
+							},
+						},
+					},
+				}
+
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+		})
+
+		Context("Conversion from v1beta3 to v1alpha1 during update request", func() {
+			It("updates labels of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-9"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update the labels from empty to 2 labels
+					pgV1beta3.Labels = map[string]string{
+						"allowed-label-1": "val1",
+						"allowed-label-2": "val2",
+					}
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("updates extensions of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-10"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update the extensions from empty to 1 extension
+					pgV1beta3.Spec.Extensions = []string{
+						"MobilityDB",
+					}
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("updates custom configuration of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-11"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update the postgresql configuration from default to custom value
+					maxLocksPerTransaction := 150
+					pgV1beta3.Spec.Parameters = pgv1beta3.PostgresqlParameters{
+						MaxLocksPerTransaction: &maxLocksPerTransaction,
+					}
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("updates volume size of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-12"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update the volume size from 1Gi to 1.5Gi
+					pgV1beta3.Spec.VolumeSize = resource.MustParse("1.5Gi")
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("updates resource requirement of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-13"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update resources from the default value to 1
+					pgV1beta3.Spec.Resources = &corev1.ResourceRequirements{
+						Limits: map[corev1.ResourceName]resource.Quantity{
+							corev1.ResourceCPU:    resource.MustParse("1"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+						Requests: map[corev1.ResourceName]resource.Quantity{
+							corev1.ResourceCPU:    resource.MustParse("1"),
+							corev1.ResourceMemory: resource.MustParse("1Gi"),
+						},
+					}
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("updates replicas of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-14"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update replicas from 1 to 2
+					pgV1beta3.Spec.Replicas = pointer.Int32Ptr(2)
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+
+			It("updates scheduling constraints of a Postgresql resource", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-15"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() error {
+					var currV1beta3 pgv1beta3.Postgresql
+					if err := v1beta3Client.Get(ctx, types.NamespacedName{
+						Namespace: pgV1beta3.GetNamespace(),
+						Name:      pgV1beta3.GetName(),
+					}, &currV1beta3,
+					); err != nil {
+						return err
+					}
+
+					pgV1beta3 = currV1beta3.DeepCopy()
+
+					// Update scheduling constraints from empty to some value
+					pgV1beta3.Spec.SchedulingConstraints = &pgv1beta3.PostgresqlSchedulingConstraints{
+						Affinity: &corev1.Affinity{
+							PodAntiAffinity: &corev1.PodAntiAffinity{
+								PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
+									{
+										PodAffinityTerm: corev1.PodAffinityTerm{
+											LabelSelector: &metav1.LabelSelector{
+												MatchLabels: map[string]string{
+													"app": "dummy",
+												},
+											},
+										},
+										Weight: 1,
+									},
+								},
+							},
+						},
+					}
+
+					return v1beta3Client.Update(ctx, pgV1beta3)
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+
+				cmpV1beta3V1alpha1(*pgV1beta3, pgV1alpha1)
+			})
+		})
+
+		Context("Conversion webhook resource deletion", func() {
+			It("deletes v1alpha1 when v1beta3 is deleted", func() {
+				pgV1beta3 := newDSI(withName("test-conversion-16"))
+				err := v1beta3Client.Create(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				pgV1alpha1 := pgv1alpha1.Postgresql{}
+				err = v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				err = v1beta3Client.Delete(ctx, pgV1beta3)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = v1alpha1Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, &pgV1alpha1, &runtimeClient.GetOptions{
+					Raw: &metav1.GetOptions{
+						TypeMeta: metav1alpha1,
+					},
+				})
+				Expect(err.Error()).To(ContainSubstring("not found"),
+					"error message doesn't mention 'not found' error")
+
+				err = v1beta3Client.Get(ctx, types.NamespacedName{
+					Namespace: pgV1beta3.GetNamespace(),
+					Name:      pgV1beta3.GetName(),
+				}, pgV1beta3)
+				Expect(err.Error()).To(ContainSubstring("not found"),
+					"error message doesn't mention 'not found' error")
+			})
+		})
+	})
+})
+
 func withCustomConfiguration(config pgv1beta3.PostgresqlParameters) func(*pgv1beta3.Postgresql) {
 	return func(dsi *pgv1beta3.Postgresql) {
 		dsi.Spec.Parameters = config
@@ -1081,6 +1638,46 @@ func newDSI(opts ...func(*pgv1beta3.Postgresql)) *pgv1beta3.Postgresql {
 		applyOption(dsi)
 	}
 	return dsi
+}
+
+func withCPURequest(cpu string) func(*pgv1beta3.Postgresql) {
+	return func(pg *pgv1beta3.Postgresql) {
+		initResourcesStructs(pg)
+		pg.Spec.Resources.Requests["cpu"] = resource.MustParse(cpu)
+	}
+}
+
+func withCPULimit(cpu string) func(*pgv1beta3.Postgresql) {
+	return func(pg *pgv1beta3.Postgresql) {
+		initResourcesStructs(pg)
+		pg.Spec.Resources.Limits["cpu"] = resource.MustParse(cpu)
+	}
+}
+
+func withMemoryRequest(mem string) func(*pgv1beta3.Postgresql) {
+	return func(pg *pgv1beta3.Postgresql) {
+		initResourcesStructs(pg)
+		pg.Spec.Resources.Requests["memory"] = resource.MustParse(mem)
+	}
+}
+
+func withMemoryLimit(mem string) func(*pgv1beta3.Postgresql) {
+	return func(pg *pgv1beta3.Postgresql) {
+		initResourcesStructs(pg)
+		pg.Spec.Resources.Limits["memory"] = resource.MustParse(mem)
+	}
+}
+
+func initResourcesStructs(pg *pgv1beta3.Postgresql) {
+	if pg.Spec.Resources == nil {
+		pg.Spec.Resources = &corev1.ResourceRequirements{}
+	}
+	if pg.Spec.Resources.Requests == nil {
+		pg.Spec.Resources.Requests = corev1.ResourceList{}
+	}
+	if pg.Spec.Resources.Limits == nil {
+		pg.Spec.Resources.Limits = corev1.ResourceList{}
+	}
 }
 
 func withName(name string) func(*pgv1beta3.Postgresql) {
@@ -1145,3 +1742,40 @@ var _ = AfterSuite(func() {
 		To(Succeed(), "failed to delete testing namespace")
 	cancel()
 })
+
+// custom comparison of a Postgresql of api version v1beta3 and v1alpha1
+func cmpV1beta3V1alpha1(a pgv1beta3.Postgresql, b pgv1alpha1.Postgresql) {
+	Expect(a.Name).To(Equal(b.Name), "names of Postgresql objects differ")
+	Expect(a.Namespace).To(Equal(b.Namespace),
+		"namespace of Postgresql objects differ")
+
+	Expect(a.Labels).To(Equal(b.Labels), "labels of Postgresql objects differ")
+
+	Expect(a.Spec.Replicas).To(Equal(b.Spec.Replicas),
+		"replicas of Postgresql objects differ")
+
+	Expect(cmp.Diff(a.Spec.Resources, b.Spec.Resources)).To(Equal(""),
+		"resources of Postgresql objects differ")
+	Expect(cmp.Diff(a.Spec.Extensions, b.Spec.Extensions)).To(Equal(""),
+		"extensions of Postgresql objects differ")
+
+	if !(a.Spec.SchedulingConstraints == nil &&
+		b.Spec.SchedulingConstraints == nil) {
+
+		Expect(cmp.Diff(a.Spec.SchedulingConstraints.Affinity,
+			b.Spec.SchedulingConstraints.Affinity)).To(Equal(""),
+			"SchedulingConstraints.Affinity of Postgresql objects differ")
+		Expect(cmp.Diff(a.Spec.SchedulingConstraints.Tolerations,
+			b.Spec.SchedulingConstraints.Tolerations)).To(Equal(""),
+			"SchedulingConstraints.Tolerations of Postgresql objects differ")
+	}
+
+	Expect(cmp.Diff(a.Spec.Version, b.Spec.Version)).To(Equal(""),
+		"Version of Postgresql objects differ")
+	Expect(cmp.Diff(a.Spec.VolumeSize, b.Spec.VolumeSize)).To(Equal(""),
+		"VolumeSize of Postgresql objects differ")
+
+	aConfig := pgv1beta3.PostgresqlParameters(b.Spec.PostgresConfiguration)
+	Expect(cmp.Diff(a.Spec.Parameters, aConfig)).To(Equal(""),
+		"configuration parameters of Postgresql objects differ")
+}

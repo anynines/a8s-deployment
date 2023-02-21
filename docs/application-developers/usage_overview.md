@@ -204,33 +204,33 @@ If you want to restore a data service instance to a previous state it had, you c
 a previously taken backup (as shown in section
 [Take a Backup of the PostgreSQL Instance](#take-a-backup-of-the-postgresql-instance)).
 
-To do that, you have to create a custom API object of kind `Recovery` (a custom kind which is part
-of a8s). A `Recovery` API object fields identify the `Backup` API object to use to perform the
-restore. The `Recovery` will always be performed on the data service instance from which the backup
-was taken. Stay tuned for a complete reference of all the fields of `Recovery` API objects.
+To do that, you have to create a custom API object of kind `Restore` (a custom kind which is part
+of a8s). A `Restore` API object fields identify the `Backup` API object to use to perform the
+restore. The `Restore` will always be performed on the data service instance from which the backup
+was taken. Stay tuned for a complete reference of all the fields of `Restore` API objects.
 
 At [examples/restore.yaml](/examples/restore.yaml) there's the yaml manifest of an example
-`Recovery` that points to the PostgreSQL instance that you previously deployed. Run:
+`Restore` that points to the PostgreSQL instance that you previously deployed. Run:
 
 ```shell
 kubectl apply --filename examples/restore.yaml
 ```
 
 The a8s control plane will react by downloading the relevant backup and using it to restore the data
-service instance. This might take some time, to learn when the recovery has completed, run:
+service instance. This might take some time, to learn when the restore has completed, run:
 
 ```shell
-kubectl wait recovery recovery-sample --for=condition=complete
+kubectl wait restore recovery-sample --for=condition=complete
 ```
 
-and wait until the command has finished. If your recovery takes a long time to complete, you may
+and wait until the command has finished. If your restore takes a long time to complete, you may
 need to run the `kubectl wait` command multiple times or adjust the timeout using the
  `--timeout=<n>s` flag.
 
-When you want to delete a `Recovery`, run:
+When you want to delete a `Restore`, run:
 
 ```shell
-kubectl delete recovery <recovery-name>
+kubectl delete restore <restore-name>
 ```
 
 ## Visualize the Logs of the PostgreSQL Instance
