@@ -40,4 +40,4 @@ PostgreSQL 13 and 14. **Don't use it for production workloads**. Some features m
     - [postgresql-operator](/docs/application-developers/api-documentation/postgresql-operator)
     - [Labels of DSI Secondary Resources](/docs/application-developers/api-documentation/labels_secondary_dsi_objects.md)
 - [Current Limitations](docs/current_limitations.md)
-- [Broken Link for testing](https://github.com/anynines/a8s-deployment/edit/a8s_1035_testing_broken_link_checking/README.BROKEN)
+- [Broken Link for testing](https://github.com/anynines/a8s-deployment/blob/a8s_1035_testing_broken_link_checking/README.BROKEN)
