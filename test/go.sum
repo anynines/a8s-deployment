@@ -10,8 +10,8 @@ github.com/anynines/a8s-backup-manager v0.34.0 h1:VBfA7kVjkzo26+zrYC3t4dTtTPkiXD
 github.com/anynines/a8s-backup-manager v0.34.0/go.mod h1:yayIzv5u31WcEGsa+vQExuPjAxZzdirZ5gIrqoxftIA=
 github.com/anynines/a8s-service-binding-controller v0.34.1-0.20230125140308-36f252e2ccf3 h1:StZXWE3ROEJ2eb746fwWueBYyK4FxTIpMWZRvunDyDU=
 github.com/anynines/a8s-service-binding-controller v0.34.1-0.20230125140308-36f252e2ccf3/go.mod h1:ghpRFX+mrllDZ3TP3zhVZ2WYDfONaOhv1Uk7szK/Uqs=
-github.com/anynines/postgresql-operator v0.74.1-0.20230119155846-ee2c18e4442e h1:6VS3iTETQTEA/IPYXNPqwOBWmzJjC3+SQLjPgZUbM2M=
-github.com/anynines/postgresql-operator v0.74.1-0.20230119155846-ee2c18e4442e/go.mod h1:aV/94/fffpTy2lY1AqbtJP0Z0DzWRTmMF0SrCj84noY=
+github.com/anynines/postgresql-operator v0.79.1-0.20230227000052-31fec0f76d14 h1:tTuuPOwDu/Mikk+Lcsk4mwgSFOSXa0Incn3GYbFG2QA=
+github.com/anynines/postgresql-operator v0.79.1-0.20230227000052-31fec0f76d14/go.mod h1:aV/94/fffpTy2lY1AqbtJP0Z0DzWRTmMF0SrCj84noY=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/benbjohnson/clock v1.3.0 h1:ip6w0uFQkncKQ979AypyG0ER7mqUSBdKLOgAle/AT8A=
