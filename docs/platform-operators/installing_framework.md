@@ -137,10 +137,9 @@ order.
 
 More precisely, it will:
 
-1. Create two namespaces called `a8s-system` and `postgresql-system`.
-   The `postgresql-system` namespace is used for the `postgresql-controller-manager`, the rest of
-   the a8s framework components (`a8s-backup-controller-manager` and
-   `service-binding-controller-manager`) are running in `a8s-system`.
+1. Create a namespace called `a8s-system`.
+   The a8s framework components `postgresql-controller-manager`, `a8s-backup-controller-manager` and
+   `service-binding-controller-manager` will be running in `a8s-system` namespace.
 2. Register multiple CustomResourceDefinitions (CRDs)
 3. Create three deployments, one for each a8s framework component
 4. Create multiple ClusterRoles and ClusterRoleBindings:
@@ -171,22 +170,15 @@ are ready (value `1/1` under the `READY` column):
 
 ```shell
 watch kubectl get deployment --namespace a8s-system
-watch kubectl get deployment --namespace postgresql-system
 ```
 
-the output of the first command should be similar to:
+the output of the command should be similar to:
 
 ```shell
 NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
 a8s-backup-controller-manager        1/1     1            1           105s
 service-binding-controller-manager   1/1     1            1           105s
-```
-
-the output of the second command should be similar to:
-
-```shell
-NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
-postgresql-controller-manager   1/1     1            1           25m
+postgresql-controller-manager        1/1     1            1           105s
 ```
 
 ### Using the OLM
