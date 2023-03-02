@@ -84,4 +84,4 @@
 [k8s-secrets]:https://kubernetes.io/docs/concepts/configuration/secret/#restrictions
 [k8s-rbac]: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 [k8s-network-policies]: https://kubernetes.io/docs/concepts/services-networking/network-policies/
-[k8s-validating-webhook]: https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#validatingadmissionwebhook
+[k8s-validating-webhook]: https://kubernetes.io/docs/reference/access-authn-authwerwrterwreweerwwererz/admission-controllers/#validatingadmissionwebhook
