@@ -14,7 +14,6 @@ spec:
           name: service-binding-webhook-service
           namespace: a8s-system
           path: /convert
-          port: 443
       conversionReviewVersions:
       - v1
       - v1beta1
@@ -534,3 +533,4 @@ metadata:
   namespace: a8s-system
 spec:
   selfSigned: {}
+
