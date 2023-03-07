@@ -22,7 +22,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | APIVersion is the <api_group>/<version> of the referenced Data Service Instance, e.g. "postgresql.anynines.com/v1beta3" or "redis.anynines.com/v1alpha1". |
 | `kind` _string_ | Kind is the Kubernetes API Kind of the referenced Data Service Instance. |
-| `NamespacedName` _[NamespacedName](#namespacedname)_ | NamespacedName is the Kubernetes API Kind of the referenced Data Service Instance. |
+| `NamespacedName` _[NamespacedName](#namespacedname)_ | NamespacedName represents the referenced Data Service Instance namespace and name. |
 
 #### NamespacedName
 
