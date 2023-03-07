@@ -153,7 +153,7 @@ More precisely, it will:
     - postgresql-spilo-role:  
       gives spilo the required permissions to access Kubernetes resources
 
-5. Create one Role and RoleBinding:
+5. Create one Role and RoleBinding for each a8s framework component:
 
     - <component_name>-leader-election-role and <component_name>-leader-election-rolebinding:  
       used for communication between multiple controllers of the same type.  
@@ -179,6 +179,22 @@ NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
 a8s-backup-controller-manager        1/1     1            1           105s
 service-binding-controller-manager   1/1     1            1           105s
 postgresql-controller-manager        1/1     1            1           105s
+```
+
+#### Uninstall the Control Plane with Manifests
+
+To uninstall the control plane, use:
+
+```shell
+kubectl delete --kustomize deploy/a8s/manifests
+```
+
+This will delete the Kubernetes resources that make up the a8s control plane and their associated CRDs.
+
+To uninstall the cert-manager components, use:
+
+```shell
+kubectl delete --kustomize deploy/cert-manager
 ```
 
 ### Using the OLM
@@ -221,7 +237,7 @@ to apply all OLM resources necessary. In more detail, this will create:
 Additionally, the kustomization creates the secret and configMap for the backup
 bucket configuration.
 
-#### Uninstalling the Control Plane
+#### Uninstalling the Control Plane with OLM
 
 To uninstall the control plane use:
 
