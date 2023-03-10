@@ -25,6 +25,7 @@ automatically be recreated.
 
 ### Updated
 
+* Updated description of `NamespacedName` in servicebinding `v1alpha1` and `v1beta3`.
 * Deletion of PostgreSQL instance pods now runs in parallel, improving the deletion time in high
   availability setups.
 * In the Postgresql CRD, the description of the `namespaceSelector` field (which is one of the many
