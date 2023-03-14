@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/anynines/a8s-backup-manager v0.34.0
 	github.com/anynines/a8s-service-binding-controller v0.34.1-0.20230125140308-36f252e2ccf3
-	github.com/anynines/postgresql-operator v0.80.0
+	github.com/anynines/postgresql-operator v0.83.1-0.20230313225625-fa4c1a4aeff8
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20230209235359-64dc83baed9b
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
@@ -24,7 +24,6 @@ require (
 
 require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
-	github.com/anynines/a8s-shared/errors v1.0.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
