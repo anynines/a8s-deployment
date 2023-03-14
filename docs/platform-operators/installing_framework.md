@@ -84,6 +84,8 @@ Also, your changes will be overwritten when deploying with the OLM and during an
 update. If you need to edit the configMap, reapply it when you deployed or
 updated the framework. In this case you might want to disable automatic updates.
 
+> WARNING: Issues may occure when running spilo with the MobilityDB Postgresql extension on arm-based systems. The latest spilo images natively support both amd and arm architectures, which is not the case for MobilityDB.
+
 ## Install the a8s Control Plane
 
 The a8s Control Plane can be deployed with the help of the static manifests you
