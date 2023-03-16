@@ -452,7 +452,11 @@ func setCustomPostgresConfig(pg *v1beta3.Postgresql) {
 	pg.Spec.Parameters.MaxReplicationSlots = 11
 	pg.Spec.Parameters.MaxWALSenders = 11
 	pg.Spec.Parameters.StatementTimeoutMillis = 2147483647
-	pg.Spec.Parameters.SSLCiphers = "high:medium:+3des:!anull"
+	// There is a list of SSL cipher suites that are allowed to be used by SSL connections
+	// https://www.postgresql.org/docs/14/runtime-config-connection.html#GUC-SSL-CIPHERS
+	// non-allowed values cause validation errors
+	// https://github.com/postgres/postgres/blob/REL_14_STABLE/src/backend/libpq/be-secure-openssl.c#L270
+	pg.Spec.Parameters.SSLCiphers = "!aNULL:HIGH"
 	pg.Spec.Parameters.SSLMinProtocolVersion = "TLSv1.2"
 	pg.Spec.Parameters.TempFileLimitKiloBytes = 0
 	pg.Spec.Parameters.WALWriterDelayMillis = 201
