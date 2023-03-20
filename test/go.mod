@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/anynines/a8s-backup-manager v0.34.0
 	github.com/anynines/a8s-service-binding-controller v0.34.1-0.20230125140308-36f252e2ccf3
-	github.com/anynines/postgresql-operator v0.83.1-0.20230313225625-fa4c1a4aeff8
+	github.com/anynines/postgresql-operator v0.85.1-0.20230320104034-b1ab3622bc6e
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20230209235359-64dc83baed9b
 	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
