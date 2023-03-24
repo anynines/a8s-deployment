@@ -1358,6 +1358,21 @@ spec:
                   Stale reads are possible when reading from this service. By default
                   this feature is disabled.
                 type: boolean
+              expose:
+                default: Internal
+                description: "Expose determines where (and how) the DSI can be accessed
+                  from. Currently supported values are - \"Internal\": the DSI will
+                  be accessible only from inside the K8s cluster - \"LoadBalancer\":
+                  the DSI will receive dedicated load balancers with reachable IP
+                  addresses \t  that can be used from external locations . This is
+                  only supported on K8s clusters that    support external load  balancers.
+                  This field applies to all the services backed by the DSI, that is,
+                  both the master-only one and the read-only one; the \"LoadBalancer\"
+                  value means that each service will get a dedicated LoadBalancer."
+                enum:
+                - Internal
+                - LoadBalancer
+                type: string
               extensions:
                 description: Extensions defines a list of PostgreSQL extensions which
                   should be installed. Installing means that the binaries and libraries
@@ -2703,6 +2718,16 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - list
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - endpoints
   verbs:
   - delete
@@ -2962,7 +2987,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:2c17b9cefd56ae58d8a6dda95fa43197ea2c686b
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:198ee9eb304034e6a31cd517b4e1ddf7b562d6e9
         livenessProbe:
           httpGet:
             path: /healthz

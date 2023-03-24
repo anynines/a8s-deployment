@@ -1,0 +1,14 @@
+apiVersion: postgresql.anynines.com/v1beta3
+kind: Postgresql
+metadata:
+  name: sample-pg-cluster
+spec:
+  replicas: 3
+  volumeSize: 1Gi
+  version: 14
+  expose: LoadBalancer
+  resources:
+    requests:
+      cpu: 100m
+    limits:
+      memory: 100Mi
