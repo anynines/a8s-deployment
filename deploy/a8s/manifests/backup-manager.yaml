@@ -994,7 +994,7 @@ spec:
               fieldPath: metadata.namespace
         - name: BACKUP_CREDENTIAL_PATH
           value: /etc/backup-store-secrets
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:878e5ef789335feada36e27dd40733e281536aa2
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:351f6f3abc393293b12c17a1162137ef6efcc325
         livenessProbe:
           httpGet:
             path: /healthz
