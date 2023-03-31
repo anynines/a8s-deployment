@@ -34,7 +34,7 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `namespace` _string_ |  |
+| `namespace` _string_ | Namepace of the Instance, if not provided the same namespace as the service bindings will be used |
 | `name` _string_ |  |
 
 #### ServiceBinding
