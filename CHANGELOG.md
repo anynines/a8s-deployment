@@ -9,7 +9,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 * If you use the extensions feature, delete the stateful set objects (**not the PostgreSQL objects**)
 for instances that use extensions. Your data will be preserved, and the stateful sets will
 automatically be recreated.
-* Remove old finalizer `postgresql.operator.a8s.anynines.com` from all PostgreSQL objects. 
+* Remove old finalizer `postgresql.operator.a8s.anynines.com` from all PostgreSQL objects.
 
 ### Added
 
@@ -22,6 +22,7 @@ automatically be recreated.
   dynamic resources for the PostgreSQL instance Pods. This feature is in alpha,
   is implemented only on K8s clusters with version 1.26 or higher and the
   feature gate DynamicResourceAllocation enabled.
+* Add field `spec.expose` to expose a PostgreSQL instance to outside the K8s cluster where it runs.
 
 ### Updated
 

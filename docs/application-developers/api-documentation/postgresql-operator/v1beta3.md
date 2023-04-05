@@ -11,6 +11,13 @@ Package v1beta3 contains API Schema definitions for the postgresql v1beta3 API g
 - [Postgresql](#postgresql)
 - [PostgresqlList](#postgresqllist)
 
+#### ExposeOption
+
+_Underlying type:_ `string`
+
+_Appears in:_
+- [PostgresqlSpec](#postgresqlspec)
+
 #### Postgresql
 
 Postgresql is the Schema for the postgresqls API
@@ -91,6 +98,7 @@ _Appears in:_
 | `extensions` _string array_ | Extensions defines a list of PostgreSQL extensions which should be installed. Installing means that the binaries and libraries of the defined extensions are moved to the PostgreSQL extension directory. The extensions are NOT loaded by default (i.e. by using the PostgreSQL "CREATE EXTENSION" command). Updating the list of extensions will cause a rolling update of the PostgreSQL instance. |
 | `enableReadOnlyService` _boolean_ | EnableReadOnlyService enables the creation of a read-only service. A read-only service is meant for read operations and allows for load-balancing across different PostgreSQL cluster members. Stale reads are possible when reading from this service. By default this feature is disabled. |
 | `readOnlyTargetNodes` _string_ | ReadOnlyTargetNodes specifies the target PostgreSQL cluster members which the read-only service points to. "replicas" means that only the PostgreSQL cluster replicas are used for the read-only service. "all" means that the read-only service points to all PostgreSQL cluster members. By default this feature only points to the PostgreSQL cluster replicas. |
+| `expose` _[ExposeOption](#exposeoption)_ | Expose determines where (and how) the DSI can be accessed from. Currently supported values are - "Internal": the DSI will be accessible only from inside the K8s cluster - "LoadBalancer": the DSI will receive dedicated load balancers with reachable IP addresses 	  that can be used from external locations . This is only supported on K8s clusters that    support external load  balancers. This field applies to all the services backed by the DSI, that is, both the master-only one and the read-only one; the "LoadBalancer" value means that each service will get a dedicated LoadBalancer. |
 
 #### PostgresqlStatus
 
