@@ -2,22 +2,9 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
   name: backups.backups.anynines.com
 spec:
-  conversion:
-    strategy: Webhook
-    webhook:
-      clientConfig:
-        service:
-          name: a8s-backup-webhook-service
-          namespace: a8s-system
-          path: /convert
-          port: 443
-      conversionReviewVersions:
-      - v1
-      - v1beta1
   group: backups.anynines.com
   names:
     kind: Backup
@@ -28,164 +15,6 @@ spec:
     singular: backup
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        description: Backup is the Schema for the backups API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: BackupSpec defines the desired state of Backup.
-            properties:
-              maxRetries:
-                default: Infinite
-                description: 'How many times the backup will be retried before aborting.
-                  Allowed values: any positive integer, or "Infinite"'
-                pattern: ^\d+|Infinite$
-                type: string
-              serviceInstance:
-                description: ServiceInstance identifies the Data Service Instance
-                  to backup.
-                properties:
-                  apiGroup:
-                    description: APIGroup is the API group of the Kubernetes API resource
-                      that represents the Data Service Instance to backup or restore
-                      (e.g. postgresql.anynines.com, redis.anynines.com, etc...).
-                    type: string
-                  kind:
-                    description: Kind is the kind of the Kubernetes API resource that
-                      represents the Data Service Instance to backup or restore (e.g.
-                      Postgresql, Redis, etc...).
-                    type: string
-                  name:
-                    description: Name is the name of the Kubernetes API resource that
-                      represents the Data Service Instance to backup or restore.
-                    type: string
-                required:
-                - apiGroup
-                - kind
-                - name
-                type: object
-            required:
-            - serviceInstance
-            type: object
-          status:
-            description: BackupStatus defines the observed state of Backup.
-            properties:
-              backupID:
-                description: BackupID is the ID of the Backup; clients can use this
-                  to poll the status of the Backup at the Pod identified by `PodUsedID`.
-                type: string
-              conditions:
-                description: Conditions include a set of not mutually exclusive states
-                  the Backup can be in, as well as the last observed time stamp for
-                  these conditions. They include "Ready", "InProgress", "UploadedToS3",
-                  "Terminating".
-                items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
-                  properties:
-                    lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
-                      format: date-time
-                      type: string
-                    message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
-                      maxLength: 32768
-                      type: string
-                    observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: reason contains a programmatic identifier indicating
-                        the reason for the condition's last transition. Producers
-                        of specific condition types may define expected values and
-                        meanings for this field, and whether the values are considered
-                        a guaranteed API. The value should be a CamelCase string.
-                        This field may not be empty.
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
-                      type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
-                      type: string
-                    type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
-                  required:
-                  - lastTransitionTime
-                  - message
-                  - reason
-                  - status
-                  - type
-                  type: object
-                type: array
-              lastObservationTime:
-                description: LastObservationTime is the timestamp of the last time
-                  the Condition was observed to be true.
-                format: date-time
-                type: string
-              podUsedNamespacedName:
-                description: 'PodUsedNamespacedName is the namespaced name of the
-                  DSI Pod to which the backup request was sent. TODO: Represent this
-                  jointly with `PodUsedID` (below) via a PodRef.'
-                type: string
-              podUsedUID:
-                description: 'PodUsedUID is the UID of the DSI Pod to which the backup
-                  request was sent. TODO: Represent this jointly with `PodUsedNamespacedName`
-                  (above) via a PodRef.'
-                type: string
-              retries:
-                description: Number of times the backup has been retried
-                type: integer
-            type: object
-        required:
-        - spec
-        type: object
-    served: true
-    storage: false
-    subresources:
-      status: {}
   - name: v1beta3
     schema:
       openAPIV3Schema:
@@ -254,13 +83,14 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
+                    \n \ttype FooStatus struct{ \t    // Represents the observations
+                    of a foo's current state. \t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\" \t    //
+                    +patchMergeKey=type \t    // +patchStrategy=merge \t    // +listType=map
+                    \t    // +listMapKey=type \t    Conditions []metav1.Condition
+                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n \t    // other fields
+                    \t}"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -355,22 +185,9 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    cert-manager.io/inject-ca-from: a8s-system/a8s-backup-serving-cert
     controller-gen.kubebuilder.io/version: v0.4.1
   name: restores.backups.anynines.com
 spec:
-  conversion:
-    strategy: Webhook
-    webhook:
-      clientConfig:
-        service:
-          name: a8s-backup-webhook-service
-          namespace: a8s-system
-          path: /convert
-          port: 443
-      conversionReviewVersions:
-      - v1
-      - v1beta1
   group: backups.anynines.com
   names:
     kind: Restore
@@ -381,167 +198,6 @@ spec:
     singular: restore
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        description: Restore is the Schema for the restore API
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: RestoreSpec defines the desired state of Restore.
-            properties:
-              backupName:
-                description: BackupName is the name of the Backup API object to use
-                  for the Restore; the namespace is assumed to be the same as the
-                  one for the Restore object, we might reconsider this assumption
-                  in the future.
-                type: string
-              serviceInstance:
-                description: ServiceInstance identifies the Data Service Instance
-                  to restore.
-                properties:
-                  apiGroup:
-                    description: APIGroup is the API group of the Kubernetes API resource
-                      that represents the Data Service Instance to backup or restore
-                      (e.g. postgresql.anynines.com, redis.anynines.com, etc...).
-                    type: string
-                  kind:
-                    description: Kind is the kind of the Kubernetes API resource that
-                      represents the Data Service Instance to backup or restore (e.g.
-                      Postgresql, Redis, etc...).
-                    type: string
-                  name:
-                    description: Name is the name of the Kubernetes API resource that
-                      represents the Data Service Instance to backup or restore.
-                    type: string
-                required:
-                - apiGroup
-                - kind
-                - name
-                type: object
-            required:
-            - backupName
-            - serviceInstance
-            type: object
-          status:
-            description: RestoreStatus defines the observed state of Restore.
-            properties:
-              conditions:
-                description: Conditions include a set of not mutually exclusive states
-                  the Restore can be in, as well as the last observed time stamp for
-                  these conditions. They include "Ready", "InProgress", "Terminating".
-                items:
-                  description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
-                  properties:
-                    lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
-                      format: date-time
-                      type: string
-                    message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
-                      maxLength: 32768
-                      type: string
-                    observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: reason contains a programmatic identifier indicating
-                        the reason for the condition's last transition. Producers
-                        of specific condition types may define expected values and
-                        meanings for this field, and whether the values are considered
-                        a guaranteed API. The value should be a CamelCase string.
-                        This field may not be empty.
-                      maxLength: 1024
-                      minLength: 1
-                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
-                      type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
-                      type: string
-                    type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
-                  required:
-                  - lastTransitionTime
-                  - message
-                  - reason
-                  - status
-                  - type
-                  type: object
-                type: array
-              lastObservationTime:
-                description: LastObservationTime is the timestamp of the last time
-                  the Condition was observed to be true.
-                format: date-time
-                type: string
-              podToPoll:
-                description: The Pod to poll to learn the status of the Restore, if
-                  the restore is in Progress.
-                properties:
-                  ip:
-                    description: IP is the IP of the Pod.
-                    type: string
-                  namespacedName:
-                    description: NamespacedName is the namespaced name of the Pod.
-                    type: string
-                  uid:
-                    description: UID is the UID of the Pod.
-                    type: string
-                required:
-                - ip
-                - namespacedName
-                - uid
-                type: object
-              restoreID:
-                description: RestoreID is the ID of the Restore; clients can use this
-                  to poll the status of the Restore at the Pod identified by `PodToHit`.
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: false
-    subresources:
-      status: {}
   - name: v1beta3
     schema:
       openAPIV3Schema:
@@ -606,13 +262,14 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
-                    \n     // other fields }"
+                    \n \ttype FooStatus struct{ \t    // Represents the observations
+                    of a foo's current state. \t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\" \t    //
+                    +patchMergeKey=type \t    // +patchStrategy=merge \t    // +listType=map
+                    \t    // +listMapKey=type \t    Conditions []metav1.Condition
+                    `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` \n \t    // other fields
+                    \t}"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -939,21 +596,6 @@ spec:
     app.kubernetes.io/name: backup-manager
     app.kubernetes.io/part-of: a8s-backup
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: a8s-backup-webhook-service
-  namespace: a8s-system
-spec:
-  ports:
-  - port: 443
-    protocol: TCP
-    targetPort: 9443
-  selector:
-    app.kubernetes.io/component: controller-manager
-    app.kubernetes.io/name: backup-manager
-    app.kubernetes.io/part-of: a8s-backup
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -994,7 +636,7 @@ spec:
               fieldPath: metadata.namespace
         - name: BACKUP_CREDENTIAL_PATH
           value: /etc/backup-store-secrets
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:351f6f3abc393293b12c17a1162137ef6efcc325
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:2616f22c4fe670541c3c78131ae018902f8471bf
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1002,10 +644,6 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 20
         name: manager
-        ports:
-        - containerPort: 9443
-          name: webhook-server
-          protocol: TCP
         readinessProbe:
           httpGet:
             path: /readyz
@@ -1022,9 +660,6 @@ spec:
         securityContext:
           allowPrivilegeEscalation: false
         volumeMounts:
-        - mountPath: /tmp/k8s-webhook-server/serving-certs
-          name: cert
-          readOnly: true
         - mountPath: /etc/config
           name: backup-store-config-volume
         - mountPath: /etc/backup-store-secrets
@@ -1044,10 +679,6 @@ spec:
       serviceAccountName: a8s-backup-manager-account
       terminationGracePeriodSeconds: 10
       volumes:
-      - name: cert
-        secret:
-          defaultMode: 420
-          secretName: bkp-webhook-server-cert
       - configMap:
           items:
           - key: backup-store-config.yaml
@@ -1057,25 +688,3 @@ spec:
       - name: secret-volume
         secret:
           secretName: a8s-backup-storage-credentials
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: a8s-backup-serving-cert
-  namespace: a8s-system
-spec:
-  dnsNames:
-  - a8s-backup-webhook-service.a8s-system.svc
-  - a8s-backup-webhook-service.a8s-system.svc.cluster.local
-  issuerRef:
-    kind: Issuer
-    name: a8s-backup-selfsigned-issuer
-  secretName: bkp-webhook-server-cert
----
-apiVersion: cert-manager.io/v1
-kind: Issuer
-metadata:
-  name: a8s-backup-selfsigned-issuer
-  namespace: a8s-system
-spec:
-  selfSigned: {}
