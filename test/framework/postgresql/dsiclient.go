@@ -13,21 +13,27 @@ import (
 const (
 	protocol = "postgres"
 
-	hostname = "localhost"
+	localhost = "localhost"
 
-	DbAdminUsernameKey = "username"
-	DbAdminPasswordKey = "password"
-	DatabaseKey        = "database"
+	DBKey         = "database"
+	DBUsernameKey = "username"
+	DBPasswordKey = "password"
 
 	// TODO: Make configurable at runtime when the need arises for tests with TLS. Warning:
 	// enabling SSLMODE breaks port forwarding.
-	sslmode = "disable"
+	sslmodeDisable = "disable"
 )
 
-func NewClient(credentials map[string]string, port string) Client {
+func NewClientOverPortForwarding(credentials map[string]string, port string) Client {
+	return NewClient(credentials, localhost, port, sslmodeDisable)
+}
+
+func NewClient(credentials map[string]string, host string, port string, sslmode string) Client {
 	return Client{
 		credentials: credentials,
 		port:        port,
+		hostname:    host,
+		sslmode:     sslmode,
 	}
 }
 
@@ -37,12 +43,14 @@ func NewClient(credentials map[string]string, port string) Client {
 type Client struct {
 	// credentials is servicebinding data needed for connecting to a DSI
 	credentials map[string]string
-	// port is a dynmically determined port on localhost that has been portforwarded for opening connection to the DSI
-	port string
+	// port is the destination port number the client communicates to
+	port     string
+	hostname string
+	sslmode  string
 }
 
 func (c Client) Write(ctx context.Context, tableName, data string) error {
-	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	dbConn, err := c.connectToDB(ctx)
 	if err != nil {
 		return err
 	}
@@ -59,7 +67,7 @@ func (c Client) Write(ctx context.Context, tableName, data string) error {
 }
 
 func (c Client) Read(ctx context.Context, tableName string) (string, error) {
-	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	dbConn, err := c.connectToDB(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +93,7 @@ func (c Client) Read(ctx context.Context, tableName string) (string, error) {
 }
 
 func (c Client) UserExists(ctx context.Context, username string) (bool, error) {
-	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	dbConn, err := c.connectToDB(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to connect to the database: %w", err)
 	}
@@ -101,7 +109,7 @@ func (c Client) UserExists(ctx context.Context, username string) (bool, error) {
 }
 
 func (c Client) CollectionExists(ctx context.Context, collection string) bool {
-	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	dbConn, err := c.connectToDB(ctx)
 	if err != nil {
 		return false
 	}
@@ -117,7 +125,7 @@ func (c Client) CollectionExists(ctx context.Context, collection string) bool {
 }
 
 func (c Client) CheckParameter(ctx context.Context, parameter, expectedValue string) error {
-	dbConn, err := connectToDB(ctx, c.credentials, c.port)
+	dbConn, err := c.connectToDB(ctx)
 	if err != nil {
 		return err
 	}
@@ -167,11 +175,8 @@ func createTableIfNotExists(ctx context.Context, dbConn *pgx.Conn, tableName str
 	return nil
 }
 
-func connectToDB(ctx context.Context,
-	credentials map[string]string,
-	port string) (*pgx.Conn, error) {
-
-	dbURL := dbURL(credentials, port)
+func (c Client) connectToDB(ctx context.Context) (*pgx.Conn, error) {
+	dbURL := c.dbURL()
 	conn, err := pgx.Connect(ctx, dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database with %s: %w", dbURL, err)
@@ -199,10 +204,10 @@ func endTransaction(ctx context.Context, tx pgx.Tx, err error) error {
 	return err
 }
 
-func dbURL(credentials map[string]string, port string) string {
-	user := credentials[DbAdminUsernameKey]
-	password := credentials[DbAdminPasswordKey]
-	database := credentials[DatabaseKey]
+func (c Client) dbURL() string {
+	user := c.credentials[DBUsernameKey]
+	password := c.credentials[DBPasswordKey]
+	database := c.credentials[DBKey]
 	// In recent versions of client-go the functionality of port forwards was "fixed" to
 	// close connections and stop listening when port forwarding errors occur so that kubectl
 	// can exit. https://github.com/kubernetes/kubernetes/pull/103526
@@ -216,9 +221,12 @@ func dbURL(credentials map[string]string, port string) string {
 	// So for now we disable SSLMODE for our PostgreSQL client which fixes the port forward
 	// closing.
 	//
+	// SSL can be enabled by overwriting c.sslmode for testing exposed instances where a port
+	// forward is not necessary
+	//
 	// TODO: We may want to perform tests involving SSL in future. Find alternative approach so
 	// that we can have SSLMODE enabled and reliable port forwards.
 	return strings.Join([]string{
-		protocol, "://", user, ":", password, "@", hostname, ":", port, "/", database, "?", "sslmode=", sslmode},
-	"")
+		protocol, "://", user, ":", password, "@", c.hostname, ":", c.port, "/", database, "?", "sslmode=", c.sslmode},
+		"")
 }

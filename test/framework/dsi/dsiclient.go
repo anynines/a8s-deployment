@@ -45,7 +45,19 @@ type DSIConfigurationValidator interface {
 func NewClient(ds, port string, sbData map[string]string) (DSIClient, error) {
 	switch strings.ToLower(ds) {
 	case "postgresql":
-		return postgresql.NewClient(sbData, port), nil
+		return postgresql.NewClientOverPortForwarding(sbData, port), nil
+	}
+	return nil, fmt.Errorf(
+		"dsi client factory received request to create dsi client for unknown data service %s; only supported data services are %s",
+		ds,
+		supportedDataServices(),
+	)
+}
+
+func NewClientForURL(ds, host, port, sslmode string, sbData map[string]string) (DSIClient, error) {
+	switch strings.ToLower(ds) {
+	case "postgresql":
+		return postgresql.NewClient(sbData, host, port, sslmode), nil
 	}
 	return nil, fmt.Errorf(
 		"dsi client factory received request to create dsi client for unknown data service %s; only supported data services are %s",
