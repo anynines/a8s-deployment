@@ -10,6 +10,11 @@ To try out a8s you will need:
 - one [StorageClass][storage-class] marked as `default` in the Kubernetes cluster
 - one AWS S3 bucket for storing Backups
 
+If you want your data service instances to have IPs reachable from outside the K8s cluster
+(by using the feature described
+[here](./application-developers/advanced_configuration.md#usage-outside-the-kubernetes-cluster)),
+the K8s cluster must support [external load balancers][k8s-load-balancer-services].
+
 To access the included Dashboards (Grafana, OpenSearch Dashboards) it is also
 recommended to deploy an Ingress Controller on your cluster. To access the
 Dashboards you can then expose the Dashboard Services, for more information on
@@ -55,3 +60,4 @@ marginally.
 
 [storage-class]: https://kubernetes.io/docs/concepts/storage/storage-classes/
 [k8s-ingress]: https://kubernetes.io/docs/concepts/services-networking/ingress/
+[k8s-load-balancer-services]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
