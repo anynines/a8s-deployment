@@ -36,7 +36,6 @@
   and use it to write/read data to/from the instance, etc...).
 - Given an instance, there's no multi-tenancy: all service bindings to
   it will share the same database.
-- Instances cannot be used from outside the cluster.
 
 ## Backup and Restore
 
