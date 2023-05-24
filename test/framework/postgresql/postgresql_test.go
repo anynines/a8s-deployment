@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	"github.com/anynines/a8s-deployment/test/framework/postgresql"
-	"github.com/anynines/postgresql-operator/api/v1alpha1"
+	"github.com/anynines/postgresql-operator/api/v1beta3"
 )
 
 // TODO: Test failure cases (e.g. the K8s API calls return an error). Not already done because the
@@ -53,10 +53,10 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns1"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 			},
@@ -70,10 +70,10 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg1",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "replica",
+						v1beta3.DSINameLabelKey:         "pg1",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "replica",
 					}),
 				),
 			},
@@ -87,9 +87,9 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:  "r1",
-						v1alpha1.DSIKindLabelKey:  "Redis",
-						v1alpha1.DSIGroupLabelKey: "redis.anynines.com",
+						v1beta3.DSINameLabelKey:  "r1",
+						v1beta3.DSIKindLabelKey:  "Redis",
+						v1beta3.DSIGroupLabelKey: "redis.anynines.com",
 					}),
 				),
 			},
@@ -102,30 +102,30 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 				newPod(
 					withName("p1"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "replica",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "replica",
 					}),
 				),
 				newPod(
 					withName("p2"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "replica",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "replica",
 					}),
 				),
 			},
@@ -139,20 +139,20 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 				newPod(
 					withName("p1"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "replica",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "replica",
 					}),
 				),
 			},
@@ -166,10 +166,10 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 			},
@@ -189,10 +189,10 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 			},
@@ -201,9 +201,9 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p1"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:  "r1",
-						v1alpha1.DSIKindLabelKey:  "Redis",
-						v1alpha1.DSIGroupLabelKey: "redis.anynines.com",
+						v1beta3.DSINameLabelKey:  "r1",
+						v1beta3.DSIKindLabelKey:  "Redis",
+						v1beta3.DSIGroupLabelKey: "redis.anynines.com",
 					}),
 				),
 			},
@@ -216,10 +216,10 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p0"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg0",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg0",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 			},
@@ -228,10 +228,10 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 					withName("p1"),
 					withNamespace("ns0"),
 					withLabels(map[string]string{
-						v1alpha1.DSINameLabelKey:         "pg1",
-						v1alpha1.DSIKindLabelKey:         "Postgresql",
-						v1alpha1.DSIGroupLabelKey:        "postgresql.anynines.com",
-						v1alpha1.ReplicationRoleLabelKey: "master",
+						v1beta3.DSINameLabelKey:         "pg1",
+						v1beta3.DSIKindLabelKey:         "Postgresql",
+						v1beta3.DSIGroupLabelKey:        "postgresql.anynines.com",
+						v1beta3.ReplicationRoleLabelKey: "master",
 					}),
 				),
 			},
@@ -254,7 +254,6 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 
 			// Invoke the method under test
 			gotPods, err := tc.dsi.Pods(context.Background(), k8sClient)
-
 			if err != nil {
 				t.Fatalf("Expected no error when listing DSI Pods, got: \"%v\"", err)
 			}

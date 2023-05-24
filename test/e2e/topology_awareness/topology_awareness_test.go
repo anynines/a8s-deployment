@@ -16,7 +16,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
 )
 
 // TODO: Test broken cases where the DSI has no tolerations: 1 taint - 0 tolerations;
@@ -50,7 +50,7 @@ var _ = Describe("DSIs topology awareness", func() {
 		instanceNSN    string
 		instanceClient dsi.DSIClient
 
-		sb            *sbv1alpha1.ServiceBinding
+		sb            *sbv1beta3.ServiceBinding
 		sbCredentials secret.SecretData
 
 		portForwardStopCh chan struct{}
@@ -726,27 +726,26 @@ var _ = Describe("DSIs topology awareness", func() {
 			})
 		})
 	})
-
 })
 
 func verifyDSIPodsAreInDifferentAZs(ctx context.Context,
 	dsiPods []corev1.Pod,
-	azLabelKey string) error {
-
+	azLabelKey string,
+) error {
 	return verifyDSIPodsAreInDifferentTopologyDomains(ctx, dsiPods, "AZ", azLabelKey)
 }
 
 func verifyDSIPodsAreOnDifferentNodes(ctx context.Context,
 	dsiPods []corev1.Pod,
-	nodeLabelKey string) error {
-
+	nodeLabelKey string,
+) error {
 	return verifyDSIPodsAreInDifferentTopologyDomains(ctx, dsiPods, "node", nodeLabelKey)
 }
 
 func verifyDSIPodsAreInDifferentTopologyDomains(ctx context.Context,
 	dsiPods []corev1.Pod,
-	topologyDomainName, topologyDomainKey string) error {
-
+	topologyDomainName, topologyDomainKey string,
+) error {
 	domainToPod := map[string]string{}
 	for _, p := range dsiPods {
 		podNodeLabels, err := nodes.GetLabels(ctx, p.Spec.NodeName)
@@ -769,8 +768,8 @@ func verifyDSIPodsAreInDifferentTopologyDomains(ctx context.Context,
 
 func verifyDSIPodsAreInMoreThanOneAZ(ctx context.Context,
 	dsiPods []corev1.Pod,
-	azLabelKey string) error {
-
+	azLabelKey string,
+) error {
 	seenAZs := map[string]struct{}{}
 	podAZ := ""
 	for _, p := range dsiPods {
@@ -790,8 +789,8 @@ func verifyDSIPodsAreInMoreThanOneAZ(ctx context.Context,
 }
 
 func labelNode(ctx context.Context, nodes NodesClient, nodeName string,
-	labels map[string]string) error {
-
+	labels map[string]string,
+) error {
 	// We do a Get to base the update off of a fresh version of the node, to minimize the risk of
 	// MVCC conflicts.
 	// For details: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency

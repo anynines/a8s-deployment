@@ -14,7 +14,7 @@ import (
 	"github.com/anynines/a8s-deployment/test/framework/dsi"
 	"github.com/anynines/a8s-deployment/test/framework/secret"
 	"github.com/anynines/a8s-deployment/test/framework/servicebinding"
-	sbv1alpha1 "github.com/anynines/a8s-service-binding-controller/api/v1alpha1"
+	sbv1beta3 "github.com/anynines/a8s-service-binding-controller/api/v1beta3"
 )
 
 const (
@@ -32,11 +32,11 @@ const (
 var (
 	portForwardStopCh chan struct{}
 
-	sb             *sbv1alpha1.ServiceBinding
+	sb             *sbv1beta3.ServiceBinding
 	instance       dsi.Object
 	dsiAdminClient dsi.DSIClient
 	dsiSbClient    dsi.DSIClient
-	sbClientMap    map[*sbv1alpha1.ServiceBinding]dsi.DSIClient
+	sbClientMap    map[*sbv1beta3.ServiceBinding]dsi.DSIClient
 )
 
 var _ = Describe("Service binding", func() {
@@ -255,7 +255,7 @@ var _ = Describe("Service binding", func() {
 		})
 
 		It("Performs basic ServiceBinding lifecycle operations", func() {
-			sbs := make([]*sbv1alpha1.ServiceBinding, sbAmount)
+			sbs := make([]*sbv1beta3.ServiceBinding, sbAmount)
 
 			By("Creating the ServiceBinding CR", func() {
 				for i := 0; i < sbAmount; i++ {
@@ -276,7 +276,7 @@ var _ = Describe("Service binding", func() {
 				}
 			})
 
-			serviceBindingData := make(map[*sbv1alpha1.ServiceBinding]secret.SecretData)
+			serviceBindingData := make(map[*sbv1beta3.ServiceBinding]secret.SecretData)
 			var serviceBindingSecret v1.Secret
 			By("Creating the service binding secret", func() {
 				for _, sb := range sbs {
@@ -298,7 +298,7 @@ var _ = Describe("Service binding", func() {
 
 			// Create one DSIClient per ServiceBinding user for interacting with the
 			// DSI.
-			sbClientMap = make(map[*sbv1alpha1.ServiceBinding]dsi.DSIClient)
+			sbClientMap = make(map[*sbv1beta3.ServiceBinding]dsi.DSIClient)
 			for _, sb := range sbs {
 				dsiSbClient, err = dsi.NewClient(dataservice,
 					strconv.Itoa(localPort),
@@ -480,8 +480,8 @@ var _ = Describe("Service binding", func() {
 
 		It("Performs basic ServiceBinding lifecycle operations", func() {
 			for _, instance := range instances {
-				serviceBindingData := make(map[*sbv1alpha1.ServiceBinding]secret.SecretData)
-				sbs := make([]*sbv1alpha1.ServiceBinding, sbAmount)
+				serviceBindingData := make(map[*sbv1beta3.ServiceBinding]secret.SecretData)
+				sbs := make([]*sbv1beta3.ServiceBinding, sbAmount)
 
 				By("Creating the ServiceBinding CR", func() {
 					for i := 0; i < sbAmount; i++ {
@@ -528,7 +528,7 @@ var _ = Describe("Service binding", func() {
 
 				// Create one DSIClient per ServiceBinding user for interacting
 				// with the DSI.
-				sbClientMap = make(map[*sbv1alpha1.ServiceBinding]dsi.DSIClient)
+				sbClientMap = make(map[*sbv1beta3.ServiceBinding]dsi.DSIClient)
 				for _, sb := range sbs {
 					dsiSbClient, err = dsi.NewClient(dataservice,
 						strconv.Itoa(dataServiceInstanceMap[instance].portForward),

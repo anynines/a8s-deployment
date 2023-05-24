@@ -5,6 +5,7 @@ of a PostgreSQL instance.
 
 ## Index
 
+- [Usage Outside the Kubernetes Cluster](#usage-outside-the-kubernetes-cluster)
 - [High Availability & Scheduling Constraints](#high-availability--scheduling-constraints)
     - [Affinity and Anti-Affinity](#affinity-and-anti-affinity)
         - [Example : High Availability 1 - Distributing Replicas to Zones](#example--high-availability-1---distributing-replicas-to-zones)
@@ -13,6 +14,43 @@ of a PostgreSQL instance.
         - [Example: Node dedicated to PostgreSQL Instance](#example-node-dedicated-to-postgresql-instance)
     - [Caveats and Known Limitations](#caveats-and-known-limitations)
 
+## Usage Outside the Kubernetes Cluster
+
+To use your instances outside the K8s cluster they are running in, you can expose them via a load
+balancer. You can do so by setting the field `spec.expose` equal to `LoadBalancer`, as in this
+example:
+
+```yaml
+apiVersion: postgresql.anynines.com/v1beta3
+kind: Postgresql
+metadata:
+  name: sample-pg-cluster
+spec:
+  version: 14
+  expose: LoadBalancer
+```
+
+The operator will set up a K8s ConfigMap containing the hosts and ports you can use to connect to
+your instance.
+
+The name of the ConfigMap will be `<instance-name>-connection`, the namespace will be the same as
+the instance's. You can find it and inspect the contents by running:
+
+```sh
+kubectl get configmap <instance-name>-connection -o yaml
+```
+
+*Note 1*: Exposing the instance will always create at least one dedicated load balancer, which might
+cause additional cost, depending on your infrastructure.
+
+*Note 2*: If your instance also has a read-only service (`spec.enableReadOnlyService: true`),
+exposing it outside the cluster will create two load balancers, one for the read-only service and
+one for the read-write service. This might cost even more (the actual amount depends on your
+infrastructure).
+
+*Note 3*: Some infrastructure providers might not support load balancers, if you run a8s on one such
+provider even if you specify `spec.expose: LoadBalancer` the instance won't get a load balancer.
+
 ## High Availability & Scheduling Constraints
 
 With the help of scheduling constraints you can make better use of your clusters
@@ -20,7 +58,7 @@ resource and/or make PostgreSQL instances more resilient against failures by
 setting up highly available instances. In general, these settings are exposed
 through the `spec.schedulingConstraints` field for example in the `Postgresql`
 objects (see [API
-Documentation](/docs/application-developers/api-documentation/api_reference.md#postgresqlschedulingconstraints)). 
+Documentation](/docs/application-developers/api-documentation/postgresql-operator/v1beta3.md#postgresqlschedulingconstraints)).
 
 Subfields of `schedulingConstraints` allow you to configure
 [tolerations][taints-and-tolerations], [node
@@ -35,7 +73,7 @@ Thus the a8s framework fully relies on Kubernetes mechanisms and inherits its
 limitations, therefore it is highly recommended going through the Kubernetes
 documentation on the topic:
 - [Affinity and Anti-Affinity][affinity]
-- [Taints and Tolerations][taints-and-tolerations] 
+- [Taints and Tolerations][taints-and-tolerations]
 
 
 The next sections will guide you through the configuration process.
@@ -50,7 +88,7 @@ The next sections will guide you through the configuration process.
 [Affinity and Anti-Affinity][affinity] is used to attract or repel pods to/from
 K8s cluster nodes at scheduling time or runtime, based on the nodes labels or on
 the labels of other pods running on the nodes. The former case is called node
-affinity and the latter one inter-pod (anti-)affinity. 
+affinity and the latter one inter-pod (anti-)affinity.
 
 You can read more about what constraints are possible in the [Kubernetes
 documentation][affinity], as mentioned before the a8s framework does not place
@@ -63,14 +101,14 @@ affinity can be expressed analogously.
 
 In this section we will assume that:
 
-- you are using a cluster that has nodes in at least 3 availability zones (AZ). 
+- you are using a cluster that has nodes in at least 3 availability zones (AZ).
 - you want to use a 3 replica PostgreSQL instance.
 - the AZ of a node is indicated by the node's label
   `topology.kubernetes.io/zone`.
 
 In this case, for a high available PostgreSQL, the replicas have to be distributed
 among those AZs, here is an example `Postgresql` CustomResource
-(CR) object that will achieve this: 
+(CR) object that will achieve this:
 
 ```yml
 apiVersion: postgresql.anynines.com/v1beta3
@@ -94,16 +132,16 @@ spec:
                 matchExpressions:
                 - key: a8s.a9s/dsi-name
                   operator: In
-                  values: 
+                  values:
                   - ha-1-sample-pg-cluster
                 - key: a8s.a9s/dsi-kind
                   operator: In
-                  values: 
+                  values:
                   - Postgresql
             topologyKey: topology.kubernetes.io/zone
 ```
 
-Let's go through the specs in detail: 
+Let's go through the specs in detail:
 
 ```yml
 podAntiAffinity:
@@ -112,15 +150,15 @@ podAntiAffinity:
 
 Since we want PostgreSQL pods to repel each other, we use **anti-affinity**
 here, the `requiredDuringScheduling` part will then indicate which conditions **must** be met
-before a pod gets scheduled. 
+before a pod gets scheduled.
 
 The `IgnoredDuringExecution` implies that in case we are modifying an already
 running instance, pods will not get evicted to enforce this policy, so it will
 only take effect when pods restart. Therefore, if you want to try out the
-examples make sure to always create a new instance.  
+examples make sure to always create a new instance.
 
 Goal of our constraints is to express, that no other pod of the same DSI should
-be in the same zone, which is done through: 
+be in the same zone, which is done through:
 
 ```yml
 - podAffinityTerm:
@@ -128,11 +166,11 @@ be in the same zone, which is done through:
     matchExpressions:
     - key: a8s.a9s/dsi-name
       operator: In
-      values: 
+      values:
       - ha-1-sample-pg-cluster
     - key: a8s.a9s/dsi-kind
       operator: In
-      values: 
+      values:
       - Postgresql
   topologyKey: topology.kubernetes.io/zone
 ```
@@ -157,7 +195,7 @@ section][well-known-annotations].
 > annotations][well-known-annotations] such as `topology.kubernetes.io/zone` and
 > most providers use them, Kubernetes does not enforce them. Thus, you will
 > have to make sure that your cluster uses them or replace them with the ones
-> that are used in your cluster. 
+> that are used in your cluster.
 > You can find out by asking your admin or inspecting your cluster nodes.
 
 You can test this example using:
@@ -181,11 +219,11 @@ kubectl get nodes -o go-template='{{range .items}}{{printf "%s : %s\n" .metadata
 > Note:
 > The documentation warns you that specifying pod constraints can result in
 > significantly increased amount of processing at scheduling time, which can
-> slow down your cluster. 
+> slow down your cluster.
 
 For a more detailed and complete guide, please refer to the [Kubernetes
 documentation][affinity], everything mentioned there is directly applicable to
-the a8s framework. 
+the a8s framework.
 
 #### Example: High Availability 2 - More Replicas than Zones
 
@@ -196,7 +234,7 @@ possible without having to worry about scheduling fields.
 We are now going to assume you have a cluster with 3 AZs which all contain
 multiple nodes and want to run a 5 replicas DSI on it. We want to ensure that
 pods are distributed among zones and also that there are no two Pods of the same
-DSI running on the same node. This can be achieved using: 
+DSI running on the same node. This can be achieved using:
 
 ```yml
 apiVersion: postgresql.anynines.com/v1beta3
@@ -220,11 +258,11 @@ spec:
                 matchExpressions:
                 - key: a8s.a9s/dsi-name
                   operator: In
-                  values: 
+                  values:
                   - ha-2-sample-pg-cluster
                 - key: a8s.a9s/dsi-kind
                   operator: In
-                  values: 
+                  values:
                   - Postgresql
             topologyKey: kubernetes.io/hostname
         preferredDuringSchedulingIgnoredDuringExecution:
@@ -234,11 +272,11 @@ spec:
                   matchExpressions:
                   - key: a8s.a9s/dsi-name
                     operator: In
-                    values: 
+                    values:
                     - ha-2-sample-pg-cluster
                   - key: a8s.a9s/dsi-kind
                     operator: In
-                    values: 
+                    values:
                     - Postgresql
               topologyKey: topology.kubernetes.io/zone
 ```
@@ -256,17 +294,17 @@ wouldn't be satisfiable. Instead, we have now made this constraint
       matchExpressions:
         - key: a8s.a9s/dsi-name
           operator: In
-          values: 
+          values:
           - ha-2-sample-pg-cluster
         - key: a8s.a9s/dsi-kind
           operator: In
-          values: 
+          values:
           - Postgresql
       topologyKey: topology.kubernetes.io/zone
 ```
 
 This will not prevent scheduling of pods in the same availability zone, but will
-minimize the likelihood of having them in the same AZ. 
+minimize the likelihood of having them in the same AZ.
 
 Additionally, when using `preferredDuringSchedulingIgnoredDuringExecution` one
 has to give each constraint a weight. This weight conveys to the scheduler how
@@ -297,7 +335,7 @@ kubectl get pods -l a8s.a9s/dsi-name=ha-1-sample-pg-cluster  -o go-template='{{r
 ```
 
 And additionally verify that the nodes are not running in a single AZs by
-inspecting the output of: 
+inspecting the output of:
 
 ```bash
 kubectl get nodes -o go-template='{{range .items}}{{printf "%s : %s\n" .metadata.name  (index .metadata.labels "topology.kubernetes.io/zone") }}{{end}}'
@@ -317,7 +355,7 @@ taint is `node-role.kubernetes.io/control-plane` which is typically used on the
 nodes reserved for the Kubernetes control plane components.
 
 Since taints can stop pods, be careful when tainting your nodes, you could end
-up leaving the cluster in a broken state. Please read the 
+up leaving the cluster in a broken state. Please read the
 [documentation][taints-and-tolerations] before using taints and tolerations.
 
 #### Example: Node dedicated to PostgreSQL Instance
@@ -401,7 +439,7 @@ kubectl apply -f examples/postgresql-toleration-instance.yaml
 ```
 
 If you now add another DSI, for example our `sample-pg-cluster` from the usage
-overview, by using: 
+overview, by using:
 
 ```bash
 kubectl apply -f examples/postgresql-instance.yaml
@@ -413,7 +451,7 @@ You will see that none of its replicas will be scheduled on the tainted node.
 
 This section will point out **some** of the current limitations and caveats you
 might be experiencing when working with scheduling constraints, the indicated
-Kubernetes documentation pages will provide a more complete overview. 
+Kubernetes documentation pages will provide a more complete overview.
 
 - Using scheduling constraints can evict pods and cause some pods to not be
   scheduled regardless of resources available on the cluster. This is especially
@@ -441,11 +479,11 @@ Kubernetes documentation pages will provide a more complete overview.
   cluster.
 - For some storage classes, the PersistentVolumeClaims can cause the pod to
   stick to a specific node. For example, if a pod was already scheduled on the
-  node and after a change in scheduling constraints it can no longer run on it 
+  node and after a change in scheduling constraints it can no longer run on it
   the pod can get stuck in pending. The reason is that the PersistentVolumeClaim
   of the pod  is bound to the node and therefore this node becomes the only
   eligible node for scheduling the pod, but the constraints forbid scheduling.
-  This behavior will be addressed in future releases of Kubernetes. 
+  This behavior will be addressed in future releases of Kubernetes.
 
 [affinity]:https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
 [taints-and-tolerations]:https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/

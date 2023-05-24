@@ -1,20 +1,23 @@
 # Install the a8s Control Plane
 
-- [Prerequisites](#prerequisites)
-  - [Configure Backups Store](#configure-backups-store)
-- [Configure Images](#configure-images)
-- [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
+- [Install the a8s Control Plane](#install-the-a8s-control-plane)
+  - [Prerequisites](#prerequisites)
+    - [Configure Backups Store](#configure-backups-store)
+  - [Configure Images](#configure-images)
+  - [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
     - [Using Static Manifests](#using-static-manifests)
-        - [Install the cert-manager](#install-the-cert-manager)
-        - [Install the Control Plane with Manifests](#install-the-control-plane-with-manifests)
+      - [Install the cert-manager](#install-the-cert-manager)
+      - [Install the Control Plane with Manifests](#install-the-control-plane-with-manifests)
     - [Using the OLM](#using-the-olm)
-        - [Install the OLM](#install-the-olm)
-        - [Install the Control Plane with OLM](#install-the-control-plane-with-olm)
-        - [Uninstalling the Control Plane](#uninstalling-the-control-plane)
-- [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
-- [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
-- [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
-- [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
+      - [Install the OLM](#install-the-olm)
+      - [Install the Control Plane with OLM](#install-the-control-plane-with-olm)
+      - [Uninstalling the Control Plane](#uninstalling-the-control-plane)
+  - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
+    - [Virtual Memory Usage](#virtual-memory-usage)
+      - [Disabling Virtual Memory Usage](#disabling-virtual-memory-usage)
+  - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
+  - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
+  - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
 
 ## Prerequisites
 
@@ -37,13 +40,13 @@ file. You MUST use the file names shown in the subsequent commands.
 
 ```shell
 # create file that stores the ID of the key
-echo <bucket-access-key-id> > deploy/a8s/backup-config/access-key-id 
+echo -n <bucket-access-key-id> > deploy/a8s/backup-config/access-key-id
 
 # create file that stores the secret value of the key
-echo <bucket-secret-access-key> > deploy/a8s/backup-config/secret-access-key 
+echo -n <bucket-secret-access-key> > deploy/a8s/backup-config/secret-access-key
 
 # create file that stores password for backup encryption
-echo <encryption password> > deploy/a8s/backup-config/encryption-password 
+echo -n <encryption password> > deploy/a8s/backup-config/encryption-password
 
 # create file with other information about the bucket
 cp deploy/a8s/backup-config/backup-store-config.yaml.template deploy/a8s/backup-config/backup-store-config.yaml 
@@ -81,6 +84,8 @@ Also, your changes will be overwritten when deploying with the OLM and during an
 update. If you need to edit the configMap, reapply it when you deployed or
 updated the framework. In this case you might want to disable automatic updates.
 
+> WARNING: Issues may occure when running spilo with the MobilityDB Postgresql extension on arm-based systems. The latest spilo images natively support both amd and arm architectures, which is not the case for MobilityDB.
+
 ## Install the a8s Control Plane
 
 The a8s Control Plane can be deployed with the help of the static manifests you
@@ -93,7 +98,7 @@ OLM.
 
 ### Using Static Manifests
 
-#### Install the Cert-Manager
+#### Install the cert-manager
 
 The a8s framework relies on the [cert-manager][cert-manager] to generate
 TLS certificates, therefore you will first have to install it on your cluster.
@@ -134,10 +139,9 @@ order.
 
 More precisely, it will:
 
-1. Create two namespaces called `a8s-system` and `postgresql-system`.
-   The `postgresql-system` namespace is used for the `postgresql-controller-manager`, the rest of
-   the a8s framework components (`a8s-backup-controller-manager` and
-   `service-binding-controller-manager`) are running in `a8s-system`.
+1. Create a namespace called `a8s-system`.
+   The a8s framework components `postgresql-controller-manager`, `a8s-backup-controller-manager` and
+   `service-binding-controller-manager` will be running in `a8s-system` namespace.
 2. Register multiple CustomResourceDefinitions (CRDs)
 3. Create three deployments, one for each a8s framework component
 4. Create multiple ClusterRoles and ClusterRoleBindings:
@@ -151,7 +155,7 @@ More precisely, it will:
     - postgresql-spilo-role:  
       gives spilo the required permissions to access Kubernetes resources
 
-5. Create one Role and RoleBinding:
+5. Create one Role and RoleBinding for each a8s framework component:
 
     - <component_name>-leader-election-role and <component_name>-leader-election-rolebinding:  
       used for communication between multiple controllers of the same type.  
@@ -168,22 +172,31 @@ are ready (value `1/1` under the `READY` column):
 
 ```shell
 watch kubectl get deployment --namespace a8s-system
-watch kubectl get deployment --namespace postgresql-system
 ```
 
-the output of the first command should be similar to:
+the output of the command should be similar to:
 
 ```shell
 NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
 a8s-backup-controller-manager        1/1     1            1           105s
 service-binding-controller-manager   1/1     1            1           105s
+postgresql-controller-manager        1/1     1            1           105s
 ```
 
-the output of the second command should be similar to:
+#### Uninstall the Control Plane with Manifests
+
+To uninstall the control plane, use:
 
 ```shell
-NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
-postgresql-controller-manager   1/1     1            1           25m
+kubectl delete --kustomize deploy/a8s/manifests
+```
+
+This will delete the Kubernetes resources that make up the a8s control plane and their associated CRDs.
+
+To uninstall the cert-manager components, use:
+
+```shell
+kubectl delete --kustomize deploy/cert-manager
 ```
 
 ### Using the OLM
@@ -226,7 +239,7 @@ to apply all OLM resources necessary. In more detail, this will create:
 Additionally, the kustomization creates the secret and configMap for the backup
 bucket configuration.
 
-#### Uninstalling the Control Plane
+#### Uninstalling the Control Plane with OLM
 
 To uninstall the control plane use:
 

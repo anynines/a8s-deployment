@@ -22,7 +22,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | APIVersion is the <api_group>/<version> of the referenced Data Service Instance, e.g. "postgresql.anynines.com/v1beta3" or "redis.anynines.com/v1alpha1". |
 | `kind` _string_ | Kind is the Kubernetes API Kind of the referenced Data Service Instance. |
-| `NamespacedName` _[NamespacedName](#namespacedname)_ | NamespacedName is the Kubernetes API Kind of the referenced Data Service Instance. |
+| `NamespacedName` _[NamespacedName](#namespacedname)_ | NamespacedName represents the referenced Data Service Instance namespace and name. |
 
 #### NamespacedName
 
@@ -34,7 +34,7 @@ _Appears in:_
 
 | Field | Description |
 | --- | --- |
-| `namespace` _string_ |  |
+| `namespace` _string_ | Namepace of the Instance, if not provided the same namespace as the service bindings will be used |
 | `name` _string_ |  |
 
 #### ServiceBinding
@@ -48,7 +48,7 @@ _Appears in:_
 | --- | --- |
 | `apiVersion` _string_ | `servicebindings.anynines.com/v1beta3`
 | `kind` _string_ | `ServiceBinding`
-| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `spec` _[ServiceBindingSpec](#servicebindingspec)_ |  |
 | `status` _[ServiceBindingStatus](#servicebindingstatus)_ |  |
 
@@ -60,7 +60,7 @@ ServiceBindingList contains a list of ServiceBinding.
 | --- | --- |
 | `apiVersion` _string_ | `servicebindings.anynines.com/v1beta3`
 | `kind` _string_ | `ServiceBindingList`
-| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
+| `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |
 | `items` _[ServiceBinding](#servicebinding) array_ |  |
 
 #### ServiceBindingSpec
