@@ -1,4 +1,4 @@
-# a8s-deployment
+# a8s-deployment 
 
 a8s is a Kubernetes-native platform for lifecycle automation of data services.
 
