@@ -1,8 +1,15 @@
 # Short Description
+
 _Please provide a brief summary of your changes_
+
 # Details
 
+# Note
+
+WARNING: Only users listed in the CODEOWNERS file can approve PRs!
+
 # Checks
+
 - [ ] Documentation has been adjusted
 - [ ] Architectural decisions have been documented
 - [ ] Changelog has been updated
