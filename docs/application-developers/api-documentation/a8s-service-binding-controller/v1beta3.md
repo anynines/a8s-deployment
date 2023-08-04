@@ -73,6 +73,7 @@ _Appears in:_
 | Field | Description |
 | --- | --- |
 | `instance` _[InstanceRef](#instanceref)_ | Instance identifies the Data Service Instance that the ServiceBinding binds to. |
+| `dummy` _boolean_ |  |
 
 #### ServiceBindingStatus
 

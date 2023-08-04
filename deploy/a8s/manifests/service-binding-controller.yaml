@@ -3,6 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
   name: servicebindings.servicebindings.anynines.com
 spec:
   group: servicebindings.anynines.com
@@ -348,7 +349,7 @@ spec:
         - a8s-service-binding-controller
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:a2903616cb2f52885f1cdb93b5fd1c95d6a7694a
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:f17f7b946d2c4d69f02912382abe25da53949da4
         livenessProbe:
           httpGet:
             path: /healthz
@@ -393,3 +394,4 @@ spec:
       - configMap:
           name: service-binding-manager-config
         name: manager-config
+
