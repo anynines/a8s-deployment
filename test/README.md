@@ -30,7 +30,7 @@ test cases test the same coarse-grained functionality.
 
 - To run *all* the test suites currently available run `go test ./...` from
   inside the test directory.
-- To run the end-to-end tests use `go test ./e2e/..`
+- To run the end-to-end tests use `go test ./e2e/...`
 - To run only the chaos tests use `go test ./chaos-tests`
 - To run a *single* suite/piece of functionality, for example the backup
   end-to-end tests, run `go test ./e2e/backup` from inside the test directory.
