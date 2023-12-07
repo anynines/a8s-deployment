@@ -2,6 +2,7 @@ apiVersion: backups.anynines.com/v1beta3
 kind: Restore
 metadata:
   name: recovery-sample
+  namespace: default
 spec:
   serviceInstance:
     apiGroup: "postgresql.anynines.com"

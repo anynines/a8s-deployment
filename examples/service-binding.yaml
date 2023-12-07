@@ -2,6 +2,7 @@ apiVersion: servicebindings.anynines.com/v1beta3
 kind: ServiceBinding
 metadata:
   name: sb-sample
+  namespace: default
 spec:
   instance:
     apiVersion: postgresql.anynines.com/v1beta3

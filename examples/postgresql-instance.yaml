@@ -2,6 +2,7 @@ apiVersion: postgresql.anynines.com/v1beta3
 kind: Postgresql
 metadata:
   name: sample-pg-cluster
+  namespace: default
 spec:
   replicas: 3
   volumeSize: 1Gi
