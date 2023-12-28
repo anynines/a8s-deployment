@@ -11,10 +11,8 @@ This repo contains:
 - some guidance for application developers on how to use a8s to provision and manage (e.g. take a
 backup) PostgreSQL instances that their applications can use.
 
-> WARNING: **a8s is in beta** and the only data service that it currently supports is
-PostgreSQL 13 and 14. **Don't use it for production workloads**. Some features may still be fragile
- and some breaking API changes may occur. For known issues and limitations please consult
-[Current Limitations](docs/current_limitations.md).
+> WARNING: a8s offers support for both PostgreSQL 13 and 14. Refer to [Current Limitations](docs/current_limitations.md)
+for information on any known issues or limitations.
 
 ## Main features
 
