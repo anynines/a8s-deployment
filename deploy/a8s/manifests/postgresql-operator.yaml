@@ -59,16 +59,6 @@ spec:
                 - Internal
                 - LoadBalancer
                 type: string
-              extensions:
-                description: Extensions defines a list of PostgreSQL extensions which
-                  should be installed. Installing means that the binaries and libraries
-                  of the defined extensions are moved to the PostgreSQL extension
-                  directory. The extensions are NOT loaded by default (i.e. by using
-                  the PostgreSQL "CREATE EXTENSION" command). Updating the list of
-                  extensions will cause a rolling update of the PostgreSQL instance.
-                items:
-                  type: string
-                type: array
               parameters:
                 properties:
                   archiveTimeoutSeconds:
@@ -1673,7 +1663,7 @@ spec:
         - --leader-elect
         command:
         - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:37d4a2e9d311ff66d8fc5b1d570d08232720754d
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:55f98bd3fe7035d80991487e8bbe02064fc5d2da
         livenessProbe:
           httpGet:
             path: /healthz
