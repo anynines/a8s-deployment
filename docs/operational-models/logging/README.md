@@ -1,14 +1,8 @@
 # Logging Operational Model
 
-Based on minikube.
-
 We create a separate namespace for a8s system components such as
 the logging framework. This allows us to isolate a8s Kubernetes objects from
 the rest of the cluster.
-
-```shell
-kubectl apply -f dashboard/a8s-system.yaml
-```
 
 We use a node level approach in the following steps.
 
@@ -16,8 +10,8 @@ Kubernetes logs many things on the node's disk (or uses systemd journal, but
 let's ignore it in this document). We need to detect, parse, filter, ... forward
 those logs to a destination.
 
-For example the the containers are logged in the directory
-`/var/log/containers/*` for all the pods that log to `stdout`.
+For example the containers are logged in the directory `/var/log/containers/*`
+for all the pods that log to `stdout`.
 
 There you can find files in the following style:
 
@@ -46,10 +40,6 @@ In order to now parse those log files, we will use a
 , mount relevant directories on the Kubernetes nodes to our pods and use a
 software to process the logs within the pods.
 
-Some people already built tools to process those kind of logs, so we can base
-our work on that. There are for example [Fluentd](https://www.fluentd.org/) and
-[Fluent Bit](https://fluentbit.io/) available.
-
 # Fluent Bit
 
 ## Manual Steps
@@ -70,15 +60,7 @@ given each Fluent Bit pod can collect and annotate logs for all containers on
 its node from a directory on the node.
 
 ```bash
-kubectl apply -f logging/fluent-bit-daemonset-permissions.yaml
-kubectl apply -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
-kubectl apply -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
-```
-
-You can use a demo app to generate some application specific logs:
-
-```shell
-kubectl apply -f logging/demo-app-counter.yaml
+kubectl apply -f logging/collection-infrastructure/fluent-bit-node-collector.yaml
 ```
 
 ### Deletion
@@ -87,15 +69,7 @@ If you want to get rid of the whole daemon set setup, you can run the following
 commands:
 
 ```shell
-kubectl delete -f logging/fluent-bit-daemonset-elasticsearch-minikube.yaml
-kubectl delete -f logging/fluent-bit-daemonset-configmap-elasticsearch-minikube.yaml
-kubectl delete -f logging/fluent-bit-daemonset-permissions.yaml
-```
-
-If you used the demo app, delete it using the following commands:
-
-```shell
-kubectl delete -f logging/demo-app-counter.yaml
+kubectl delete -f logging/collection-infrastructure/fluent-bit-node-collector.yaml
 ```
 
 # Fluentd
@@ -121,7 +95,7 @@ to a different destination. So we have all the `a8s.a9s/dsi-name:sample-pg-clust
 labeled pods (an instance of a PostgreSQL cluster) directed to stdout, this
 could be any destination. Additionally, we used the copy input plugin to
 duplicate the records so that we could have all logs in the cluster sent to a
-global destination, like Elasticsearch, instead of simply routing the
+global destination, like OpenSearch, instead of simply routing the
 PostgreSQL instance traffic to a single destination.
 
 ```shell
@@ -133,20 +107,18 @@ cd ../..
 ```
 
 ```shell
-kubectl apply -f logging/fluentd-aggregator-configmap.yaml
-kubectl apply -f logging/fluentd-aggregator-service.yaml
-kubectl apply -f logging/fluentd-aggregator-statefulset.yaml
+kubectl apply -f logging/collection-infrastructure/fluentd-aggregator.yaml
 ```
 
-We will also deploy a PostgreSQL cluster and Opendistro for Elasticsearch so
-that we can see logs in a real cluster being sent to multiple destinations by
-the Fluentd aggregator. Follow the instructions from the [a8s-demo][a8s-demo]
-in order to get a cluster up and running using our PostgreSQL Operator.
+We will also deploy a PostgreSQL cluster and OpenSearch so that we can see logs
+in a real cluster being sent to multiple destinations by the Fluentd aggregator.
+Follow the instructions from the [a8s-demo][a8s-demo] in order to get a cluster
+up and running using our PostgreSQL Operator.
 
 Once this has been applied, you should see some log messages that pertain to
 the PostgreSQL cluster in logs of the fluentd-aggregator in JSON format. You
 will also see logstash format logs which are being logged before being sent to
-Opendistro for Elasticsearch. You can differentiate between these based on the
+OpenSearch. You can differentiate between these based on the
 different formats.
 
 ```shell
@@ -159,30 +131,7 @@ If you want to get rid of the whole daemon set setup, you can run the following
 commands:
 
 ```shell
-kubectl delete -f logging/fluentd-aggregator-configmap.yaml
-kubectl delete -f logging/fluentd-aggregator-service.yaml
-kubectl delete -f logging/fluentd-aggregator-statefulset.yaml
+kubectl delete -f logging/collection-infrastructure/fluentd-aggregator.yaml
 ```
-
-If you used the demo app, delete it using the following commands:
-
-```shell
-kubectl delete -f logging/demo-app-counter.yaml
-```
-
-### Notes
-
-Some general notes independent of Fluent Bit or Fluentd most of the time:
-
-- Do we have access to the container logs in all products (AWS, ...)?
-- What's the deal with systemd journal?
-- In what way is is the filename format and the json file format given? Is it a
-  standard kind of in the source code of Kubernetes and Docker? If it changes,
-  a lot of things break.
-- What to do where depends on the customer requirements and special cases we
-  cannot forsee at the moment.
-- It looks quite easy to write your own fluentd image with the appropriate
-  configuration(s) for our own framework/product. But would be great of course
-  to use preexisting docker images as much as possible.
 
 [a8s-demo]: https://github.com/anynines/a8s-demo
