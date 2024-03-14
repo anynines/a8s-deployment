@@ -21,7 +21,7 @@ const (
 	SSLModeRequired = "require"
 )
 
-var _ = Describe("end-to-end tests for exposed instances", func() {
+var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadbalancer", "KindIncompatible"), func() {
 
 	Context("Instance exposed via Load Balancer", Ordered, func() {
 		AfterAll(func() {

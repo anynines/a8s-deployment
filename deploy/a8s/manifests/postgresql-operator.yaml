@@ -1672,8 +1672,8 @@ spec:
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
         command:
-        - postgresql-operator
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:c01af5af858b4a5186460a51d5a1f34a5d428317
+        - ./manager
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:37d4a2e9d311ff66d8fc5b1d570a08232a20754x
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1808,3 +1808,4 @@ webhooks:
     resources:
     - postgresqls
   sideEffects: None
+

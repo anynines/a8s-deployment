@@ -231,6 +231,10 @@ func MasterService(instanceName string) string {
 	return fmt.Sprintf("%s-%s", instanceName, "master")
 }
 
+func PatroniService(instanceName string) string {
+	return fmt.Sprintf("%s-%s", instanceName, "patroni")
+}
+
 func AdminRoleSecretName(instanceName string) string {
 	return fmt.Sprintf("%s.%s", "postgres.credentials", instanceName)
 }

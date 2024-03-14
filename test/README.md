@@ -30,16 +30,24 @@ test cases test the same coarse-grained functionality.
 
 - To run *all* the test suites currently available run `go test ./...` from
   inside the test directory.
-- To run the end-to-end tests use `go test ./e2e/..`
+- To run the end-to-end tests use `go test ./e2e/...`
 - To run only the chaos tests use `go test ./chaos-tests`
 - To run a *single* suite/piece of functionality, for example the backup
   end-to-end tests, run `go test ./e2e/backup` from inside the test directory.
 - `go test` can also be replaced by `ginkgo` for more informative output.
 
+Some tests are not compatible with certain environments. They are labeled accordingly
+so they can be skipped using the GinkGo CLI. For example the following command will
+skip tests that don't work in Kind.
+
+``` sh
+ginkgo run --label-filter='!KindIncompatible' ./...
+```
+
 If your run includes the `chaos-tests`, you will have to install
 [ChaosMesh](https://chaos-mesh.org/). As the installation is specific to the
 container runtime used in your cluster, refer to the [official installation
-guide](https://chaos-mesh.org/docs/production-installation-using-helm/). 
+guide](https://chaos-mesh.org/docs/production-installation-using-helm/).
 
 ### Adding or Modifying Tests
 

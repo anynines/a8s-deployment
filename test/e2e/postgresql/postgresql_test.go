@@ -172,6 +172,40 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Expect(svc.Spec.Ports[0].Name).To(Equal("postgresql"))
 				Expect(svc.Spec.Ports[0].Port).To(Equal(int32(5432)))
 				Expect(svc.Spec.Ports[0].Protocol).To(Equal(corev1.ProtocolTCP))
+				Expect(svc.Spec.Ports).To(HaveLen(1))
+			})
+
+			By("creating a Service that points to all of the pods for the Patroni API", func() {
+				svc := &corev1.Service{}
+				Expect(k8sClient.Get(ctx,
+					types.NamespacedName{
+						Name: postgresql.PatroniService(
+							instance.GetName()),
+						Namespace: instance.GetNamespace()},
+					svc)).To(Succeed())
+
+				By("checking a8s labels added to Service", func() {
+					Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(svc.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(svc.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+				})
+
+				By("checking a8s labels as selector", func() {
+					Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-name", pg.Name))
+					Expect(svc.Spec.Selector).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
+					Expect(len(svc.Spec.Selector)).To(Equal(4))
+				})
+
+				Expect(svc.Spec.Type).To(Equal(corev1.ServiceTypeClusterIP))
+				Expect(svc.Spec.Ports[0].Name).To(Equal("patroni"))
+				Expect(svc.Spec.Ports[0].Port).To(Equal(int32(8008)))
+				Expect(svc.Spec.Ports[0].Protocol).To(Equal(corev1.ProtocolTCP))
+				Expect(svc.Spec.Ports).To(HaveLen(1))
 			})
 
 			By("creating the ServiceAccount", func() {
@@ -301,10 +335,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					},
 				})).To(Succeed(), "failed to list events emitted for test DSI")
 
-				Expect(len(instanceEvents.Items)).To(Equal(6), "found more events than expected, "+
+				Expect(len(instanceEvents.Items)).To(Equal(7), "found more events than expected, "+
 					"there should be one for every secondary API object that the Operator "+
-					"directly creates (ServiceAccount, RoleBinding, master Service, StatefulSet, "+
-					"two Secrets)")
+					"directly creates (ServiceAccount, RoleBinding, master Service, patroni Service, "+
+					"StatefulSet, two Secrets)")
 
 				// Sort events by message so that we know for which secondary API object each event
 				// is created w/o having to inspect the event first. *This is a hack that makes the
@@ -320,8 +354,9 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				adminSecretEvent := instanceEvents.Items[1]
 				standbySecretsEvent := instanceEvents.Items[2]
 				masterSvcEvent := instanceEvents.Items[3]
-				svcAccountEvent := instanceEvents.Items[4]
-				ssetEvent := instanceEvents.Items[5]
+				patroniSvcEvent := instanceEvents.Items[4]
+				svcAccountEvent := instanceEvents.Items[5]
+				ssetEvent := instanceEvents.Items[6]
 
 				By("emitting an event for the creation of the roleBinding", func() {
 					Expect(roleBindingEvent.Message).To(Equal("Successfully created roleBinding"),
@@ -393,6 +428,25 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					Expect(masterSvcEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
 						"wrong event involvedObject.kind")
 					Expect(masterSvcEvent.InvolvedObject.APIVersion).
+						To(Equal("postgresql.anynines.com/v1beta3"),
+							"wrong event involvedObject.apiVersion")
+				})
+
+				By("emitting an event for the creation of the patroni service", func() {
+					Expect(patroniSvcEvent.Message).
+						To(Equal(fmt.Sprintf("Successfully created service: %s/%s-patroni",
+							pg.Namespace,
+							pg.Name)),
+							"wrong event message")
+					Expect(patroniSvcEvent.Type).To(Equal(corev1.EventTypeNormal),
+						"wrong event type")
+					Expect(patroniSvcEvent.Reason).To(Equal("Created"), "wrong event reason")
+					Expect(patroniSvcEvent.Count).To(Equal(int32(1)), "wrong event count")
+					Expect(patroniSvcEvent.Source.Component).To(Equal("postgresql-controller"),
+						"wrong event source.component")
+					Expect(patroniSvcEvent.InvolvedObject.Kind).To(Equal("Postgresql"),
+						"wrong event involvedObject.kind")
+					Expect(patroniSvcEvent.InvolvedObject.APIVersion).
 						To(Equal("postgresql.anynines.com/v1beta3"),
 							"wrong event involvedObject.apiVersion")
 				})
@@ -615,6 +669,35 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 			})
 
+			By("Ensuring patroni service labels are updated", func() {
+				Eventually(func(g Gomega) {
+					svc := &corev1.Service{}
+					Expect(k8sClient.Get(ctx,
+						types.NamespacedName{
+							Name: postgresql.PatroniService(
+								instance.GetName()),
+							Namespace: instance.GetNamespace()},
+						svc)).To(Succeed())
+					g.Expect(err).To(BeNil())
+
+					g.Expect(svc.Labels).To(HaveKeyWithValue("test-label-1", "val3"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("test-label-4", "val4"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(svc.Labels).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(svc.Labels).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(svc.Labels)).To(Equal(numA8SLabels + 2))
+
+					g.Expect(svc.Spec.Selector).
+						To(HaveKeyWithValue("a8s.a9s/replication-role", "master"))
+					g.Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-name", instance.GetName()))
+					g.Expect(svc.Spec.Selector).
+						To(HaveKeyWithValue("a8s.a9s/dsi-group", "postgresql.anynines.com"))
+					g.Expect(svc.Spec.Selector).To(HaveKeyWithValue("a8s.a9s/dsi-kind", "Postgresql"))
+					g.Expect(len(svc.Spec.Selector)).To(Equal(numA8SLabels + 1))
+				}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
+			})
+
 			By("Ensuring ServiceAccount labels are updated", func() {
 				Eventually(func(g Gomega) {
 					sa := &corev1.ServiceAccount{}
@@ -745,6 +828,17 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					err := k8sClient.Get(ctx,
 						types.NamespacedName{
 							Name:      postgresql.MasterService(instance.GetName()),
+							Namespace: instance.GetNamespace()},
+						&corev1.Service{})
+					return err != nil && k8serrors.IsNotFound(err)
+				}, asyncOpsTimeoutMins).Should(BeTrue())
+			})
+
+			By("removing the service that points to the patroni API", func() {
+				Eventually(func() bool {
+					err := k8sClient.Get(ctx,
+						types.NamespacedName{
+							Name:      postgresql.PatroniService(instance.GetName()),
 							Namespace: instance.GetNamespace()},
 						&corev1.Service{})
 					return err != nil && k8serrors.IsNotFound(err)
