@@ -345,10 +345,10 @@ spec:
       - args:
         - --config=/config/controller_manager_config.yaml
         command:
-        - a8s-service-binding-controller
+        - ./manager
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:a2903616cb2f52885f1cdb93b5fd1c95d6a7694a
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:a3f2694dc93e7ace07829cb1b8a3b5f6s4d1527c
         livenessProbe:
           httpGet:
             path: /healthz
