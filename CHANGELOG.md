@@ -4,6 +4,14 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.0] - 2024-03-15
+
+### Updated
+
+* Control plane images are now compatible with both ARM and AMD architectures.
+* Updated cert-manager to v1.12.0.
+* Documentation has been revised, removing outdated instructions.
+
 ## [0.3.0] - 2023-05-15
 ### Migration Instructions
 * If you use the extensions feature, delete the stateful set objects (**not the PostgreSQL objects**)
