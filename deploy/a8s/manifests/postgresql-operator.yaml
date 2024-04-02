@@ -67,20 +67,20 @@ spec:
               extensions:
                 description: |-
                   Extensions defines a list of PostgreSQL extensions which should be installed. Extensions can
-                  be installed from the supported list of extensions. NOTE: This implementation of extensions
-                  will enabled in a up coming feature PR. Remove note once PR is merged.
+                  be installed from the supported list of extensions. The currently supported extensions are:
+                  postgis, uuid-ossp, ltree, pgcrypto, pg_stat_statements, fuzzystrmatch, pg_trgm, hstore
                 items:
                   type: string
-                maxItems: 9
+                maxItems: 8
                 type: array
                 x-kubernetes-list-type: set
                 x-kubernetes-validations:
                 - message: 'Only the following extensions are supported: ''postgis'',
                     ''uuid-ossp'', ''ltree'', ''pgcrypto'', ''pg_stat_statements'',
-                    ''fuzzystrmatch'', ''pg_trgm'', ''hstore'', ''mobilitydb''.'
+                    ''fuzzystrmatch'', ''pg_trgm'', ''hstore''.'
                   rule: self.all(extension, extension in ['postgis', 'uuid-ossp',
                     'ltree', 'pgcrypto', 'pg_stat_statements', 'fuzzystrmatch', 'pg_trgm',
-                    'hstore', 'mobilitydb'])
+                    'hstore'])
               parameters:
                 properties:
                   archiveTimeoutSeconds:
@@ -1602,7 +1602,7 @@ spec:
         - --leader-elect
         command:
         - ./manager
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:58ff6eb0a92442340005c9a6f957589ef35e1e07
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:553cc3f68aff84f4f2081cee951d7eb707d0f410
         livenessProbe:
           httpGet:
             path: /healthz
