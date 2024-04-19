@@ -176,6 +176,7 @@ spec:
                     minimum: 1
                     type: integer
                   maxLocksPerTransaction:
+                    default: 100
                     description: |-
                       MaxLocksPerTransaction sets the maximum number of locks per transaction.
                       The shared lock table tracks locks on max_locks_per_transaction * (max_connections +
@@ -1350,6 +1351,13 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - services
   verbs:
   - create
@@ -1594,7 +1602,7 @@ spec:
         - --leader-elect
         command:
         - ./manager
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:8f4a7a914c4dab0d8ccc27b8ee7aa152f71e7f08
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:58ff6eb0a92442340005c9a6f957589ef35e1e07
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1673,34 +1681,6 @@ metadata:
   namespace: a8s-system
 spec:
   selfSigned: {}
----
-apiVersion: admissionregistration.k8s.io/v1
-kind: MutatingWebhookConfiguration
-metadata:
-  annotations:
-    cert-manager.io/inject-ca-from: a8s-system/postgresql-serving-cert
-  name: postgresql-mutating-webhook-configuration
-webhooks:
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: postgresql-webhook-service
-      namespace: a8s-system
-      path: /mutate-postgresql-anynines-com-v1beta3-postgresql
-  failurePolicy: Fail
-  name: mpostgresql.kb.io
-  rules:
-  - apiGroups:
-    - postgresql.anynines.com
-    apiVersions:
-    - v1beta3
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - postgresqls
-  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration

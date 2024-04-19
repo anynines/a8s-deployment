@@ -10,6 +10,14 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 * Validation for PostgreSQL Extensions field.
 
+### Fixed
+
+* Fix PostgreSQL restart logic after user parameter updates
+
+### Updated
+
+* The backup_agent has been bumped to the latest version and now includes buildx support.
+
 ## [1.0.0] - 2024-03-15
 
 ### Updated
