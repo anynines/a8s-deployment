@@ -67,6 +67,10 @@
   reason behind that is that the secrets, where the password and username are
   stored, are limited to a single namespace (see [Kubernetes Secrets][k8s-secrets])
 
+## PostgreSQL Extensions
+
+- Extensions validation does implement extension installation.
+
 ## Logging
 
 - OpenDashboards has the authentication disabled, this means that the dashboard

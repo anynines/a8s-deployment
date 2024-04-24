@@ -4,6 +4,12 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+
+### Added
+
+* Validation for PostgreSQL Extensions field.
+
 ## [1.0.0] - 2024-03-15
 
 ### Updated
