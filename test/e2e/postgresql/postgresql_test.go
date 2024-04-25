@@ -97,8 +97,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			By("creating a StatefulSet", func() {
 				sts := &appsv1.StatefulSet{}
 				Expect(k8sClient.Get(ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts)).To(Succeed(), "failed to get statefulset")
 
 				Expect(*sts.Spec.Replicas).To(Equal(*pg.Spec.Replicas))
@@ -148,7 +150,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					types.NamespacedName{
 						Name: postgresql.MasterService(
 							instance.GetName()),
-						Namespace: instance.GetNamespace()},
+						Namespace: instance.GetNamespace(),
+					},
 					svc)).To(Succeed())
 
 				By("checking a8s labels added to Service", func() {
@@ -181,7 +184,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					types.NamespacedName{
 						Name: postgresql.PatroniService(
 							instance.GetName()),
-						Namespace: instance.GetNamespace()},
+						Namespace: instance.GetNamespace(),
+					},
 					svc)).To(Succeed())
 
 				By("checking a8s labels added to Service", func() {
@@ -212,8 +216,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				sa := &corev1.ServiceAccount{}
 				Expect(k8sClient.Get(
 					ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sa,
 				)).To(Succeed(), "failed to get serviceaccount")
 
@@ -230,8 +236,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				rolebinding := &rbacv1.RoleBinding{}
 				Expect(k8sClient.Get(
 					ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					rolebinding,
 				)).To(Succeed(), "failed to get rolebinding")
 
@@ -258,7 +266,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					ctx,
 					types.NamespacedName{
 						Name:      postgresql.AdminRoleSecretName(instance.GetName()),
-						Namespace: instance.GetNamespace()},
+						Namespace: instance.GetNamespace(),
+					},
 					adminRoleSecret,
 				)).To(Succeed(), "failed to get admin role secret")
 
@@ -284,7 +293,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					types.NamespacedName{
 						Name: postgresql.StandbyRoleSecretName(
 							instance.GetName()),
-						Namespace: instance.GetNamespace()},
+						Namespace: instance.GetNamespace(),
+					},
 					standbyRoleSecret,
 				)).To(Succeed(), "failed to get standby role secret")
 
@@ -311,7 +321,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						types.NamespacedName{
 							Name: postgresql.PvcName(
 								instance.GetName(), i),
-							Namespace: instance.GetNamespace()}, pvc,
+							Namespace: instance.GetNamespace(),
+						}, pvc,
 					)).To(Succeed(), "failed to get pvc")
 
 					Expect(pvc.Status.Phase).To(Equal(corev1.ClaimBound))
@@ -326,7 +337,6 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			// https://pkg.go.dev/github.com/onsi/ginkgo/v2#FlakeAttempts .
 			By("emitting exactly one event for each secondary API object that is directly "+
 				"created by the operator, and no more", func() {
-
 				instanceEvents := &corev1.EventList{}
 				Expect(k8sClient.List(ctx, instanceEvents, &ctrlruntimeclient.ListOptions{
 					FieldSelector: ctrlruntimeclient.MatchingFieldsSelector{
@@ -377,7 +387,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				By("emitting an event for the creation of the admin secret", func() {
 					adminSecretNSN := types.NamespacedName{
 						Namespace: instance.GetNamespace(),
-						Name:      postgresql.AdminRoleSecretName(instance.GetName())}
+						Name:      postgresql.AdminRoleSecretName(instance.GetName()),
+					}
 
 					Expect(adminSecretEvent.Message).
 						To(Equal(fmt.Sprintf("Successfully created secret %s", adminSecretNSN)),
@@ -397,7 +408,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				By("emitting an event for the creation of the standby secret", func() {
 					standbySecretNSN := types.NamespacedName{
 						Namespace: instance.GetNamespace(),
-						Name:      postgresql.StandbyRoleSecretName(instance.GetName())}
+						Name:      postgresql.StandbyRoleSecretName(instance.GetName()),
+					}
 
 					Expect(standbySecretsEvent.Message).
 						To(Equal(fmt.Sprintf("Successfully created secret %s", standbySecretNSN)),
@@ -534,8 +546,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				sts := &appsv1.StatefulSet{}
 				err = k8sClient.Get(
 					ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts,
 				)
 				if err != nil {
@@ -564,8 +578,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				sts := &appsv1.StatefulSet{}
 				err = k8sClient.Get(
 					ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts,
 				)
 				if err != nil {
@@ -602,8 +618,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Eventually(func(g Gomega) {
 					sts := &appsv1.StatefulSet{}
 					err := k8sClient.Get(ctx,
-						types.NamespacedName{Name: instance.GetName(),
-							Namespace: instance.GetNamespace()},
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace(),
+						},
 						sts)
 					g.Expect(err).To(BeNil())
 
@@ -646,7 +664,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						types.NamespacedName{
 							Name: postgresql.MasterService(
 								instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						svc)).To(Succeed())
 					g.Expect(err).To(BeNil())
 
@@ -676,7 +695,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						types.NamespacedName{
 							Name: postgresql.PatroniService(
 								instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						svc)).To(Succeed())
 					g.Expect(err).To(BeNil())
 
@@ -703,8 +723,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					sa := &corev1.ServiceAccount{}
 					Expect(k8sClient.Get(
 						ctx,
-						types.NamespacedName{Name: instance.GetName(),
-							Namespace: instance.GetNamespace()},
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace(),
+						},
 						sa,
 					)).To(Succeed(), "failed to get serviceaccount")
 
@@ -723,8 +745,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					rb := &rbacv1.RoleBinding{}
 					Expect(k8sClient.Get(
 						ctx,
-						types.NamespacedName{Name: instance.GetName(),
-							Namespace: instance.GetNamespace()},
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace(),
+						},
 						rb,
 					)).To(Succeed(), "failed to get rolebinding")
 
@@ -745,7 +769,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						ctx,
 						types.NamespacedName{
 							Name:      postgresql.AdminRoleSecretName(instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						adminSecret,
 					)).To(Succeed(), "failed to get admin role secret")
 
@@ -766,7 +791,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						ctx,
 						types.NamespacedName{
 							Name:      postgresql.StandbyRoleSecretName(instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						standbySecret,
 					)).To(Succeed(), "failed to get admin role secret")
 
@@ -816,8 +842,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Eventually(func() bool {
 					sts := &appsv1.StatefulSet{}
 					err := k8sClient.Get(ctx,
-						types.NamespacedName{Name: instance.GetName(),
-							Namespace: instance.GetNamespace()},
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace(),
+						},
 						sts)
 					return err != nil && k8serrors.IsNotFound(err)
 				}, asyncOpsTimeoutMins).Should(BeTrue())
@@ -828,7 +856,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					err := k8sClient.Get(ctx,
 						types.NamespacedName{
 							Name:      postgresql.MasterService(instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						&corev1.Service{})
 					return err != nil && k8serrors.IsNotFound(err)
 				}, asyncOpsTimeoutMins).Should(BeTrue())
@@ -839,7 +868,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					err := k8sClient.Get(ctx,
 						types.NamespacedName{
 							Name:      postgresql.PatroniService(instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						&corev1.Service{})
 					return err != nil && k8serrors.IsNotFound(err)
 				}, asyncOpsTimeoutMins).Should(BeTrue())
@@ -849,8 +879,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Eventually(func() bool {
 					err := k8sClient.Get(
 						ctx,
-						types.NamespacedName{Name: instance.GetName(),
-							Namespace: instance.GetNamespace()},
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace(),
+						},
 						&rbacv1.RoleBinding{},
 					)
 					return err != nil && k8serrors.IsNotFound(err)
@@ -861,8 +893,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				Eventually(func() bool {
 					err := k8sClient.Get(
 						ctx,
-						types.NamespacedName{Name: instance.GetName(),
-							Namespace: instance.GetNamespace()},
+						types.NamespacedName{
+							Name:      instance.GetName(),
+							Namespace: instance.GetNamespace(),
+						},
 						&corev1.ServiceAccount{})
 					return err != nil && k8serrors.IsNotFound(err)
 				}, asyncOpsTimeoutMins).Should(BeTrue())
@@ -875,7 +909,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						types.NamespacedName{
 							Name: postgresql.AdminRoleSecretName(
 								instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						&corev1.Secret{},
 					)
 					return err != nil && k8serrors.IsNotFound(err)
@@ -889,7 +924,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						types.NamespacedName{
 							Name: postgresql.StandbyRoleSecretName(
 								instance.GetName()),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						&corev1.Secret{},
 					)
 					return err != nil && k8serrors.IsNotFound(err)
@@ -904,7 +940,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 							types.NamespacedName{
 								Name: postgresql.PvcName(
 									instance.GetName(), i),
-								Namespace: instance.GetNamespace()},
+								Namespace: instance.GetNamespace(),
+							},
 							&corev1.PersistentVolumeClaim{},
 						)
 						if err == nil || !k8serrors.IsNotFound(err) {
@@ -921,7 +958,8 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 						ctx,
 						types.NamespacedName{
 							Name:      instance.GetName(),
-							Namespace: instance.GetNamespace()},
+							Namespace: instance.GetNamespace(),
+						},
 						&corev1.Endpoints{},
 					)
 					if err == nil || !k8serrors.IsNotFound(err) {
@@ -1091,7 +1129,6 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				client, err = dsi.NewClient(dataservice,
 					strconv.Itoa(localPort), adminSecretData)
 				Expect(err).To(BeNil(), "failed to create new dsi client")
-
 			})
 
 			By("ensuring that the default database exists", func() {
@@ -1274,15 +1311,17 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 
 			sts := &appsv1.StatefulSet{}
 			Expect(k8sClient.Get(ctx,
-				types.NamespacedName{Name: instance.GetName(),
-					Namespace: instance.GetNamespace()},
+				types.NamespacedName{
+					Name:      instance.GetName(),
+					Namespace: instance.GetNamespace(),
+				},
 				sts)).To(Succeed(), "failed to get statefulset")
 
 			Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(0))
 		})
 
 		It("Provisions the PostgreSQL instance with one PostgreSQL extension", func() {
-			extensions := []string{"MobilityDB"}
+			extensions := []string{"mobilitydb"}
 
 			instance, err = dsi.New(
 				dataservice,
@@ -1305,8 +1344,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 
 			sts := &appsv1.StatefulSet{}
 			Expect(k8sClient.Get(ctx,
-				types.NamespacedName{Name: instance.GetName(),
-					Namespace: instance.GetNamespace()},
+				types.NamespacedName{
+					Name:      instance.GetName(),
+					Namespace: instance.GetNamespace(),
+				},
 				sts)).To(Succeed(), "failed to get statefulset")
 
 			Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(1))
@@ -1319,7 +1360,12 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Provisions the PostgreSQL instance with multiple PostgreSQL extensions", func() {
-			extensions := []string{"MobilityDB", "pg-qualstats"}
+			Skip(`
+			pg-qualstats currently lacks support for some PostgreSQL versions. 
+			Remove the 'skip' directive from the tests when compatibility has been achieved.
+		`)
+
+			extensions := []string{"mobilitydb", "pg-qualstats"}
 			instance, err = dsi.New(
 				dataservice,
 				testingNamespace,
@@ -1341,8 +1387,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 
 			sts := &appsv1.StatefulSet{}
 			Expect(k8sClient.Get(ctx,
-				types.NamespacedName{Name: instance.GetName(),
-					Namespace: instance.GetNamespace()},
+				types.NamespacedName{
+					Name:      instance.GetName(),
+					Namespace: instance.GetNamespace(),
+				},
 				sts)).To(Succeed(), "failed to get statefulset")
 
 			Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(2))
@@ -1379,15 +1427,17 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					return err
 				}
 
-				currDSI.Spec.Extensions = []string{"MobilityDB"}
+				currDSI.Spec.Extensions = []string{"mobilitydb"}
 				return k8sClient.Update(ctx, &currDSI)
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			Eventually(func(g Gomega) {
 				sts := &appsv1.StatefulSet{}
 				g.Expect(k8sClient.Get(ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts)).To(Succeed(), "failed to get statefulset")
 
 				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(1))
@@ -1396,6 +1446,11 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Adds multiple PostgreSQL extensions on update", func() {
+			Skip(`
+			pg-qualstats currently lacks support for some PostgreSQL versions. 
+			Remove the 'skip' directive from the tests when compatibility has been achieved.
+		`)
+
 			instance, err = dsi.New(
 				dataservice,
 				testingNamespace,
@@ -1419,15 +1474,17 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					return err
 				}
 
-				currDSI.Spec.Extensions = []string{"MobilityDB", "pg-qualstats"}
+				currDSI.Spec.Extensions = []string{"mobilitydb", "pg-qualstats"}
 				return k8sClient.Update(ctx, &currDSI)
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			Eventually(func(g Gomega) {
 				sts := &appsv1.StatefulSet{}
 				g.Expect(k8sClient.Get(ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts)).To(Succeed(), "failed to get statefulset")
 
 				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(2))
@@ -1437,7 +1494,12 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Removes one PostgreSQL extension on update", func() {
-			extensions := []string{"MobilityDB", "pg-qualstats"}
+			Skip(`
+			pg-qualstats currently lacks support for some PostgreSQL versions. 
+			Remove the 'skip' directive from the tests when compatibility has been achieved.
+		`)
+
+			extensions := []string{"mobilitydb", "pg-qualstats"}
 			instance, err = dsi.New(
 				dataservice,
 				testingNamespace,
@@ -1466,15 +1528,17 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					return err
 				}
 
-				currDSI.Spec.Extensions = []string{"MobilityDB"}
+				currDSI.Spec.Extensions = []string{"mobilitydb"}
 				return k8sClient.Update(ctx, &currDSI)
 			}, asyncOpsTimeoutMins, 1*time.Second).Should(BeNil())
 
 			Eventually(func(g Gomega) {
 				sts := &appsv1.StatefulSet{}
 				g.Expect(k8sClient.Get(ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts)).To(Succeed(), "failed to get statefulset")
 
 				g.Expect(len(sts.Spec.Template.Spec.InitContainers)).To(Equal(1))
@@ -1483,7 +1547,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Removes all PostgreSQL extensions on update", func() {
-			extensions := []string{"MobilityDB"}
+			extensions := []string{"mobilitydb"}
 			instance, err = dsi.New(
 				dataservice,
 				testingNamespace,
@@ -1519,8 +1583,10 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 			Eventually(func(g Gomega) {
 				sts := &appsv1.StatefulSet{}
 				g.Expect(k8sClient.Get(ctx,
-					types.NamespacedName{Name: instance.GetName(),
-						Namespace: instance.GetNamespace()},
+					types.NamespacedName{
+						Name:      instance.GetName(),
+						Namespace: instance.GetNamespace(),
+					},
 					sts)).To(Succeed(), "failed to get statefulset")
 
 				// After removing all extensions the cleanup-extensions init container is still part

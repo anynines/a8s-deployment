@@ -874,9 +874,9 @@ var _ = Describe("Defaulting webhook", func() {
 				To(Equal(maxLocksPerTransaction))
 		})
 
-		It("Applies defaulting when maxLocksPerTransaction is not set and MobilityDB is defined", func() {
+		It("Applies defaulting when maxLocksPerTransaction is not set and mobilitydb is defined", func() {
 			dsi = newDSI(withName("dsi-defaulting-with-mobilitydb"),
-				withExtensions("MobilityDB"))
+				withExtensions("mobilitydb"))
 
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
@@ -886,9 +886,9 @@ var _ = Describe("Defaulting webhook", func() {
 				To(Equal(maxLocksPerTransactionDefaultWithMobilityDB))
 		})
 
-		It("Does not apply defaulting when maxLocksPerTransaction is set and MobilityDB is defined", func() {
+		It("Does not apply defaulting when maxLocksPerTransaction is set and mobilitydb is defined", func() {
 			dsi = newDSI(withName("dsi-defaulting-with-custom-config-and-mobilitydb"),
-				withExtensions("MobilityDB"))
+				withExtensions("mobilitydb"))
 
 			Expect(k8sClient.Create(ctx, dsi)).To(Succeed())
 
