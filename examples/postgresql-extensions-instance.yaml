@@ -1,0 +1,22 @@
+apiVersion: postgresql.anynines.com/v1beta3
+kind: Postgresql
+metadata:
+  name: sample-pg-cluster
+spec:
+  extensions:
+    - postgis
+    - uuid-ossp 
+    - ltree 
+    - pgcrypto
+    - pg_stat_statements
+    - fuzzystrmatch
+    - pg_trgm
+    - hstore
+  replicas: 3
+  volumeSize: 1Gi
+  version: 14
+  resources:
+    requests:
+      cpu: 100m
+    limits:
+      memory: 200Mi

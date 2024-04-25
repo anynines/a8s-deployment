@@ -59,6 +59,10 @@
 
   to force the deletion.
 
+## PostgreSQL Extensions
+
+- Status on extension state, required for informing user of unresolvable dependencies on extensions that block their removal.
+
 ## Service Bindings
 
 - Custom parameters for configuring the permissions are not supported.
@@ -66,10 +70,6 @@
 - Service Bindings can only be used in the namespace they are created in, the
   reason behind that is that the secrets, where the password and username are
   stored, are limited to a single namespace (see [Kubernetes Secrets][k8s-secrets])
-
-## PostgreSQL Extensions
-
-- Extensions validation does implement extension installation.
 
 ## Logging
 

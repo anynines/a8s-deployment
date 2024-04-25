@@ -1321,6 +1321,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Provisions the PostgreSQL instance with one PostgreSQL extension", func() {
+			Skip("Skip MobilityDB related tests until we support arbitrary extensions")
 			extensions := []string{"mobilitydb"}
 
 			instance, err = dsi.New(
@@ -1404,6 +1405,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Adds one PostgreSQL extension on update", func() {
+			Skip("Skip MobilityDB related tests until we support arbitrary extensions")
 			instance, err = dsi.New(
 				dataservice,
 				testingNamespace,
@@ -1547,6 +1549,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 		})
 
 		It("Removes all PostgreSQL extensions on update", func() {
+			Skip("Skip MobilityDB related tests until we support arbitrary extensions")
 			extensions := []string{"mobilitydb"}
 			instance, err = dsi.New(
 				dataservice,
