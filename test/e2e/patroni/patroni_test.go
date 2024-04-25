@@ -94,7 +94,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 				defaultTempFileLimitKiloBytes = -1
 				defaultTrackIOTiming          = "off"
 				defaultWalWriterDelayMillis   = 200 // Needs ms
-				defaultMaxLocksPerTransaction = 64
+				defaultMaxLocksPerTransaction = 100
 			)
 
 			By("creating a PostgreSQL instance with implicit defaults", func() {
@@ -391,10 +391,26 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					// still in the process of restarting due to parameters that
 					// require restart.
 					Eventually(func() error {
-						return client.CheckParameter(
+						portForwardStopCh, localPort, err = framework.PortForward(
+							ctx, instancePort, kubeconfigPath, instance, k8sClient)
+						Expect(err).To(BeNil(),
+							fmt.Sprintf("failed to establish portforward to DSI %s/%s",
+								instance.GetNamespace(), instance.GetName()))
+
+						// Create client for interacting with the new instance.
+						client, err = dsi.NewClient(
+							dataservice, strconv.Itoa(localPort), adminSecretData)
+						Expect(err).To(BeNil(), "failed to create new dsi client")
+
+						probeErr := client.CheckParameter(
 							ctx,
 							setting.parameter,
 							setting.value)
+						if probeErr != nil {
+							close(portForwardStopCh)
+							return probeErr
+						}
+						return probeErr
 					}, framework.AsyncOpsTimeoutMins, 1*time.Second).Should(Succeed(),
 						fmt.Sprintf("unable to check custom config is set correctly on update for %s/%s",
 							instance.GetNamespace(), instance.GetName()))
@@ -421,7 +437,9 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 					fmt.Sprintf("failed to list events emitted for the config update of %s/%s",
 						instance.GetNamespace(), instance.GetName()))
 
-				Expect(len(events.Items)).To(Equal(1), "exactly one event should be emitted for "+
+				// We require two events: one to update the PostgreSQL configuration, and another
+				// to confirm a successful restart following the configuration update.
+				Expect(len(events.Items)).To(Equal(2), "exactly two events should be emitted for "+
 					"the config update of a DSI, found more than one")
 
 				event := events.Items[0]
