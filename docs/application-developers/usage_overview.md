@@ -241,7 +241,7 @@ WARNING: Extensions cannot be removed if they have dependencies on other objects
 
 The extensions currently supported are: postgis, uuid-ossp, ltree, pgcrypto, pg_stat_statements, fuzzystrmatch, pg_trgm, hstore.
 
-See [examples/postgresql-extensions-instance.yaml](examples/postgresql-extensions-instance.yaml) for an example manifest containing a list of desired extensions to be installed.
+See [examples/postgresql-extensions-instance.yaml](/examples/postgresql-extensions-instance.yaml) for an example manifest containing a list of desired extensions to be installed.
 
 ## Visualize the Logs of the PostgreSQL Instance
 
