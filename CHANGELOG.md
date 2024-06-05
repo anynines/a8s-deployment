@@ -4,6 +4,22 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] - 2024-06-05
+
+### Added
+
+* Added support for installing/uninstalling PostgreSQL extensions via the extensions field,
+  including postgis, uuid-ossp, ltree, pgcrypto, pg_stat_statements, fuzzystrmatch, pg_trgm, and
+  hstore.
+
+### Fixed
+
+* Fix PostgreSQL restart logic after user parameter updates.
+
+### Updated
+
+* The backup_agent has been bumped to the latest version and now includes buildx support.
+
 ## [1.0.0] - 2024-03-15
 
 ### Updated

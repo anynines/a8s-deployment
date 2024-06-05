@@ -3,6 +3,15 @@ kind: Postgresql
 metadata:
   name: sample-pg-cluster
 spec:
+  extensions:
+    - postgis
+    - uuid-ossp 
+    - ltree 
+    - pgcrypto
+    - pg_stat_statements
+    - fuzzystrmatch
+    - pg_trgm
+    - hstore
   replicas: 3
   volumeSize: 1Gi
   version: 14

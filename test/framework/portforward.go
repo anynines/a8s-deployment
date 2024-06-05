@@ -57,8 +57,8 @@ func PortForward(ctx context.Context,
 	targetPort int,
 	pathToKubeConfig string,
 	dsi runtimeClient.Object,
-	c runtimeClient.Client) (chan struct{}, int, error) {
-
+	c runtimeClient.Client,
+) (chan struct{}, int, error) {
 	pod, err := GetPrimaryPodUsingServiceSelector(ctx, dsi, c)
 	if err != nil {
 		return nil, -1, err
@@ -69,14 +69,15 @@ func PortForward(ctx context.Context,
 
 // PortForwardPod d establishes a port-forward from a randomly selected local port to port `targetPort`
 // of `pod`.
-//  To terminate the port-forward, close the returned channel.
-//  The other return arguments are the selected local port, and an error in case of failure.
+//
+//	To terminate the port-forward, close the returned channel.
+//	The other return arguments are the selected local port, and an error in case of failure.
 func PortForwardPod(ctx context.Context,
 	targetPort int,
 	pathToKubeConfig string,
 	pod *corev1.Pod,
-	c runtimeClient.Client) (chan struct{}, int, error) {
-
+	c runtimeClient.Client,
+) (chan struct{}, int, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", pathToKubeConfig)
 	if err != nil {
 		panic(err)
@@ -106,7 +107,6 @@ func PortForwardPod(ctx context.Context,
 		stopCh:     stopCh,
 		readyCh:    readyCh,
 	})
-
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to configure port forward for pod %s/%s port %d",
 			pod.Namespace, pod.Name, targetPort)
@@ -114,7 +114,6 @@ func PortForwardPod(ctx context.Context,
 
 	go func() {
 		err := fw.ForwardPorts()
-
 		if err != nil {
 			panic(fmt.Sprintf("An error occurred during port forwarding for pod %s/%s port %d: %s",
 				pod.Namespace, pod.Name, targetPort, err))
@@ -168,8 +167,8 @@ func portForwardAPod(req portForwardAPodRequest) (*portforward.PortForwarder, er
 
 func primarySvcSelector(ctx context.Context,
 	dsi runtimeClient.Object,
-	c runtimeClient.Client) (*labels.Selector, error) {
-
+	c runtimeClient.Client,
+) (*labels.Selector, error) {
 	svcName := fmt.Sprintf("%s-master", dsi.GetName())
 	var svc corev1.Service
 	err := c.Get(ctx, types.NamespacedName{Name: svcName, Namespace: dsi.GetNamespace()}, &svc)
@@ -192,8 +191,8 @@ func primarySvcSelector(ctx context.Context,
 // portforward to using the service selector.
 func GetPrimaryPodUsingServiceSelector(ctx context.Context,
 	dsi runtimeClient.Object,
-	c runtimeClient.Client) (*corev1.Pod, error) {
-
+	c runtimeClient.Client,
+) (*corev1.Pod, error) {
 	svcSelector, err := primarySvcSelector(ctx, dsi, c)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get selector for service: %w", err)
@@ -204,8 +203,8 @@ func GetPrimaryPodUsingServiceSelector(ctx context.Context,
 		primaryPodList := &corev1.PodList{}
 		if err := c.List(ctx, primaryPodList, &runtimeClient.ListOptions{
 			Namespace:     dsi.GetNamespace(),
-			LabelSelector: *svcSelector}); err != nil {
-
+			LabelSelector: *svcSelector,
+		}); err != nil {
 			return err
 		}
 		if len(primaryPodList.Items) != 1 {

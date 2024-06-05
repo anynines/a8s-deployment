@@ -122,7 +122,7 @@ spec:
     requests:
       cpu: 100m
     limits:
-      memory: 100Mi
+      memory: 200Mi
   schedulingConstraints:
     affinity:
       podAntiAffinity:
@@ -248,7 +248,7 @@ spec:
     requests:
       cpu: 100m
     limits:
-      memory: 100Mi
+      memory: 200Mi
   schedulingConstraints:
     affinity:
       podAntiAffinity:
@@ -389,7 +389,7 @@ spec:
     requests:
       cpu: 100m
     limits:
-      memory: 100Mi
+      memory: 200Mi
   schedulingConstraints:
     affinity:
       nodeAffinity:

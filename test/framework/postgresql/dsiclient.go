@@ -227,6 +227,7 @@ func (c Client) dbURL() string {
 	// TODO: We may want to perform tests involving SSL in future. Find alternative approach so
 	// that we can have SSLMODE enabled and reliable port forwards.
 	return strings.Join([]string{
-		protocol, "://", user, ":", password, "@", c.hostname, ":", c.port, "/", database, "?", "sslmode=", c.sslmode},
+		protocol, "://", user, ":", password, "@", c.hostname, ":", c.port, "/", database, "?", "sslmode=", c.sslmode,
+	},
 		"")
 }

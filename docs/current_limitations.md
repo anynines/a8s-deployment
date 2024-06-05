@@ -59,6 +59,10 @@
 
   to force the deletion.
 
+## PostgreSQL Extensions
+
+- Status on extension state, required for informing user of unresolvable dependencies on extensions that block their removal.
+
 ## Service Bindings
 
 - Custom parameters for configuring the permissions are not supported.

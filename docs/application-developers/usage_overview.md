@@ -233,6 +233,16 @@ When you want to delete a `Restore`, run:
 kubectl delete restore <restore-name>
 ```
 
+## Install/Uninstall PostgreSQL Extensions
+
+PostgreSQL is designed to be easily extensible. For this reason, extensions loaded into the database can function just like features that are built in. Application developers can enable extensions by adding the desired extensions to the extensions field as a list. Likewise, extensions can be uninstalled by removing them from the extensions list. Extensions can be installed on new instances as well as on running instances.
+
+WARNING: Extensions cannot be removed if they have dependencies on other objects in the database. If you are using features of an extension in your database tables, the removal operation will not succeed. Users must remove these blocking dependencies for the extension to be cleanly removed from the database. The PostgreSQL operator will not forcibly remove extensions with dependencies to avoid unexpected data loss.
+
+The extensions currently supported are: postgis, uuid-ossp, ltree, pgcrypto, pg_stat_statements, fuzzystrmatch, pg_trgm, hstore.
+
+See [examples/postgresql-extensions-instance.yaml](/examples/postgresql-extensions-instance.yaml) for an example manifest containing a list of desired extensions to be installed.
+
 ## Visualize the Logs of the PostgreSQL Instance
 
 Application developers should be aware that all pods with the label field `app`
