@@ -22,7 +22,6 @@ const (
 )
 
 var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadbalancer", "KindIncompatible"), func() {
-
 	Context("Instance exposed via Load Balancer", Ordered, func() {
 		AfterAll(func() {
 			Expect(k8sClient.Delete(ctx, instance.GetClientObject())).To(
@@ -82,15 +81,18 @@ var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadba
 			Expect(err).To(BeNil(),
 				fmt.Sprintf("failed to parse secret data for service binding %s/%s",
 					sb.GetNamespace(), sb.GetName()))
-
 		})
 
 		var connInfo v1.ConfigMap
 		It("Creates a connection ConfigMap", func() {
-			Expect(k8sClient.Get(ctx, types.NamespacedName{
-				Namespace: instance.GetNamespace(),
-				Name:      dsi.ConnectionInfoName(instance.GetName()),
-			}, &connInfo)).To(Succeed())
+			Eventually(func() error {
+				return k8sClient.Get(ctx, types.NamespacedName{
+					Namespace: instance.GetNamespace(),
+					Name:      dsi.ConnectionInfoName(instance.GetName()),
+				},
+					&connInfo,
+				)
+			}, asyncOpsTimeoutMins, 1*time.Second).Should(Succeed())
 
 			Expect(connInfo.Data).To(HaveKey("primary"),
 				"connInfo does not contain information about primary database")
@@ -100,7 +102,6 @@ var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadba
 
 			Expect(connInfo.Data).To(HaveKey("readOnly"),
 				"connInfo does not contain information about read only service")
-
 		})
 
 		It("can write data via public address", func() {
