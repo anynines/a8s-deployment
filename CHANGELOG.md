@@ -4,6 +4,12 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+
+### Updated
+
+* Bump Operator-SDK version to v1.34.2 for postgresql-operator
+
 ## [1.1.0] - 2024-06-05
 
 ### Added
