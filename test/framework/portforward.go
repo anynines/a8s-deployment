@@ -114,7 +114,18 @@ func PortForwardPod(ctx context.Context,
 
 	go func() {
 		err := fw.ForwardPorts()
-		if err != nil {
+		// Recent versions of client-go will return err when the port forward loses connection to
+		// pod.
+		// https://github.com/kubernetes/client-go/commit/d0842249d3b92ea67c446fe273f84fe74ebaed9f
+		// Handle potential errors from port forwarding.:
+		// 1. If we lose the connection to the pod (e.g., the PostgreSQL server restarts due to a
+		// configuration change), we can attempt to recover since this is a known and recoverable error.
+		// 2. For any other errors, we panic and log the details since they are unexpected and
+		// non-recoverable.
+		if err == portforward.ErrLostConnectionToPod {
+			log.Printf("lost connection to pod while port forwarding for pod %s/%s port %d: %s. The error is recoverable",
+				pod.Namespace, pod.Name, targetPort, err)
+		} else if err != nil {
 			panic(fmt.Sprintf("An error occurred during port forwarding for pod %s/%s port %d: %s",
 				pod.Namespace, pod.Name, targetPort, err))
 		}
