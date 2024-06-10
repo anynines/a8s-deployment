@@ -3,6 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
   name: backups.backups.anynines.com
 spec:
   group: backups.anynines.com
@@ -186,6 +187,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
   name: restores.backups.anynines.com
 spec:
   group: backups.anynines.com
@@ -624,11 +626,21 @@ spec:
     spec:
       containers:
       - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=7
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+      - args:
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
         command:
-        - ./manager
+        - a8s-backup-manager
         env:
         - name: systemNamespace
           valueFrom:
@@ -636,7 +648,7 @@ spec:
               fieldPath: metadata.namespace
         - name: BACKUP_CREDENTIAL_PATH
           value: /etc/backup-store-secrets
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:2616f22c4fe670541c3c78131aw018902e847rbf
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:316dd07429843911c16e627f1b3753ba7db9f179
         livenessProbe:
           httpGet:
             path: /healthz
@@ -664,16 +676,6 @@ spec:
           name: backup-store-config-volume
         - mountPath: /etc/backup-store-secrets
           name: secret-volume
-      - args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=7
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: https
       securityContext:
         runAsUser: 65532
       serviceAccountName: a8s-backup-manager-account
@@ -688,3 +690,4 @@ spec:
       - name: secret-volume
         secret:
           secretName: a8s-backup-storage-credentials
+
