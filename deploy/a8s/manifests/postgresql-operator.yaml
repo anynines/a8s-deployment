@@ -1809,7 +1809,7 @@ spec:
         - --leader-elect
         command:
         - ./manager
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:32cff0ecbc54763a3bf8a4079b1d2db9b1f26754
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:83574bc124a6af73295881ecac0db34236c05a92
         livenessProbe:
           httpGet:
             path: /healthz
@@ -1954,3 +1954,4 @@ webhooks:
     resources:
     - postgresqls
   sideEffects: None
+
