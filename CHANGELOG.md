@@ -6,6 +6,11 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
+### Added
+
+* Backup-manager now supports S3-compatible storage services, allowing users to back up and restore
+  data with any S3-compatible provider.
+
 ### Updated
 
 * Bump Operator-SDK version to v1.34.2 for postgresql-operator
