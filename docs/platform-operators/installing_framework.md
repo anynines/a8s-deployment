@@ -3,6 +3,7 @@
 - [Install the a8s Control Plane](#install-the-a8s-control-plane)
   - [Prerequisites](#prerequisites)
     - [Configure Backups Store](#configure-backups-store)
+    - [Configure S3-Compatible Backups Store](#configure-s3-compatible-backups-store)
   - [Configure Images](#configure-images)
   - [Install the a8s Control Plane](#install-the-a8s-control-plane-1)
     - [Using Static Manifests](#using-static-manifests)
@@ -59,6 +60,32 @@ Then, use an editor to open `deploy/a8s/backup-config/backup-store-config.yaml` 
 
 All the created files are gitignored so you don't have to worry about committing them by mistake
 (since they contain private data).
+
+### Configure S3-Compatible Backup Store (Optional)
+
+Alternatively, the framework supports taking backups to any S3-compatible backup store, which can be useful for local testing. This requires installing and configuring a local S3-compatible backup store, such as MinIO, separately.
+
+```shell
+# create file that stores the ID of the key
+echo -n <bucket-access-key-id> > deploy/a8s/backup-config/access-key-id
+
+# create file that stores the secret value of the key
+echo -n <bucket-secret-access-key> > deploy/a8s/backup-config/secret-access-key
+
+# create file that stores password for backup encryption
+echo -n <encryption password> > deploy/a8s/backup-config/encryption-password
+
+# create file with other information about the bucket
+cp deploy/a8s/backup-config/backup-store-config.yaml.template deploy/a8s/backup-config/backup-store-config.yaml
+```
+
+Next, use an editor to open `deploy/a8s/backup-config/backup-store-config.yaml` and replace the value:
+
+- Of the `container` field with the name of the S3 bucket.
+- Add `path_style` set to `True`.
+- Add `endpoint` with the URL for the S3-compatible service, for example, `http://test-hl.default.svc.cluster.local:9000`.
+
+All the created files are gitignored, so you don't have to worry about committing them by mistake (since they contain private data).
 
 ## Configure Images
 
