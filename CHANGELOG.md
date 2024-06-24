@@ -14,6 +14,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Updated
 
 * Bump Operator-SDK version to v1.34.2 for postgresql-operator
+* Bump Operator-SDK version to v1.34.2 for a8s-service-binding-controller
 
 ## [1.1.0] - 2024-06-05
 

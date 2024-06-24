@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: servicebindings.servicebindings.anynines.com
 spec:
   group: servicebindings.anynines.com
@@ -24,14 +24,19 @@ spec:
         description: ServiceBinding is the Schema for the servicebindings API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -43,9 +48,9 @@ spec:
                   ServiceBinding binds to.
                 properties:
                   apiVersion:
-                    description: APIVersion is the <api_group>/<version> of the referenced
-                      Data Service Instance, e.g. "postgresql.anynines.com/v1beta3"
-                      or "redis.anynines.com/v1alpha1".
+                    description: |-
+                      APIVersion is the <api_group>/<version> of the referenced Data Service Instance,
+                      e.g. "postgresql.anynines.com/v1beta3" or "redis.anynines.com/v1alpha1".
                     type: string
                   kind:
                     description: Kind is the Kubernetes API Kind of the referenced
@@ -54,8 +59,9 @@ spec:
                   name:
                     type: string
                   namespace:
-                    description: Namepace of the Instance, if not provided the same
-                      namespace as the service bindings will be used
+                    description: |-
+                      Namepace of the Instance, if not provided the same namespace as the service bindings
+                      will be used
                     type: string
                 required:
                 - apiVersion
@@ -69,29 +75,31 @@ spec:
             description: ServiceBindingStatus defines the observed state of the ServiceBinding.
             properties:
               error:
-                description: Error is a message explaining why the service binding
-                  could not be implemented if that's the case.
+                description: |-
+                  Error is a message explaining why the service binding could not be implemented if that's the
+                  case.
                 type: string
               implemented:
-                description: Implemented is `true` if and only if the service binding
-                  has been implemented by creating a user with the appropriate permissions
-                  in the bound Data Service Instance. Users can safely consume the
-                  service binding secret identified by `Secret` IF AND ONLY IF `Implemented`
-                  is true. In other words, even if the secret identified by `Secret`
-                  gets created before `Implemented` becomes true, users MUST NOT consume
-                  that secret before `Implemented` has become true.
+                description: |-
+                  Implemented is `true` if and only if the service binding has been implemented by creating
+                  a user with the appropriate permissions in the bound Data Service Instance.
+                  Users can safely consume the service binding secret identified by `Secret` IF AND ONLY IF
+                  `Implemented` is true. In other words, even if the secret identified by `Secret` gets created
+                  before `Implemented` becomes true, users MUST NOT consume that secret before `Implemented`
+                  has become true.
                 type: boolean
               secret:
-                description: Secret contains the namespace and name of the Kubernetes
-                  API secret that stores the credentials and information (e.g. URL)
-                  associated to the service binding to access the bound Data Service
-                  Instance.
+                description: |-
+                  Secret contains the namespace and name of the Kubernetes API secret that stores the
+                  credentials and information (e.g. URL) associated to the service binding to access the bound
+                  Data Service Instance.
                 properties:
                   name:
                     type: string
                   namespace:
-                    description: Namepace of the Instance, if not provided the same
-                      namespace as the service bindings will be used
+                    description: |-
+                      Namepace of the Instance, if not provided the same namespace as the service bindings
+                      will be used
                     type: string
                 required:
                 - name
@@ -102,30 +110,44 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: a8s-service-binding-controller
   name: service-binding-manager-account
   namespace: a8s-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: leader-election-role
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: role
+    app.kubernetes.io/part-of: a8s-service-binding
   name: service-binding-leader-election-role
   namespace: a8s-system
 rules:
 - apiGroups:
   - ""
-  - coordination.k8s.io
   resources:
   - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
   - leases
   verbs:
   - get
@@ -146,7 +168,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: service-binding-manager-role
 rules:
 - apiGroups:
@@ -212,6 +233,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: metrics-reader
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/part-of: a8s-service-binding
   name: service-binding-metrics-reader
 rules:
 - nonResourceURLs:
@@ -222,6 +250,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: proxy-role
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/part-of: a8s-service-binding
   name: service-binding-proxy-role
 rules:
 - apiGroups:
@@ -240,6 +275,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: leader-election-rolebinding
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: rolebinding
+    app.kubernetes.io/part-of: a8s-service-binding
   name: service-binding-leader-election-rolebinding
   namespace: a8s-system
 roleRef:
@@ -254,6 +296,13 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: manager-rolebinding
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: clusterrolebinding
+    app.kubernetes.io/part-of: a8s-service-binding
   name: service-binding-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -267,6 +316,13 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: proxy-rolebinding
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: clusterrolebinding
+    app.kubernetes.io/part-of: a8s-service-binding
   name: service-binding-proxy-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -301,27 +357,37 @@ kind: Service
 metadata:
   labels:
     app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: controller-manager-metrics-service
+    app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
+    control-plane: controller-manager
   name: service-binding-controller-manager-metrics-service
   namespace: a8s-system
 spec:
   ports:
   - name: https
     port: 8443
+    protocol: TCP
     targetPort: https
   selector:
     app.kubernetes.io/component: controller-manager
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
+    control-plane: controller-manager
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: service-binding-controller-manager
     app.kubernetes.io/part-of: a8s-service-binding
+    control-plane: controller-manager
   name: service-binding-controller-manager
   namespace: a8s-system
 spec:
@@ -331,24 +397,29 @@ spec:
       app.kubernetes.io/component: controller-manager
       app.kubernetes.io/name: service-binding-controller-manager
       app.kubernetes.io/part-of: a8s-service-binding
+      control-plane: controller-manager
   template:
     metadata:
       annotations:
+        kubectl.kubernetes.io/default-container: manager
         prometheus.io/port: "8443"
         prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/component: controller-manager
         app.kubernetes.io/name: service-binding-controller-manager
         app.kubernetes.io/part-of: a8s-service-binding
+        control-plane: controller-manager
     spec:
       containers:
       - args:
-        - --config=/config/controller_manager_config.yaml
+        - --health-probe-bind-address=:8081
+        - --metrics-bind-address=127.0.0.1:8080
+        - --leader-elect
         command:
         - ./manager
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:a3f2694dc93e7ace07829cb1b8a3b5f6s4d1527c
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:0caabf0e1a159662c3830a042c94da36995d221a
         livenessProbe:
           httpGet:
             path: /healthz
@@ -371,6 +442,9 @@ spec:
             memory: 100Mi
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - mountPath: /config/controller_manager_config.yaml
           name: manager-config
@@ -379,12 +453,25 @@ spec:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
-        - --v=7
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+        - --v=0
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
           name: https
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 5m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
       securityContext:
         runAsUser: 65532
       serviceAccountName: service-binding-manager-account
@@ -393,3 +480,4 @@ spec:
       - configMap:
           name: service-binding-manager-config
         name: manager-config
+
