@@ -1,0 +1,19 @@
+apiVersion: backups.anynines.com/v1beta3
+kind: BackupPolicy
+metadata:
+  name: backuppolicy-sample
+spec:
+  enabled: true
+  scheduleConfig:
+    type: "Cron"
+    cron:
+      expression: "*/5 * * * *"
+  serviceInstance:
+    name: "sample-pg-cluster"
+    kind: "PostgreSQL"
+    apiGroup: "postgresql.anynines.com"
+  backupOptions:
+    maxRetries : "4"
+  retentionConfig:
+    count: 5
+  
