@@ -4,6 +4,15 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [unreleased]
+
+### Added
+
+* BackupPolicy to manage backups supporting scheduling and retention configuartion. 
+* BackupPolicy Readme explaining the feature
+* BackupPolicy API Documentation
+* end-to-end on BackupPolicy RetentionPolicy
+
 ## [1.2.0] - 2024-06-24
 
 ### Added

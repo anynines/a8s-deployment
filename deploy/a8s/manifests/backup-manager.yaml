@@ -367,6 +367,180 @@ status:
   conditions: []
   storedVersions: []
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: backuppolicies.backups.anynines.com
+spec:
+  group: backups.anynines.com
+  names:
+    kind: BackupPolicy
+    listKind: BackupPolicyList
+    plural: backuppolicies
+    singular: backuppolicy
+  scope: Namespaced
+  versions:
+  - name: v1beta3
+    schema:
+      openAPIV3Schema:
+        description: BackupPolicy is the Schema for the backuppolicies API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BackupPolicySpec defines the desired state of BackupPolicy
+            properties:
+              backupOptions:
+                description: BackupOptions is the configuration options for backups
+                properties:
+                  maxRetries:
+                    default: Infinite
+                    description: |-
+                      How many times the backup will be retried before aborting.
+                      Allowed values: any positive integer, or "Infinite"
+                    pattern: ^\d+|Infinite$
+                    type: string
+                type: object
+              enabled:
+                default: true
+                description: Enabled is whether the policy enabled or not, set to
+                  false instead of delete
+                type: boolean
+              retentionConfig:
+                description: RetentionConfig the retention policy for backups
+                properties:
+                  count:
+                    description: Count specifies the maximum number of backups to
+                      retain
+                    type: integer
+                  retentionPeriod:
+                    description: Period specifies the retention as duration
+                    properties:
+                      count:
+                        description: Count is the number of time unit for the retention
+                          period  e.g. 7 (days)
+                        type: integer
+                      type:
+                        description: Type is the type of time unit for the retention
+                          period (hours, days, months, years)
+                        enum:
+                        - hours
+                        - days
+                        - months
+                        - years
+                        type: string
+                    type: object
+                type: object
+              scheduleConfig:
+                description: ScheduleConfig the scheduling configuration for backups
+                properties:
+                  cron:
+                    properties:
+                      expression:
+                        description: Expression is the cron expression for scheduling
+                          backups
+                        type: string
+                    type: object
+                  timeZone:
+                    default: UTC
+                    description: Timezone to calculate next schedule date
+                    pattern: ^(?:(?:[A-Za-z_\-]+\/[A-Za-z_\-]+(?:\/[A-Za-z_\-]+)?)|(?:Etc\/[A-Za-z0-9+\-]+(?:\/[A-Za-z0-9]+)?|(?:UTC|CET|CST6CDT|EET|EST|EST5EDT|MET|MST|MST7MDT|PST8PDT|HST)))$
+                    type: string
+                  type:
+                    description: |-
+                      ScheduleType specifies the type of schedule to define date/time of next backup to run
+                      Currently we support Cron; more types to be implemented later
+                    enum:
+                    - Cron
+                    type: string
+                type: object
+              serviceInstance:
+                description: ServiceInstances identifies a list of Data Service Instances
+                  to backup.
+                properties:
+                  apiGroup:
+                    description: |-
+                      APIGroup is the API group of the Kubernetes API resource that represents the
+                      Data Service Instance to backup or restore (e.g. postgresql.anynines.com,
+                      redis.anynines.com, etc...).
+                    type: string
+                  kind:
+                    description: |-
+                      Kind is the kind of the Kubernetes API resource that represents the
+                      Data Service Instance to backup or restore (e.g. Postgresql, Redis,
+                      etc...).
+                    type: string
+                  name:
+                    description: |-
+                      Name is the name of the Kubernetes API resource that represents the
+                      Data Service Instance to backup or restore.
+                    type: string
+                required:
+                - apiGroup
+                - kind
+                - name
+                type: object
+            required:
+            - enabled
+            - scheduleConfig
+            - serviceInstance
+            type: object
+          status:
+            description: BackupPolicyStatus defines the observed state of BackupPolicy
+            properties:
+              backupsCount:
+                description: BackupsCount is the number of retained backups
+                type: integer
+              enabled:
+                description: Enabled is whether the policy enabled or not, set to
+                  false instead of delete
+                type: boolean
+              lastBackupDate:
+                description: LastBackupDate is the last date when the backup process
+                  was run
+                format: date-time
+                type: string
+              latestBackup:
+                description: LatestBackup is the last backup created by the policy
+                properties:
+                  name:
+                    description: Name of the backup created
+                    type: string
+                  status:
+                    description: Status status of the backup
+                    type: string
+                type: object
+              nextScheduledBackup:
+                description: NextScheduledBackup is the next date sheduled to run
+                  the backup
+                format: date-time
+                type: string
+            required:
+            - enabled
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -437,6 +611,32 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - backuppolicies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - backuppolicies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - backups.anynines.com
+  resources:
+  - backuppolicies/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - backups.anynines.com
   resources:
