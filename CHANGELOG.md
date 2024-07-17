@@ -4,6 +4,12 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+
+### Updated
+
+* Bump Operator-SDK version to v1.34.1 for a8s-backup-manager
+
 ## [1.2.0] - 2024-06-24
 
 ### Added
