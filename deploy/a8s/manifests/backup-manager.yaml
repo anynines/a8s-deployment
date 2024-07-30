@@ -733,7 +733,7 @@ spec:
               fieldPath: metadata.namespace
         - name: BACKUP_CREDENTIAL_PATH
           value: /etc/backup-store-secrets
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:c5ca16374fcf20f497865051802850624fe19668
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager:2b1bda5c83a8259831d442df1fdbd8adcc0c6450
         livenessProbe:
           httpGet:
             path: /healthz
@@ -778,3 +778,4 @@ spec:
       - name: secret-volume
         secret:
           secretName: a8s-backup-storage-credentials
+
