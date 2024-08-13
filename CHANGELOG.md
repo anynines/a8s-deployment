@@ -15,6 +15,10 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 * Bump Operator-SDK version to v1.34.1 for a8s-backup-manager
 * Remove hard-coded start commands from deployment manifests
 
+### Fixed
+
+* Fix nil pointer dereference in OwnerUIDExtractor indexer function of PostgreSQL Operator
+
 ## [1.2.0] - 2024-06-24
 
 ### Added
