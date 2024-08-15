@@ -6,6 +6,10 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 
+### Added
+
+* BackupPolicy feature: Create new backups based on a schedule. You can now configure a schedule for each Postgresql instance's backups and when the backups will be cleaned up.
+
 ### Updated
 
 * Bump Operator-SDK version to v1.34.1 for a8s-backup-manager
