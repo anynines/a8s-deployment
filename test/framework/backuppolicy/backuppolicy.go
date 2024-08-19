@@ -67,7 +67,7 @@ func New(opts ...Option) *v1beta3.BackupPolicy {
 	return p
 }
 
-func MockExistingBackups(p *v1beta3.BackupPolicy, dsi runtimeClient.Object) []v1beta3.Backup {
+func GenerateBackups(p *v1beta3.BackupPolicy, dsi runtimeClient.Object) []v1beta3.Backup {
 	existingBackups := []v1beta3.Backup{
 		{
 			ObjectMeta: v1.ObjectMeta{
