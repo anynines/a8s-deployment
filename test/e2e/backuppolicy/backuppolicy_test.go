@@ -75,6 +75,7 @@ var _ = Describe("BackupPolicy", func() {
 
 				EventuallyWithOffset(1, func() bool {
 					createdBuckup := &backupv1beta3.BackupPolicy{}
+
 					if err = k8sClient.Get(ctx, types.NamespacedName{
 						Name:      backupPolicy.GetName(),
 						Namespace: backupPolicy.GetNamespace(),
@@ -83,7 +84,6 @@ var _ = Describe("BackupPolicy", func() {
 					}
 
 					return createdBuckup.Status.BackupsCount > 0
-
 				}, asyncOpsTimeoutMins, pollingPeriod).Should(BeTrue(),
 					fmt.Sprintf("timeout reached waiting for fetching backupPolicy %s/%s: %s",
 						backupPolicy.GetNamespace(),
@@ -129,11 +129,7 @@ var _ = Describe("BackupPolicy", func() {
 						return false
 					}
 
-					if len(backups.Items) >= 3 {
-						return true
-					}
-					return false
-
+					return len(backups.Items) >= 3
 				}, asyncOpsTimeoutMins, pollingPeriod).Should(BeTrue(),
 					fmt.Sprintf("timeout reached waiting for fetching backupPolicy %s/%s: %s",
 						backupPolicy.GetNamespace(),
@@ -151,6 +147,7 @@ var _ = Describe("BackupPolicy", func() {
 				backupPolicy = policy.New(
 					policy.SetNamespacedName(testingNamespace),
 					policy.SetEnabled(true),
+					policy.SetInstanceRef(instance),
 					policy.ScheduleConfiguration(backupv1beta3.ScheduleConfiguration{
 						Type:     backupv1beta3.ScheduleTypeCron,
 						TimeZone: "UTC",
@@ -166,7 +163,7 @@ var _ = Describe("BackupPolicy", func() {
 			})
 
 			By("Create existing backups", func() {
-				for _, backup := range policy.MockExistingBackups(backupPolicy, instance) {
+				for _, backup := range policy.GenerateBackups(backupPolicy, instance) {
 					Expect(k8sClient.Create(ctx, &backup)).To(Succeed(),
 						"failed to create existing backups")
 				}
@@ -185,10 +182,7 @@ var _ = Describe("BackupPolicy", func() {
 						return false
 					}
 
-					if len(backups.Items) == 2 {
-						return true
-					}
-					return false
+					return len(backups.Items) == 2
 				}, asyncOpsTimeoutMins, pollingPeriod).Should(BeTrue(),
 					fmt.Sprintf("timeout reached waiting for correct backups count %s/%s: %s",
 						backupPolicy.GetNamespace(),
@@ -200,5 +194,4 @@ var _ = Describe("BackupPolicy", func() {
 			})
 		})
 	})
-
 })
