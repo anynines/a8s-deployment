@@ -14,6 +14,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 * Bump Operator-SDK version to v1.34.1 for a8s-backup-manager
 * Remove hard-coded start commands from deployment manifests
+* Bump cert-manager version to v1.15.3
 
 ### Fixed
 
