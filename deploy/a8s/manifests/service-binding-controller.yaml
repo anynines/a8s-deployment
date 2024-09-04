@@ -344,7 +344,6 @@ data:
       bindAddress: 127.0.0.1:8080
     leaderElection:
       leaderElect: true
-      resourceName: 875d0b65.anynines.com
 kind: ConfigMap
 metadata:
   name: service-binding-manager-config
@@ -413,11 +412,7 @@ spec:
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
-        command:
-        - ./manager
-        - --postgresql-root-role=a9s_user
-        - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:e8f212597141b399ecc6c404eea3ef251bc42e43
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:b389a8ddd14ff1e0b52fb622226d6ab4479e544a
         livenessProbe:
           httpGet:
             path: /healthz
@@ -472,6 +467,7 @@ spec:
             - ALL
       securityContext:
         runAsUser: 65532
+      serviceAccountName: service-binding-manager-account
       terminationGracePeriodSeconds: 10
       volumes:
       - configMap:
