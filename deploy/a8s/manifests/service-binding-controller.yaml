@@ -336,17 +336,14 @@ subjects:
 apiVersion: v1
 data:
   controller_manager_config.yaml: |
-    apiVersion: controller-runtime.sigs.k8s.io/v1alpha1
+    apiVersion: config.servicebindings.anynines.com/v1beta3
     kind: ControllerManagerConfig
     health:
       healthProbeBindAddress: :8081
     metrics:
       bindAddress: 127.0.0.1:8080
-    webhook:
-      port: 9443
     leaderElection:
       leaderElect: true
-      resourceName: 875d0b65.anynines.com
 kind: ConfigMap
 metadata:
   name: service-binding-manager-config
@@ -412,12 +409,10 @@ spec:
     spec:
       containers:
       - args:
-        - --postgresql-root-role=a9s_user
-        - --postgresql-default-database=a9s_apps_default_db
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:0caabf0e1a159662c3830a042c94da36995d221a
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:b389a8ddd14ff1e0b52fb622226d6ab4479e544a
         livenessProbe:
           httpGet:
             path: /healthz
