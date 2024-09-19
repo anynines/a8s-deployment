@@ -65,7 +65,7 @@ ServiceBindingList contains a list of ServiceBinding.
 
 #### ServiceBindingSpec
 
-ServiceBindingSpec defines the desired state of the ServiceBinding.
+ServiceBindingSpec defines the desired state of the ServiceBinding. TEST
 
 _Appears in:_
 - [ServiceBinding](#servicebinding)

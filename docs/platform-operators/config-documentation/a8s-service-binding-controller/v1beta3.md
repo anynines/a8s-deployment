@@ -25,7 +25,7 @@ _Appears in:_
 
 #### ControllerManagerConfig
 
-ControllerManagerConfig is the Schema for the manager's configuration API
+ControllerManagerConfig is the Schema for the manager's configuration API TEST
 
 | Field | Description |
 | --- | --- |
