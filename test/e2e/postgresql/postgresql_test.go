@@ -76,6 +76,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 					framework.GenerateName(instanceNamePrefix,
 						GinkgoParallelProcess(), suffixLength),
 					replicas,
+					testVersion,
 				)
 				Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -505,6 +506,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				replicas,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 			Expect(k8sClient.Create(ctx, instance.GetClientObject())).
@@ -818,6 +820,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				replicas,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1009,6 +1012,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1157,6 +1161,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				haReplicas,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 			Expect(k8sClient.Create(ctx, instance.GetClientObject())).
@@ -1300,6 +1305,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
@@ -1330,6 +1336,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1373,6 +1380,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1412,6 +1420,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1459,6 +1468,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1508,6 +1518,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -1557,6 +1568,7 @@ var _ = Describe("PostgreSQL Operator end-to-end tests", func() {
 				framework.GenerateName(
 					instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 				singleReplica,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 

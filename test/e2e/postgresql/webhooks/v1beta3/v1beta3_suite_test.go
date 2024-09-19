@@ -35,6 +35,7 @@ var (
 	ctx                                                               context.Context
 	cancel                                                            context.CancelFunc
 	testingNamespace, kubeconfigPath, dataservice, instanceNamePrefix string
+	testVersion                                                       int
 
 	k8sClient runtimeClient.Client
 
@@ -58,7 +59,7 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
-	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace = framework.ConfigToVars(config)
+	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace, testVersion = framework.ConfigToVars(config)
 
 	// Create Kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)
@@ -853,6 +854,7 @@ func newDSI(opts ...func(*pgv1beta3.Postgresql)) *pgv1beta3.Postgresql {
 		framework.GenerateName(
 			instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 		1,
+		testVersion,
 	)
 	Expect(err).To(BeNil(), "failed to generate new DSI resource")
 

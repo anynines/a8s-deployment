@@ -28,13 +28,13 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		nonDSIPods []client.Object
 	}{
 		"return_nil_when_there_are_0_pods": {
-			dsi:        postgresql.New("ns0", "pg0", 3),
+			dsi:        postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods:    nil,
 			nonDSIPods: nil,
 		},
 
 		"return_nil_when_all_pods_are_not_of_a_dsi": {
-			dsi:     postgresql.New("ns0", "pg0", 3),
+			dsi:     postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: nil,
 			nonDSIPods: []client.Object{
 				newPod(
@@ -46,7 +46,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_nil_when_all_pods_are_of_a_dsi_with_same_kind_and_name_but_different_namespace": {
-			dsi:     postgresql.New("ns0", "pg0", 3),
+			dsi:     postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: nil,
 			nonDSIPods: []client.Object{
 				newPod(
@@ -63,7 +63,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_nil_when_all_pods_are_of_a_dsi_with_same_kind_and_namespace_but_different_name": {
-			dsi:     postgresql.New("ns0", "pg0", 3),
+			dsi:     postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: nil,
 			nonDSIPods: []client.Object{
 				newPod(
@@ -80,7 +80,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_nil_when_all_pods_are_of_a_dsi_of_another_kind": {
-			dsi:     postgresql.New("ns0", "pg0", 3),
+			dsi:     postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: nil,
 			nonDSIPods: []client.Object{
 				newPod(
@@ -96,7 +96,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_the_dsi_pods_when_all_pods_belong_to_the_dsi": {
-			dsi: postgresql.New("ns0", "pg0", 3),
+			dsi: postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: []client.Object{
 				newPod(
 					withName("p0"),
@@ -133,7 +133,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_the_dsi_pods_when_there_are_less_pods_than_replicas": {
-			dsi: postgresql.New("ns0", "pg0", 3),
+			dsi: postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: []client.Object{
 				newPod(
 					withName("p0"),
@@ -160,7 +160,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_only_the_dsi_pods_when_some_pods_are_not_of_a_dsi": {
-			dsi: postgresql.New("ns0", "pg0", 3),
+			dsi: postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: []client.Object{
 				newPod(
 					withName("p0"),
@@ -183,7 +183,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_only_the_dsi_pods_when_some_pods_are_of_a_dsi_of_a_different_kind": {
-			dsi: postgresql.New("ns0", "pg0", 3),
+			dsi: postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: []client.Object{
 				newPod(
 					withName("p0"),
@@ -210,7 +210,7 @@ func TestPodsRetrievalHappyPaths(t *testing.T) {
 		},
 
 		"return_only_the_dsi_pods_when_some_pods_are_of_another_dsi_with_same_kind_and_namespace": {
-			dsi: postgresql.New("ns0", "pg0", 3),
+			dsi: postgresql.New("ns0", "pg0", 3, 16),
 			dsiPods: []client.Object{
 				newPod(
 					withName("p0"),

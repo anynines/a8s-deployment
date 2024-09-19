@@ -23,6 +23,7 @@ var (
 	cancel                                                            context.CancelFunc
 	err                                                               error
 	testingNamespace, kubeconfigPath, dataservice, instanceNamePrefix string
+	testVersion                                                       int
 
 	k8sClient runtimeClient.Client
 )
@@ -38,7 +39,7 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
-	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace = framework.ConfigToVars(config)
+	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace, testVersion = framework.ConfigToVars(config)
 
 	Expect(strings.ToLower(dataservice) == "postgresql").To(BeTrue(),
 		"This test suite only supports PostgreSQL")

@@ -2,7 +2,9 @@ package framework
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strconv"
 
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 )
@@ -10,6 +12,7 @@ import (
 const (
 	testingNamespacePrefix = "a8s-e2e-tests"
 	suffixLength           = 5
+	defaultVersion         = 16
 )
 
 type TestRunConfig struct {
@@ -22,6 +25,8 @@ type TestRunConfig struct {
 	// Namespace provides the target namespace to be used for testing. If not given then a
 	// unique namespace is created.
 	Namespace string
+	// Dataservice version to test
+	Version int
 }
 
 // TODO: Use marshalling approach to provide more fine grained feedback on missing environment
@@ -37,7 +42,25 @@ func ParseEnv() (TestRunConfig, error) {
 	if config.Namespace == "" {
 		config.Namespace = UniqueName(testingNamespacePrefix, suffixLength)
 	}
+
+	version, err := getIntEnv("VERSION", defaultVersion)
+	if err != nil {
+		return TestRunConfig{}, err
+	}
+	config.Version = version
 	return config, validateConfig(config)
+}
+
+func getIntEnv(key string, fallback int) (int, error) {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback, nil
+	}
+	intValue, err := strconv.Atoi(value)
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s: %s", key, value)
+	}
+	return intValue, nil
 }
 
 func validateConfig(c TestRunConfig) error {
@@ -54,6 +77,6 @@ func validateConfig(c TestRunConfig) error {
 	return k8serrors.NewAggregate(errs)
 }
 
-func ConfigToVars(c TestRunConfig) (kubeconfigPath, dsiNamePrefix, dataservice, namespace string) {
-	return c.KubeconfigPath, c.DSINamePrefix, c.Dataservice, c.Namespace
+func ConfigToVars(c TestRunConfig) (kubeconfigPath, dsiNamePrefix, dataservice, namespace string, version int) {
+	return c.KubeconfigPath, c.DSINamePrefix, c.Dataservice, c.Namespace, c.Version
 }
