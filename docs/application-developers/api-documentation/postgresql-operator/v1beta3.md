@@ -82,7 +82,7 @@ _Appears in:_
 
 #### PostgresqlSpec
 
-PostgresqlSpec defines the desired state of Postgresql.
+PostgresqlSpec defines the desired state of Postgresql. TEST: This is a pipeline test..
 
 _Appears in:_
 - [Postgresql](#postgresql)
