@@ -1,11 +1,10 @@
 apiVersion: v1
 data:
-  backupAgentImage: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:81450cbb7f94fa020441361d8c64ew89499acd13
+  backupAgentImage: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:778d95b3fdd4decda7c7359c51349f479ff907a2
   extensionCleanupImage: alpine:3.16.0
   extensionImageRegistry: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator/postgresql-extensions
-  spiloImage: ghcr.io/zalando/spilo-15:3.0-p1
+  spiloImage: ghcr.io/zalando/spilo-16:3.3-p2
 kind: ConfigMap
 metadata:
   name: postgresql-images
   namespace: a8s-system
-

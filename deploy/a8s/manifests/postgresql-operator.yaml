@@ -1374,7 +1374,7 @@ spec:
                   Version specifies the PostgreSQL version that the instance should use.
                   It is required to pick a version and it cannot be changed afterwards,
                   since major version upgrades are  currently unsupported.
-                maximum: 14
+                maximum: 16
                 minimum: 13
                 type: integer
               volumeSize:
@@ -1807,7 +1807,7 @@ spec:
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:1761ccfa05638862c161fe1d32b2a67e1621ef8b
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:2574b003d2655bb3b7ab1cced907b6081b15a7a5
         livenessProbe:
           httpGet:
             path: /healthz
