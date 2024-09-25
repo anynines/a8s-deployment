@@ -412,7 +412,7 @@ spec:
         - --config=/config/controller_manager_config.yaml
         - --postgresql-root-role=a9s_user
         - --postgresql-default-database=a9s_apps_default_db
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:454b3551dad39fe63da11ddcc7972b95fb318476
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:c0577843cb54282fb9e01ed3d7fa4b5ada001e82
         livenessProbe:
           httpGet:
             path: /healthz
