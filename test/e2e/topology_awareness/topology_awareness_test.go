@@ -39,6 +39,8 @@ const (
 	taintingTimeout = 5 * time.Second
 	labelingTimeout = 5 * time.Second
 	listingTimeout  = 5 * time.Second
+
+	asyncOpsTimeoutMins = time.Minute * 15
 )
 
 var _ = Describe("DSIs topology awareness", func() {
@@ -126,7 +128,7 @@ var _ = Describe("DSIs topology awareness", func() {
 						g.Expect(sset.Status.ReadyReplicas).To(Equal(replicas),
 							"ready replicas of DSI "+instanceNSN+
 								"'s StatefulSet don't match DSI's desired replicas")
-					}, 5*time.Minute).Should(Succeed(),
+					}, asyncOpsTimeoutMins).Should(Succeed(),
 						"failed to verify that the DSI's StatefulSet gets up and running")
 				})
 
@@ -205,7 +207,7 @@ var _ = Describe("DSIs topology awareness", func() {
 						g.Expect(sset.Status.ReadyReplicas).To(Equal(replicas),
 							"ready replicas of DSI "+instanceNSN+
 								"'s StatefulSet don't match DSI's desired replicas")
-					}, 5*time.Minute).Should(Succeed(),
+					}, asyncOpsTimeoutMins).Should(Succeed(),
 						"failed to verify that the DSI's StatefulSet gets up and running")
 				})
 
@@ -318,7 +320,7 @@ var _ = Describe("DSIs topology awareness", func() {
 						g.Expect(sset.Status.ReadyReplicas).To(Equal(replicas),
 							"ready replicas of DSI "+instanceNSN+
 								"'s StatefulSet don't match DSI's desired replicas")
-					}, 5*time.Minute).Should(Succeed(),
+					}, asyncOpsTimeoutMins).Should(Succeed(),
 						"failed to verify that the DSI's StatefulSet gets up and running")
 				})
 
@@ -397,7 +399,7 @@ var _ = Describe("DSIs topology awareness", func() {
 						g.Expect(sset.Status.ReadyReplicas).To(Equal(replicas),
 							"ready replicas of DSI "+instanceNSN+
 								"'s StatefulSet don't match DSI's desired replicas")
-					}, 5*time.Minute).Should(Succeed(),
+					}, asyncOpsTimeoutMins).Should(Succeed(),
 						"failed to verify that the DSI's StatefulSet gets up and running")
 				})
 

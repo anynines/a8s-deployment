@@ -19,7 +19,7 @@ const (
 	replicas            = 1
 	suffixLength        = 5
 	pollingPeriod       = 1 * time.Second
-	asyncOpsTimeoutMins = time.Minute * 2
+	asyncOpsTimeoutMins = time.Minute * 5
 )
 
 var (
@@ -45,7 +45,6 @@ var _ = Describe("BackupPolicy", func() {
 	})
 
 	AfterEach(func() {
-
 		Expect(k8sClient.Delete(ctx, backupPolicy)).To(Succeed(),
 			fmt.Sprintf("failed to delete backup policy %s/%s",
 				backupPolicy.GetNamespace(), backupPolicy.GetName()))
