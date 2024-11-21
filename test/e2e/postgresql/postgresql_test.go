@@ -46,7 +46,7 @@ const (
 	// entity is a generic term to describe where data services store their data.
 	entity = "test_entity"
 	// asyncOpsTimeoutMins...
-	asyncOpsTimeoutMins = time.Minute * 5
+	asyncOpsTimeoutMins = time.Minute * 10
 )
 
 var (

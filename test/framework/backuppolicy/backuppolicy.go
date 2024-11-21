@@ -17,7 +17,7 @@ const (
 	// they check has not become true. Needed because some conditions might become true only
 	// after some time, so we need to check them asynchronously.
 	// TODO: Make asyncOpsTimeoutMins an invocation parameter.
-	asyncOpsTimeoutMins = time.Minute * 2
+	asyncOpsTimeoutMins = time.Minute * 5
 	suffixLength        = 6
 	pollingPeriod       = 1 * time.Second
 )

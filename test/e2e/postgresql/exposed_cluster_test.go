@@ -119,7 +119,7 @@ var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadba
 			// to become available from the internet
 			Eventually(func() error {
 				return client.Write(ctx, entity, testInput)
-			}, 5*time.Minute).Should(Succeed())
+			}, asyncOpsTimeoutMins).Should(Succeed())
 		})
 
 		It("can read data via public address", func() {
@@ -139,7 +139,7 @@ var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadba
 				entityData, err := client.Read(ctx, entity)
 				g.Expect(err).To(BeNil(), "error reading from the instances primary service")
 				g.Expect(entityData).To(Equal(testInput), "data service returned unexpected entry")
-			}, 5*time.Minute).Should(Succeed())
+			}, asyncOpsTimeoutMins).Should(Succeed())
 
 			By("allowing reading from read-only service")
 
@@ -158,7 +158,7 @@ var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadba
 				entityData, err := client.Read(ctx, entity)
 				g.Expect(err).To(BeNil(), "error reading from the instances read-only service")
 				g.Expect(entityData).To(Equal(testInput), "data service returned unexpected entry")
-			}, 5*time.Minute).Should(Succeed())
+			}, asyncOpsTimeoutMins).Should(Succeed())
 		})
 	})
 })
