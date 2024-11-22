@@ -52,9 +52,12 @@ func ParseEnv() (TestRunConfig, error) {
 }
 
 func getIntEnv(key string, fallback int) (int, error) {
-	value := os.Getenv(key)
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return fallback, nil // Environment variable not set, use the fallback
+	}
 	if value == "" {
-		return fallback, nil
+		return fallback, fmt.Errorf("%s is set but empty", key)
 	}
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
