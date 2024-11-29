@@ -50,6 +50,7 @@ var _ = Describe("Backup", func() {
 			testingNamespace,
 			framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
 			replicas,
+			testVersion,
 		)
 		Expect(err).To(BeNil(), "failed to generate new DSI resource")
 

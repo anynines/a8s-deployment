@@ -54,10 +54,10 @@ type PodsGetter interface {
 // access the properties of structs. We would need to implement methods to expose these properties
 // which would negate some of the value of functional options.
 
-func New(ds, namespace, name string, replicas int32) (Object, error) {
+func New(ds, namespace, name string, replicas int32, version int) (Object, error) {
 	switch strings.ToLower(ds) {
 	case "postgresql":
-		return postgresql.New(namespace, name, replicas), nil
+		return postgresql.New(namespace, name, replicas, version), nil
 	}
 	return nil, fmt.Errorf(
 		"dsi factory received request to create dsi for unknown data service %s; only supported data services are %s",
@@ -98,7 +98,8 @@ func WaitForReadiness(ctx context.Context, instance runtimeClient.Object, c runt
 		if err = c.Get(
 			ctx,
 			types.NamespacedName{
-				Name: instance.GetName(), Namespace: instance.GetNamespace()},
+				Name: instance.GetName(), Namespace: instance.GetNamespace(),
+			},
 			instanceCreated.GetClientObject(),
 		); err != nil {
 			return fmt.Sprintf("%v+", err)
@@ -115,8 +116,8 @@ func WaitForReadiness(ctx context.Context, instance runtimeClient.Object, c runt
 
 // WaitForReplicaReadiness waits until the given number of ReplicaPods report as ready.
 func WaitForReplicaReadiness(ctx context.Context, instance runtimeClient.Object,
-	c runtimeClient.Client, replicas int) {
-
+	c runtimeClient.Client, replicas int,
+) {
 	var err error
 	EventuallyWithOffset(1, func() bool {
 		dsiPods, err := GetPodsWithLabels(ctx, c, instance.GetNamespace(),
@@ -149,7 +150,8 @@ func WaitForDeletion(ctx context.Context, instance runtimeClient.Object, c runti
 		err = c.Get(
 			ctx,
 			types.NamespacedName{
-				Name: instance.GetName(), Namespace: instance.GetNamespace()},
+				Name: instance.GetName(), Namespace: instance.GetNamespace(),
+			},
 			instanceCreated.GetClientObject(),
 		)
 		return err != nil && errors.IsNotFound(err)
@@ -169,7 +171,8 @@ func WaitForPodDeletion(ctx context.Context, pod *corev1.Pod, c runtimeClient.Cl
 		if err = c.Get(
 			ctx,
 			types.NamespacedName{
-				Name: pod.GetName(), Namespace: pod.GetNamespace()},
+				Name: pod.GetName(), Namespace: pod.GetNamespace(),
+			},
 			podCreated,
 		); err != nil {
 			log.Println("failed to wait for pod to be deleted")
@@ -186,8 +189,8 @@ func WaitForPodDeletion(ctx context.Context, pod *corev1.Pod, c runtimeClient.Cl
 }
 
 func GetPodsWithLabels(ctx context.Context, c runtimeClient.Client,
-	namespace string, label map[string]string) (*corev1.PodList, error) {
-
+	namespace string, label map[string]string,
+) (*corev1.PodList, error) {
 	selector, err := labels.Set(label).AsValidatedSelector()
 	if err != nil {
 		return nil, err

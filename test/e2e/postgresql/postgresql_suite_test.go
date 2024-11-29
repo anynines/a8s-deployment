@@ -19,6 +19,7 @@ var (
 	cancel                                                            context.CancelFunc
 	err                                                               error
 	testingNamespace, kubeconfigPath, dataservice, instanceNamePrefix string
+	testVersion                                                       int
 
 	k8sClient runtimeClient.Client
 )
@@ -34,8 +35,7 @@ var _ = BeforeSuite(func() {
 	// Parse environmental variable configuration
 	config, err := framework.ParseEnv()
 	Expect(err).To(BeNil(), "failed to parse environmental variables as configuration")
-	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace =
-		framework.ConfigToVars(config)
+	kubeconfigPath, instanceNamePrefix, dataservice, testingNamespace, testVersion = framework.ConfigToVars(config)
 
 	// Create Kubernetes client for interacting with the Kubernetes API
 	k8sClient, err = dsi.NewK8sClient(dataservice, kubeconfigPath)

@@ -51,7 +51,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 		instance = postgresql.New(
 			testingNamespace,
 			framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
-			replicas, postgresql.WithVolumeSize("2Gi"))
+			replicas, testVersion, postgresql.WithVolumeSize("2Gi"))
 
 		Expect(k8sClient.Create(ctx, instance.GetClientObject())).
 			To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",
@@ -94,7 +94,7 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 			fmt.Sprintf("failed to delete service binding %s/%s",
 				sb.GetNamespace(), sb.GetName()))
 		dsi.WaitForDeletion(ctx, instance.GetClientObject(), k8sClient)
-		//TODO: Wait for deletion for all secondary objects
+		// TODO: Wait for deletion for all secondary objects
 	})
 
 	It("No failover to replica with critical replication lag", func() {
@@ -276,7 +276,6 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 
 		// Check replica data propagation
 		By("Ensuring data was propagated to replicas", func() {
-
 			// TODO: use replica service when implemented
 			replicaPods, err := dsi.GetPodsWithLabels(ctx, k8sClient, instance.GetNamespace(),
 				instance.GetReplicaLabels())
@@ -323,7 +322,6 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 					instance.GetName()),
 			)
 		})
-
 	})
 
 	It("Failed Master rejoins as replica", func() {
@@ -331,7 +329,6 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 
 		var masterPod *corev1.Pod
 		By("Selecting master Pod", func() {
-
 			masterPodList, err := dsi.GetPodsWithLabels(ctx, k8sClient, instance.GetNamespace(),
 				instance.GetMasterLabels())
 			Expect(err).To(BeNil(),
@@ -568,6 +565,5 @@ var _ = Describe("PostgreSQL Chaos tests", func() {
 					instance.GetName()),
 			)
 		})
-
 	})
 })

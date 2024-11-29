@@ -7,7 +7,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
 )
 
 const (
@@ -22,6 +22,13 @@ const (
 	// TODO: Make configurable at runtime when the need arises for tests with TLS. Warning:
 	// enabling SSLMODE breaks port forwarding.
 	sslmodeDisable = "disable"
+
+	// Define a custom schema name to use instead of 'public'
+	// This is necessary due to changes in PostgreSQL 15 that restrict permissions on the public schema
+	// For more information on these changes and schema usage, see:
+	// - PostgreSQL 15 Release Notes: https://www.postgresql.org/docs/release/15.0/
+	// - PostgreSQL Schema documentation: https://www.postgresql.org/docs/15/ddl-schemas.html#DDL-SCHEMAS-PATTERNS
+	customSchemaName = "app_schema"
 )
 
 func NewClientOverPortForwarding(credentials map[string]string, port string) Client {
@@ -56,10 +63,17 @@ func (c Client) Write(ctx context.Context, tableName, data string) error {
 	}
 	defer func() { closeConnection(ctx, dbConn) }()
 
+	// Create the custom schema if it doesn't exist
+	if err := createSchemaIfNotExists(ctx, dbConn); err != nil {
+		return err
+	}
+
+	// Create the table in the custom schema
 	if err := createTableIfNotExists(ctx, dbConn, tableName); err != nil {
 		return err
 	}
 
+	// Insert data into the table in the custom schema
 	if err := insertData(ctx, dbConn, tableName, data); err != nil {
 		return fmt.Errorf("failed to insert data: %w", err)
 	}
@@ -73,7 +87,8 @@ func (c Client) Read(ctx context.Context, tableName string) (string, error) {
 	}
 	defer func() { closeConnection(ctx, dbConn) }()
 
-	query := fmt.Sprintf("SELECT * FROM %s;", tableName)
+	// Query the table from the custom schema
+	query := fmt.Sprintf("SELECT * FROM %s.%s;", customSchemaName, tableName)
 	rows, err := dbConn.Query(ctx, query)
 	if err != nil {
 		return "", fmt.Errorf(
@@ -151,6 +166,25 @@ func (c Client) Delete(ctx context.Context, entity, data string) error {
 	return errors.New("not implemented")
 }
 
+// createSchemaIfNotExists creates a custom schema if it doesn't already exist
+func createSchemaIfNotExists(ctx context.Context, dbConn *pgx.Conn) error {
+	createSchemaSQL := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s;", customSchemaName)
+	if _, err := dbConn.Exec(ctx, createSchemaSQL); err != nil {
+		return fmt.Errorf("failed to create schema with %s: %w", createSchemaSQL, err)
+	}
+	return nil
+}
+
+// createTableIfNotExists creates a table in the custom schema if it doesn't already exist
+func createTableIfNotExists(ctx context.Context, dbConn *pgx.Conn, tableName string) error {
+	createSqlTable := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s.%s(input text);", customSchemaName, tableName)
+	if _, err := dbConn.Exec(ctx, createSqlTable); err != nil {
+		return fmt.Errorf("failed to create table with %s: %w", createSqlTable, err)
+	}
+	return nil
+}
+
+// insertData inserts data into a table in the custom schema
 func insertData(ctx context.Context, dbConn *pgx.Conn, tableName, input string) error {
 	tx, err := dbConn.Begin(ctx)
 	if err != nil {
@@ -158,19 +192,11 @@ func insertData(ctx context.Context, dbConn *pgx.Conn, tableName, input string) 
 	}
 	defer func() { err = endTransaction(ctx, tx, err) }()
 
-	query := fmt.Sprintf("INSERT INTO %s(input) VALUES ($1);", tableName)
+	query := fmt.Sprintf("INSERT INTO %s.%s(input) VALUES ($1);", customSchemaName, tableName)
 	_, err = tx.Exec(ctx, query, input)
 	if err != nil {
 		return fmt.Errorf(
 			"failed transaction for query %s with input %s: %v", query, input, err)
-	}
-	return nil
-}
-
-func createTableIfNotExists(ctx context.Context, dbConn *pgx.Conn, tableName string) error {
-	createSqlTable := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(input text);", tableName)
-	if _, err := dbConn.Exec(ctx, createSqlTable); err != nil {
-		return fmt.Errorf("failed to create table with %s: %w", createSqlTable, err)
 	}
 	return nil
 }

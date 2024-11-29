@@ -62,7 +62,7 @@ var _ = Describe("Backup Chaos Tests", func() {
 		instance = postgresql.New(
 			testingNamespace,
 			framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(), suffixLength),
-			replicas)
+			replicas, testVersion)
 
 		Expect(k8sClient.Create(ctx, instance.GetClientObject())).
 			To(Succeed(), fmt.Sprintf("failed to create instance %s/%s",

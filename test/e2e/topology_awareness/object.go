@@ -14,8 +14,8 @@ type Object interface {
 	dsi.WithPodAntiAffinity
 }
 
-func newDSI(ds, namespace, name string, replicas int32) (Object, error) {
-	baseObj, err := dsi.New(ds, namespace, name, replicas)
+func newDSI(ds, namespace, name string, replicas int32, version int) (Object, error) {
+	baseObj, err := dsi.New(ds, namespace, name, replicas, version)
 	if err != nil {
 		return nil, err
 	}

@@ -9,6 +9,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 * BackupPolicy feature: Create new backups based on a schedule. You can now configure a schedule for each Postgresql instance's backups and when the backups will be cleaned up.
+* PostgreSQL 16 support ([Release Notes](https://www.postgresql.org/docs/release/16.0/))
+* Improved backup/restore reliability across versions.
 
 ### Updated
 

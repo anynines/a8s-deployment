@@ -105,6 +105,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 						GinkgoParallelProcess(),
 						suffixLength),
 					replicas,
+					testVersion,
 				)
 				Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -182,6 +183,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 						GinkgoParallelProcess(),
 						suffixLength),
 					replicas,
+					testVersion,
 				)
 				Expect(err).To(BeNil(), "failed to generate new DSI resource")
 
@@ -269,6 +271,7 @@ var _ = Describe("Patroni end-to-end Tests", func() {
 						GinkgoParallelProcess(),
 						suffixLength),
 					replicas,
+					testVersion,
 				)
 				Expect(err).To(BeNil(), "failed to generate new DSI resource")
 

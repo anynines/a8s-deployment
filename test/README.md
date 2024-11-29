@@ -18,8 +18,9 @@
     resource to avoid conflict when running tests in parallel.
   - `DATASERVICE`: Provides the data service type tests will be run against.
      Currently supported dataservices:
-
-    - PostgreSQL
+         - PostgreSQL
+  - `VERSION`: Provides the data service version to test. Currently only
+    supported for PostgreSQL.
 
 ## How to use
 

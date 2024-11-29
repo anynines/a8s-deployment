@@ -112,7 +112,7 @@ var _ = Describe("DSIs topology awareness", func() {
 					// Create the DSI K8s API object
 					instance, err = newDSI(dataservice, testingNamespace,
 						framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(),
-							suffixLength), replicas)
+							suffixLength), replicas, testVersion)
 					Expect(err).To(BeNil(), "failed to generate DSI object")
 					instanceNSN = instance.GetNamespace() + "/" + instance.GetName()
 					instance.SetTolerations(tolerations...)
@@ -191,7 +191,7 @@ var _ = Describe("DSIs topology awareness", func() {
 					// Create the DSI K8s API object
 					instance, err = newDSI(dataservice, testingNamespace,
 						framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(),
-							suffixLength), replicas)
+							suffixLength), replicas, testVersion)
 					Expect(err).To(BeNil(), "failed to generate DSI object")
 					instanceNSN = instance.GetNamespace() + "/" + instance.GetName()
 					instance.SetTolerations(tolerations...)
@@ -304,7 +304,7 @@ var _ = Describe("DSIs topology awareness", func() {
 					// Create the DSI K8s API object
 					instance, err = newDSI(dataservice, testingNamespace,
 						framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(),
-							suffixLength), replicas)
+							suffixLength), replicas, testVersion)
 					Expect(err).To(BeNil(), "failed to generate DSI object")
 					instanceNSN = instance.GetNamespace() + "/" + instance.GetName()
 					instance.SetTolerations(tolerations...)
@@ -383,7 +383,7 @@ var _ = Describe("DSIs topology awareness", func() {
 					// Create the DSI K8s API object
 					instance, err = newDSI(dataservice, testingNamespace,
 						framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(),
-							suffixLength), replicas)
+							suffixLength), replicas, testVersion)
 					Expect(err).To(BeNil(), "failed to generate DSI object")
 					instanceNSN = instance.GetNamespace() + "/" + instance.GetName()
 					instance.SetTolerations(tolerations...)
@@ -511,7 +511,7 @@ var _ = Describe("DSIs topology awareness", func() {
 					// Create the DSI K8s API object
 					instance, err = newDSI(dataservice, testingNamespace,
 						framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(),
-							suffixLength), replicas)
+							suffixLength), replicas, testVersion)
 					Expect(err).To(BeNil(), "failed to generate DSI object")
 
 					instance.AddRequiredPodAntiAffinityTerm(corev1.PodAffinityTerm{
@@ -628,7 +628,7 @@ var _ = Describe("DSIs topology awareness", func() {
 					// Create the DSI K8s API object
 					instance, err = newDSI(dataservice, testingNamespace,
 						framework.GenerateName(instanceNamePrefix, GinkgoParallelProcess(),
-							suffixLength), replicas)
+							suffixLength), replicas, testVersion)
 					Expect(err).To(BeNil(), "failed to generate DSI object")
 
 					instance.AddRequiredPodAntiAffinityTerm(corev1.PodAffinityTerm{

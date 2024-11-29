@@ -50,6 +50,7 @@ var _ = Describe("Service binding", func() {
 					GinkgoParallelProcess(),
 					suffixLength),
 				replicas,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate DSI object")
 
@@ -213,6 +214,7 @@ var _ = Describe("Service binding", func() {
 					GinkgoParallelProcess(),
 					suffixLength),
 				replicas,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate DSI object")
 
@@ -427,6 +429,7 @@ var _ = Describe("Service binding", func() {
 						GinkgoParallelProcess(),
 						suffixLength),
 					replicas,
+					testVersion,
 				)
 				Expect(err).To(BeNil(), "failed to generate DSI object")
 				instances[i] = instance

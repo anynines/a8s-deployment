@@ -36,6 +36,7 @@ var _ = Describe("end-to-end tests for exposed instances", Label("ExternalLoadba
 				framework.GenerateName(instanceNamePrefix,
 					GinkgoParallelProcess(), suffixLength),
 				3,
+				testVersion,
 			)
 			Expect(err).To(BeNil(), "failed to generate new DSI resource")
 

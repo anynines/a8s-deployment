@@ -24,7 +24,6 @@ const (
 	resourceCPU = "500m"
 	resourceMem = "500Mi"
 	volumeSize  = "1G"
-	version     = 14
 
 	kind = "Postgresql"
 )
@@ -178,7 +177,7 @@ func NewK8sClient(kubeconfig string) (runtimeClient.Client, error) {
 	return k8sClient, nil
 }
 
-func New(namespace, name string, replicas int32, opts ...func(*Postgresql)) *Postgresql {
+func New(namespace, name string, replicas int32, version int, opts ...func(*Postgresql)) *Postgresql {
 	p := &Postgresql{&pgv1beta3.Postgresql{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

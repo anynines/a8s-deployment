@@ -6,3 +6,4 @@ to be configured. We assume that the requirements from
 
 - [Install the a8s Control Plane](/docs/platform-operators/installing_framework.md)
 - [Updating the a8s Control Plane](/docs/platform-operators/updating_framework.md)
+- [PostgreSQL Version Migration](/docs/platform-operators/postgresql_version_migration.md)
