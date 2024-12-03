@@ -1807,7 +1807,7 @@ spec:
         - --health-probe-bind-address=:8081
         - --metrics-bind-address=127.0.0.1:8080
         - --leader-elect
-        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:2574b003d2655bb3b7ab1cced907b6081b15a7a5
+        image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:c5d60e34ea545fd056890bd9df8a405180b90d54
         livenessProbe:
           httpGet:
             path: /healthz
