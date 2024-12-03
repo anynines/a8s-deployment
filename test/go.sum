@@ -21,8 +21,8 @@ github.com/bxcodec/faker v2.0.1+incompatible/go.mod h1:BNzfpVdTwnFJ6GtfYTcQu6l6r
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/chaos-mesh/chaos-mesh/api v0.0.0-20230209235359-64dc83baed9b h1:am6IJSVZb/JIMffv4bOJ+BwPbrnwUovCTVP/gY38F1Q=
-github.com/chaos-mesh/chaos-mesh/api v0.0.0-20230209235359-64dc83baed9b/go.mod h1:tMUOEjRuThuozqrIDKhyViTZXaEZhIVV18/cSiGC3NQ=
+github.com/chaos-mesh/chaos-mesh/api v0.0.0-20241018161350-b08de63dc44b h1:kgwUURHUIosKm27r21U33oTpaDxTjg+YpZE3hY7UK/0=
+github.com/chaos-mesh/chaos-mesh/api v0.0.0-20241018161350-b08de63dc44b/go.mod h1:x11iCbZV6hzzSQWMq610B6Wl5Lg1dhwqcVfeiWQQnQQ=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=

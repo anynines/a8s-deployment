@@ -8,7 +8,7 @@ require (
 	github.com/anynines/a8s-backup-manager v0.42.1-0.20240808121834-50ac6e406efc
 	github.com/anynines/a8s-service-binding-controller v0.37.1-0.20230423204020-a2903616cb2f
 	github.com/anynines/postgresql-operator v0.89.0
-	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20230209235359-64dc83baed9b
+	github.com/chaos-mesh/chaos-mesh/api v0.0.0-20241018161350-b08de63dc44b
 	github.com/go-logr/logr v1.4.2
 	github.com/go-logr/zapr v1.3.0
 	github.com/jackc/pgx/v5 v5.7.1
