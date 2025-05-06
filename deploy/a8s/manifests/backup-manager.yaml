@@ -903,8 +903,6 @@ spec:
               name: backup-store-config-volume
             - mountPath: /etc/backup-store-secrets
               name: secret-volume
-      securityContext:
-        runAsUser: 65532
       serviceAccountName: a8s-backup-manager-account
       terminationGracePeriodSeconds: 10
       volumes:
