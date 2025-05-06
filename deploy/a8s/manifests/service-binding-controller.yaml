@@ -204,7 +204,14 @@ rules:
     verbs:
       - get
       - list
+      - update
       - watch
+  - apiGroups:
+      - postgresql.anynines.com
+    resources:
+      - postgresqls/finalizers
+    verbs:
+      - update
   - apiGroups:
       - servicebindings.anynines.com
     resources:
@@ -414,7 +421,7 @@ spec:
             - --config=/config/controller_manager_config.yaml
             - --postgresql-root-role=a9s_user
             - --postgresql-default-database=a9s_apps_default_db
-          image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:f4f0d6ef8c4d77d2d058cb996509ec44af69dfb0
+          image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:eae08495d2ca442932acecdc54b15e6d5bcb7eec
           livenessProbe:
             httpGet:
               path: /healthz
@@ -467,8 +474,6 @@ spec:
             capabilities:
               drop:
                 - ALL
-      securityContext:
-        runAsUser: 65532
       serviceAccountName: service-binding-manager-account
       terminationGracePeriodSeconds: 10
       volumes:
