@@ -1629,6 +1629,12 @@ rules:
       - get
       - update
   - apiGroups:
+      - postgresql.anynines.com
+    resources:
+      - postgresqls/finalizers
+    verbs:
+      - update
+  - apiGroups:
       - rbac.authorization.k8s.io
     resourceNames:
       - postgresql-spilo-role
@@ -1688,6 +1694,7 @@ rules:
       - ""
     resources:
       - endpoints
+      - endpoints/restricted
     verbs:
       - create
       - delete
@@ -1876,7 +1883,7 @@ spec:
             - --health-probe-bind-address=:8081
             - --metrics-bind-address=127.0.0.1:8080
             - --leader-elect
-          image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:e759fe95860041ce818a09f4eae79a8376a950ad
+          image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator:0dc360e4590ff6fb7f86927f1a48422790b0a9c9
           livenessProbe:
             httpGet:
               path: /healthz
@@ -1936,7 +1943,6 @@ spec:
               drop:
                 - ALL
       securityContext:
-        runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
       serviceAccountName: postgresql-manager-account
