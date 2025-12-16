@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.3
+    controller-gen.kubebuilder.io/version: v0.18.0
   name: servicebindings.servicebindings.anynines.com
 spec:
   group: servicebindings.anynines.com
@@ -51,19 +51,27 @@ spec:
                     apiVersion:
                       description: |-
                         APIVersion is the <api_group>/<version> of the referenced Data Service Instance,
-                        e.g. "postgresql.anynines.com/v1beta3" or "redis.anynines.com/v1alpha1".
+                        e.g. "postgresql.anynines.com/v1beta3" or "rds.aws.anynines.com/v1"
+                      enum:
+                        - postgresql.anynines.com/v1beta3
+                        - rds.aws.anynines.com/v1
                       type: string
                     kind:
-                      description:
-                        Kind is the Kubernetes API Kind of the referenced
-                        Data Service Instance.
+                      description: |-
+                        Kind is the Kubernetes API Kind of the referenced Data Service Instance.
+                        e.g. "Postgresql" or "PostgresqlInstance".
+                      enum:
+                        - Postgresql
+                        - PostgresqlInstance
                       type: string
                     name:
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                       type: string
                     namespace:
                       description: |-
                         Namespace of the Instance, if not provided the same namespace as the service bindings
                         will be used
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                       type: string
                   required:
                     - apiVersion
@@ -97,11 +105,13 @@ spec:
                     Data Service Instance.
                   properties:
                     name:
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                       type: string
                     namespace:
                       description: |-
                         Namespace of the Instance, if not provided the same namespace as the service bindings
                         will be used
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
                       type: string
                   required:
                     - name
@@ -210,6 +220,20 @@ rules:
       - postgresql.anynines.com
     resources:
       - postgresqls/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - rds.aws.anynines.com
+    resources:
+      - postgresqlinstances
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - rds.aws.anynines.com
+    resources:
+      - postgresqlinstances/finalizers
     verbs:
       - update
   - apiGroups:
@@ -421,7 +445,8 @@ spec:
             - --config=/config/controller_manager_config.yaml
             - --postgresql-root-role=a9s_user
             - --postgresql-default-database=a9s_apps_default_db
-          image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:eae08495d2ca442932acecdc54b15e6d5bcb7eec
+            - --enable-integration=postgresql
+          image: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller:d9d34fbeada18ad3410975eeef746531c0e2c6d0
           livenessProbe:
             httpGet:
               path: /healthz
