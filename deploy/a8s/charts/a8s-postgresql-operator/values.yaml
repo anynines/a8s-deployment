@@ -1,0 +1,60 @@
+namespace: a8s-system
+replicaCount: 1
+
+image:
+  repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator
+  tag: 0dc360e4590ff6fb7f86927f1a48422790b0a9c9
+  pullPolicy: IfNotPresent
+
+kubeRbacProxyImage:
+  repository: gcr.io/kubebuilder/kube-rbac-proxy
+  tag: v0.16.0
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: postgresql-manager-account
+
+webhookCertificate:
+  name: postgresql-serving-cert
+  secretName: pg-webhook-server-cert
+  issuerName: postgresql-selfsigned-issuer
+
+services:
+  metrics:
+    port: 8443
+  webhook:
+    port: 443
+
+controllerConfig:
+  healthProbeBindAddress: :8081
+  metricsBindAddress: 127.0.0.1:8080
+  webhookPort: 9443
+  leaderElect: true
+  leaderElectionResourceName: b21ab9b4.anynines.com
+
+imageConfig:
+  spiloImage: ghcr.io/zalando/spilo-16:3.3-p2
+  backupAgentImage: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-agent:778d95b3fdd4decda7c7359c51349f479ff907a2
+  extensionCleanupImage: alpine:3.16.0
+  extensionImageRegistry: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator/postgresql-extensions
+
+resources:
+  manager:
+    limits:
+      cpu: 150m
+      memory: 150Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  kubeRbacProxy:
+    limits:
+      cpu: 400m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

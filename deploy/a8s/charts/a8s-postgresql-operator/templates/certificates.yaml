@@ -1,0 +1,31 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Values.webhookCertificate.issuerName }}
+  namespace: {{ include "a8s-postgresql-operator.namespace" . }}
+  labels:
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/created-by: postgresql-operator
+    app.kubernetes.io/part-of: a8s-postgres
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.webhookCertificate.name }}
+  namespace: {{ include "a8s-postgresql-operator.namespace" . }}
+  labels:
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/created-by: postgresql-operator
+    app.kubernetes.io/part-of: a8s-postgres
+  annotations:
+    cert-manager.io/inject-ca-from: {{ include "a8s-postgresql-operator.namespace" . }}/{{ .Values.webhookCertificate.name }}
+spec:
+  dnsNames:
+    - postgresql-webhook-service.{{ include "a8s-postgresql-operator.namespace" . }}.svc
+    - postgresql-webhook-service.{{ include "a8s-postgresql-operator.namespace" . }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: {{ .Values.webhookCertificate.issuerName }}
+  secretName: {{ .Values.webhookCertificate.secretName }}

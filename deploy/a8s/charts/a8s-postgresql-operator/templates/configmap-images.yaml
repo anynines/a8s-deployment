@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-images
+  namespace: {{ include "a8s-postgresql-operator.namespace" . }}
+  labels:
+    {{- include "a8s-postgresql-operator.labels" . | nindent 4 }}
+data:
+  spiloImage: {{ .Values.imageConfig.spiloImage | quote }}
+  backupAgentImage: {{ .Values.imageConfig.backupAgentImage | quote }}
+  extensionCleanupImage: {{ .Values.imageConfig.extensionCleanupImage | quote }}
+  extensionImageRegistry: {{ .Values.imageConfig.extensionImageRegistry | quote }}
