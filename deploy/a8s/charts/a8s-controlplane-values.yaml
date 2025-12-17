@@ -1,0 +1,46 @@
+# a8s Control Plane Configuration Values
+# This file provides example configuration for deploying all three a8s components
+
+# PostgreSQL Operator configuration
+# For all available options, see: deploy/a8s/charts/a8s-postgresql-operator/values.yaml
+postgresqlOperator:
+  enabled: true
+  namespace: a8s-system
+  replicaCount: 1
+
+# Backup Manager configuration
+# For all available options, see: deploy/a8s/charts/a8s-backup-manager/values.yaml
+backupManager:
+  enabled: true
+  namespace: a8s-system
+  replicaCount: 1
+  # Backup storage configuration - REQUIRED
+  backupStorageConfig:
+    # ConfigMap for backup store coordinates
+    configMap:
+      name: a8s-backup-store-config
+      config:
+        cloud_configuration:
+          provider: "AWS"
+          container: "my-backup-bucket" # CHANGE: Set to your S3 bucket name
+          region: "eu-central-1" # CHANGE: Set to your S3 region
+          # For S3-compatible storage (e.g., MinIO), also add:
+          # endpoint: "http://minio.default.svc.cluster.local:9000"
+          # path_style: true
+    # Secret for backup storage credentials
+    secret:
+      name: a8s-backup-storage-credentials
+      create: true # Set to false to use existing secret
+      # CHANGE: Provide your AWS credentials
+      accessKeyId: "YOUR_AWS_ACCESS_KEY_ID"
+      secretAccessKey: "YOUR_AWS_SECRET_ACCESS_KEY"
+      encryptionPassword: "YOUR_ENCRYPTION_PASSWORD"
+
+# Service Binding Controller configuration
+# For all available options, see: deploy/a8s/helm/a8s-service-binding-controller/values.yaml
+serviceBindingController:
+  enabled: true
+  namespace: a8s-system
+  replicaCount: 1
+  controllerConfig:
+    enable-integration: "postgresql" # Enable PostgreSQL service binding
