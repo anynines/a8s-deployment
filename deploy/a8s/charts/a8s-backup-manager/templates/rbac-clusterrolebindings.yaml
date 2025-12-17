@@ -1,0 +1,40 @@
+{{- $backupNamespace := include "a8s-backup-manager.namespace" . -}}
+{{- $backupSAName := default "a8s-backup-manager-account" .Values.serviceAccount.name -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backup-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backup-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $backupSAName }}
+    namespace: {{ $backupNamespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backup-metrics-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backup-metrics-reader
+subjects:
+  - kind: ServiceAccount
+    name: {{ $backupSAName }}
+    namespace: {{ $backupNamespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backup-proxy-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backup-proxy-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $backupSAName }}
+    namespace: {{ $backupNamespace }}

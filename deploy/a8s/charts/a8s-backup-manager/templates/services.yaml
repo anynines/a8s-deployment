@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-backup-manager
+    app.kubernetes.io/instance: a8s-backup-manager
+    app.kubernetes.io/name: a8s-backup-manager
+    app.kubernetes.io/part-of: a8s-backup
+  name: {{ include "a8s-backup-manager.fullname" . }}-controller-manager-metrics-service
+  namespace: {{ include "a8s-backup-manager.namespace" . }}
+spec:
+  ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: a8s-backup-manager
+    app.kubernetes.io/name: a8s-backup-manager
+    app.kubernetes.io/part-of: a8s-backup
