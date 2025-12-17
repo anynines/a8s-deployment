@@ -1,0 +1,67 @@
+{{- $namespace := include "a8s-service-binding-controller.namespace" . -}}
+{{- $saName := default "service-binding-manager-account" .Values.serviceAccount.name -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: service-binding-leader-election-role
+  namespace: {{ $namespace }}
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: leader-election-role
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/name: role
+    app.kubernetes.io/part-of: a8s-service-binding
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: service-binding-leader-election-rolebinding
+  namespace: {{ $namespace }}
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: leader-election-rolebinding
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/name: rolebinding
+    app.kubernetes.io/part-of: a8s-service-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: service-binding-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $saName }}
+    namespace: {{ $namespace }}

@@ -1,0 +1,39 @@
+namespace: a8s-system
+replicaCount: 1
+image:
+  repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller
+  tag: d9d34fbeada18ad3410975eeef746531c0e2c6d0
+  pullPolicy: IfNotPresent
+kubeRbacProxyImage:
+  repository: gcr.io/kubebuilder/kube-rbac-proxy
+  tag: v0.16.0
+  pullPolicy: IfNotPresent
+serviceAccount:
+  create: true
+  name: service-binding-manager-account
+controllerConfig:
+  postgresqlRootRole: a9s_user
+  postgresqlDefaultDatabase: a9s_apps_default_db
+  enable-integration: postgresql
+  leaderElection: true
+service:
+  port: 8443
+  annotations: {}
+resources:
+  manager:
+    limits:
+      cpu: 200m
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  kubeRbacProxy:
+    limits:
+      cpu: 400m
+      memory: 128Mi
+    requests:
+      cpu: 5m
+      memory: 64Mi
+nodeSelector: {}
+tolerations: []
+affinity: {}

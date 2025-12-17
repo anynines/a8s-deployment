@@ -1,0 +1,41 @@
+{{- $namespace := include "a8s-service-binding-controller.namespace" . -}}
+{{- $saName := default "service-binding-manager-account" .Values.serviceAccount.name -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: service-binding-manager-rolebinding
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: manager-rolebinding
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/name: clusterrolebinding
+    app.kubernetes.io/part-of: a8s-service-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: service-binding-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $saName }}
+    namespace: {{ $namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: service-binding-proxy-rolebinding
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: proxy-rolebinding
+    app.kubernetes.io/managed-by: helm
+    app.kubernetes.io/name: clusterrolebinding
+    app.kubernetes.io/part-of: a8s-service-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: service-binding-proxy-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $saName }}
+    namespace: {{ $namespace }}

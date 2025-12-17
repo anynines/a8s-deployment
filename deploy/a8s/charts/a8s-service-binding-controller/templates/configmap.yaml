@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-binding-manager-config
+  namespace: {{ include "a8s-service-binding-controller.namespace" . }}
+  labels:
+    {{- include "a8s-service-binding-controller.labels" . | nindent 4 }}
+data:
+  controller_manager_config.yaml: |-
+    apiVersion: config.servicebindings.anynines.com/v1beta3
+    kind: ControllerManagerConfig
+    health:
+      healthProbeBindAddress: :8081
+    metrics:
+      bindAddress: 127.0.0.1:8080
+    leaderElection:
+      leaderElect: {{ ternary "true" "false" .Values.controllerConfig.leaderElection }}
