@@ -10,4 +10,5 @@ backup-store-config.yaml
 workflow/
 
 .vscode/
+tmp
 

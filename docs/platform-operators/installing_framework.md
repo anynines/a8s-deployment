@@ -13,12 +13,19 @@
       - [Install the OLM](#install-the-olm)
       - [Install the Control Plane with OLM](#install-the-control-plane-with-olm)
       - [Uninstalling the Control Plane](#uninstalling-the-control-plane)
+    - [Using Helm Charts](#using-helm-charts)
+      - [Installing with Helm](#install-components-with-helm)
+      - [Install All Components with Helm](#install-all-components-with-helm)
+      - [Install the PostgreSQL Operator](#install-the-postgresql-operator)
+      - [Install the Service Binding Controller](#install-the-service-binding-controller)
+      - [Install the Backup Manager](#install-the-backup-manager)
   - [(Optional) Install the Logging Infrastructure](#optional-install-the-logging-infrastructure)
     - [Virtual Memory Usage](#virtual-memory-usage)
       - [Disabling Virtual Memory Usage](#disabling-virtual-memory-usage)
   - [Uninstall the Logging Infrastructure](#uninstall-the-logging-infrastructure)
   - [(Optional) Install the Metrics Infrastructure](#optional-install-the-metrics-infrastructure)
   - [Uninstall the Metrics Infrastructure](#uninstall-the-metrics-infrastructure)
+- [Building and Publishing Helm Charts](building_helm_charts.md)
 
 ## Prerequisites
 
@@ -117,7 +124,7 @@ updated the framework. In this case you might want to disable automatic updates.
 
 The a8s Control Plane can be deployed with the help of the static manifests you
 can find under `/deploy/a8s/manifests` or with the help of the [Operator
-Lifecycle Manager (OLM)][olm]. 
+Lifecycle Manager (OLM)][olm].
 
 While the manifest method is easy to use, it does not come with automatic
 updates or lifecycle management of the framework, so we encourage you to use the
@@ -238,7 +245,7 @@ operator-sdk olm install
 
 to install the OLM components to your cluster. Alternatively, you can follow the
 [official
-instructions](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/install/install.md). 
+instructions](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/install/install.md).
 
 #### Install the Control Plane with OLM
 
@@ -249,13 +256,14 @@ kubectl apply --kustomize deploy/a8s/olm
 ```
 
 to apply all OLM resources necessary. In more detail, this will create:
+
 - the namespace `a8s-system`.
 - a `CatalogSource` referencing the a8s catalog which contains references to
   our operators
 - an `OperatorGroup` a8s-operators linked to the a8s-system namespace, which can
   be used to adjust general permission for all operators in that group. You can
   find more information on that subject
-  [here](https://docs.openshift.com/container-platform/4.8/operators/understanding/olm/olm-understanding-operatorgroups.html). 
+  [here](https://docs.openshift.com/container-platform/4.8/operators/understanding/olm/olm-understanding-operatorgroups.html).
 - a `Subscription` to the a8s postgresql-operator. A Subscription indicates your
   desire to have the operator installed to the cluster, the OLM will then fetch
   the bundle of the PostgreSQL operator and its dependencies, which includes
@@ -287,6 +295,371 @@ kubectl delete crd recoveries.backups.anynines.com\
     postgresqls.postgresql.anynines.com\
     servicebindings.servicebindings.anynines.com
 ```
+
+### Using Helm Charts
+
+You can deploy a8s components using Helm charts. Charts are available in two ways:
+
+1. **From the repository** (recommended): Published charts in AWS S3
+2. **Locally**: Charts under `deploy/a8s/charts/` in this repository
+
+Published charts are available at:
+
+- PostgreSQL Operator: `https://anynines-artifacts.s3.eu-central-1.amazonaws.com/charts/postgresql-operator`
+- Backup Manager: `https://anynines-artifacts.s3.eu-central-1.amazonaws.com/charts/backup-manager`
+- Service Binding Controller: `https://anynines-artifacts.s3.eu-central-1.amazonaws.com/charts/service-binding-controller`
+
+This approach is useful if you want to manage specific components independently or integrate a8s with your existing Helm-based infrastructure.
+
+#### Install Components with Helm
+
+Each chart is self-contained and can be deployed independently from either the repository or locally.
+
+#### Install All Components with Helm
+
+To deploy all three a8s components (PostgreSQL Operator, Service Binding Controller, and Backup Manager)
+together in a single command, similar to the `kubectl apply --kustomize` approach:
+
+1. **Prerequisites**:
+
+   - Ensure cert-manager is installed (see [Install the cert-manager](#install-the-cert-manager))
+   - Prepare AWS S3 credentials (access key ID, secret access key, encryption password)
+
+2. **Install from published charts** (recommended):
+
+   First, add the Helm repositories:
+
+   ```shell
+   helm repo add postgresql-operator https://anynines-artifacts.s3.eu-central-1.amazonaws.com/charts/postgresql-operator
+   helm repo add backup-manager https://anynines-artifacts.s3.eu-central-1.amazonaws.com/charts/backup-manager
+   helm repo add service-binding-controller https://anynines-artifacts.s3.eu-central-1.amazonaws.com/charts/service-binding-controller
+   helm repo update
+   ```
+
+   Then install the charts:
+
+   ```shell
+   helm install postgresql-operator \
+     postgresql-operator/postgresql-operator \
+     --namespace a8s-system \
+     --create-namespace && \
+   helm install backup-manager \
+     backup-manager/backup-manager \
+     --namespace a8s-system \
+     --set backupStorageConfig.secret.create=true \
+     --set backupStorageConfig.secret.accessKeyId=YOUR_AWS_ACCESS_KEY_ID \
+     --set backupStorageConfig.secret.secretAccessKey=YOUR_AWS_SECRET_ACCESS_KEY \
+     --set backupStorageConfig.secret.encryptionPassword=YOUR_ENCRYPTION_PASSWORD && \
+   helm install service-binding-controller \
+     service-binding-controller/service-binding-controller \
+     --namespace a8s-system
+   ```
+
+   Or **install from local charts**:
+
+   First, configure the values file at `deploy/a8s/charts/a8s-controlplane-values.yaml` and update the required values:
+
+   - `backupManager.backupStorageConfig.secret.accessKeyId`: Your AWS access key
+   - `backupManager.backupStorageConfig.secret.secretAccessKey`: Your AWS secret key
+   - `backupManager.backupStorageConfig.secret.encryptionPassword`: Your encryption password
+   - `backupManager.backupStorageConfig.configMap.config.cloud_configuration.container`: Your S3 bucket name
+   - `backupManager.backupStorageConfig.configMap.config.cloud_configuration.region`: Your S3 region
+
+   Then install:
+
+   ```shell
+   helm install postgresql-operator ./deploy/a8s/charts/a8s-postgresql-operator \
+     --namespace a8s-system \
+     --create-namespace \
+     -f deploy/a8s/charts/a8s-controlplane-values.yaml && \
+   helm install backup-manager ./deploy/a8s/charts/a8s-backup-manager \
+     --namespace a8s-system \
+     -f deploy/a8s/charts/a8s-controlplane-values.yaml && \
+   helm install service-binding-controller ./deploy/a8s/charts/a8s-service-binding-controller \
+     --namespace a8s-system \
+     -f deploy/a8s/charts/a8s-controlplane-values.yaml
+   ```
+
+   For image configurations and all available options, see the individual chart values files:
+   - [PostgreSQL Operator values](../../deploy/a8s/charts/a8s-postgresql-operator/values.yaml)
+   - [Backup Manager values](../../deploy/a8s/charts/a8s-backup-manager/values.yaml)
+   - [Service Binding Controller values](../../deploy/a8s/charts/a8s-service-binding-controller/values.yaml)
+
+3. **Verify all components are running**:
+
+   ```shell
+   kubectl get deployment -n a8s-system
+   ```
+
+   All three deployments should show `1/1` under the `READY` column:
+
+   ```shell
+   NAME                                          READY   UP-TO-DATE   AVAILABLE   AGE
+   a8s-postgresql-operator-controller-manager    1/1     1            1           2m
+   a8s-backup-manager-controller-manager         1/1     1            1           2m
+   a8s-service-binding-controller-manager        1/1     1            1           2m
+   ```
+
+4. **Uninstall all components**:
+
+   ```shell
+   helm uninstall postgresql-operator --namespace a8s-system && \
+   helm uninstall backup-manager --namespace a8s-system && \
+   helm uninstall service-binding-controller --namespace a8s-system
+   ```
+
+   To also delete the CRDs:
+
+   ```shell
+   kubectl delete crd postgresqls.postgresql.anynines.com \
+     backups.backups.anynines.com \
+     restores.backups.anynines.com  \
+     backuppolicies.backups.anynines.com  \
+     servicebindings.servicebindings.anynines.com
+   ```
+
+#### Install the PostgreSQL Operator
+
+To install the a8s PostgreSQL Operator using Helm:
+
+1. **Prerequisites**: Ensure cert-manager is installed on your cluster (see
+[Install the cert-manager](#install-the-cert-manager) section above).
+
+2. **Install from the published chart** (recommended):
+
+   ```shell
+   helm install a8s-postgresql-operator \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/postgresql-operator \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --create-namespace
+   ```
+
+   Or **use the local Helm chart**:
+
+   ```shell
+   helm install a8s-postgresql-operator ./deploy/a8s/charts/a8s-postgresql-operator \
+     --namespace a8s-system \
+     --create-namespace
+   ```
+
+3. **Customize image tag** (if using private or mirrored images):
+
+   ```shell
+   helm install a8s-postgresql-operator \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/postgresql-operator \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --create-namespace \
+     --set image.tag=your-tag
+   ```
+
+   For PostgreSQL image configuration (Spilo, backup agent), edit the values:
+
+   ```shell
+   helm install a8s-postgresql-operator \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/postgresql-operator \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --create-namespace \
+     --set postgresqlImages.spiloImage=your-registry.com/spilo:latest \
+     --set postgresqlImages.backupAgentImage=your-registry.com/backup-agent:latest
+   ```
+
+   See [values.yaml](../../deploy/a8s/charts/a8s-postgresql-operator/values.yaml) for all
+   available configuration options.
+
+4. **Verify the deployment**:
+
+   ```shell
+   kubectl get deployment -n a8s-system a8s-postgresql-operator-controller-manager
+   ```
+
+   The deployment should show `1/1` under the `READY` column.
+
+5. **Uninstall** (if needed):
+
+   ```shell
+   helm uninstall a8s-postgresql-operator --namespace a8s-system
+   ```
+
+   To also delete the CRD, run:
+
+   ```shell
+   kubectl delete crd postgresqls.postgresql.anynines.com
+   ```
+
+#### Install the Service Binding Controller
+
+To install the a8s Service Binding Controller using Helm:
+
+1. **Prerequisites**: Ensure cert-manager is installed on your cluster (see
+[Install the cert-manager](#install-the-cert-manager) section above).
+
+2. **Install from the published chart** (recommended):
+
+   ```shell
+   helm install a8s-service-binding-controller \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/service-binding-controller \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --create-namespace
+   ```
+
+   Or **use the local Helm chart**:
+
+   ```shell
+   helm install a8s-service-binding-controller ./deploy/a8s/charts/a8s-service-binding-controller \
+     --namespace a8s-system \
+     --create-namespace
+   ```
+
+3. **Customize the deployment** by overriding values:
+
+   ```shell
+   helm install a8s-service-binding-controller \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/service-binding-controller \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --create-namespace \
+     --set controllerConfig.enable-integration=postgresql \
+     --set replicaCount=1
+   ```
+
+   See [values.yaml](../../deploy/a8s/charts/a8s-service-binding-controller/values.yaml) for all
+   available configuration options.
+
+4. **Verify the deployment**:
+
+   ```shell
+   kubectl get deployment -n a8s-system a8s-service-binding-controller-manager
+   ```
+
+   The deployment should show `1/1` under the `READY` column.
+
+5. **Uninstall** (if needed):
+
+   ```shell
+   helm uninstall a8s-service-binding-controller --namespace a8s-system
+   ```
+
+   This will remove the Service Binding Controller deployment and RBAC resources, but will retain
+   the CustomResourceDefinition (CRD). To also delete the CRD, run:
+
+   ```shell
+   kubectl delete crd servicebindings.servicebindings.anynines.com
+   ```
+
+#### Install the Backup Manager
+
+To install the a8s Backup Manager using Helm:
+
+1. **Prerequisites**:
+
+   - Ensure cert-manager is installed (see [Install the cert-manager](#install-the-cert-manager))
+   - Prepare AWS S3 credentials (access key ID, secret access key, encryption password)
+   - Note the S3 bucket name and region
+
+2. **Configure backup storage credentials**:
+
+   Option A: Create the backup storage secret externally and reference it:
+
+   ```shell
+   kubectl create secret generic a8s-backup-storage-credentials \
+     --from-literal=access-key-id=YOUR_AWS_ACCESS_KEY_ID \
+     --from-literal=secret-access-key=YOUR_AWS_SECRET_ACCESS_KEY \
+     --from-literal=encryption-password=YOUR_ENCRYPTION_PASSWORD \
+     -n a8s-system
+   ```
+
+   Then install with the backup-manager from the published chart:
+
+   ```shell
+   helm install a8s-backup-manager \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/backup-manager \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --set backupStorageConfig.secret.create=false
+   ```
+
+   Or use the local chart:
+
+   ```shell
+   helm install a8s-backup-manager ./deploy/a8s/charts/a8s-backup-manager \
+     --namespace a8s-system \
+     --set backupStorageConfig.secret.create=false
+   ```
+
+   Option B: Provide credentials directly to Helm (use with caution, best for testing):
+
+   ```shell
+   helm install a8s-backup-manager \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/backup-manager \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --set backupStorageConfig.secret.create=true \
+     --set backupStorageConfig.secret.accessKeyId=YOUR_AWS_ACCESS_KEY_ID \
+     --set backupStorageConfig.secret.secretAccessKey=YOUR_AWS_SECRET_ACCESS_KEY \
+     --set backupStorageConfig.secret.encryptionPassword=YOUR_ENCRYPTION_PASSWORD
+   ```
+
+3. **Customize the backup storage configuration**:
+
+   ```shell
+   helm install a8s-backup-manager \
+     oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/backup-manager \
+     --version 0.1.0 \
+     --namespace a8s-system \
+     --set backupStorageConfig.configMap.config.cloud_configuration.provider=AWS \
+     --set backupStorageConfig.configMap.config.cloud_configuration.container=my-backup-bucket \
+     --set backupStorageConfig.configMap.config.cloud_configuration.region=eu-central-1 \
+     --set backupStorageConfig.secret.create=false
+   ```
+
+   Or for S3-compatible storage (MinIO):
+
+   ```shell
+   helm install a8s-backup-manager ./deploy/a8s/charts/a8s-backup-manager \
+     --namespace a8s-system \
+     -f - <<EOF
+   backupStorageConfig:
+     configMap:
+       name: a8s-backup-store-config
+       config:
+         cloud_configuration:
+           provider: "S3"
+           container: "my-bucket"
+           region: "us-east-1"
+           endpoint: "http://minio.default.svc.cluster.local:9000"
+           path_style: true
+     secret:
+       create: false
+   EOF
+   ```
+
+   See [values.yaml](../../deploy/a8s/charts/a8s-backup-manager/values.yaml) and
+   [README.md](../../deploy/a8s/charts/a8s-backup-manager/README.md) for all available options.
+
+4. **Verify the deployment**:
+
+   ```shell
+   kubectl get deployment -n a8s-system a8s-backup-manager-controller-manager
+   ```
+
+   The deployment should show `1/1` under the `READY` column.
+
+5. **Uninstall** (if needed):
+
+   ```shell
+   helm uninstall a8s-backup-manager --namespace a8s-system
+   ```
+
+   To also delete the CRD, run:
+
+   ```shell
+   kubectl delete crd backups.backups.anynines.com restores.backups.anynines.com  \
+     backuppolicies.backups.anynines.com 
+   ```
 
 ## (Optional) Install the Logging Infrastructure
 
