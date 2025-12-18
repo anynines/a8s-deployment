@@ -8,6 +8,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+* Add helm charts to support installation of the a8s control plane(postgresql-operator, service-binding-controller and backup-manager).
+* Add support in service-binding-controller to handle user creation of AWS RDS postgresql instances.
 * BackupPolicy feature: Create new backups based on a schedule. You can now configure a schedule for each Postgresql instance's backups and when the backups will be cleaned up.
 * PostgreSQL 16 support ([Release Notes](https://www.postgresql.org/docs/release/16.0/))
 * Improved backup/restore reliability across versions.
@@ -59,7 +61,9 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 * Documentation has been revised, removing outdated instructions.
 
 ## [0.3.0] - 2023-05-15
+
 ### Migration Instructions
+
 * If you use the extensions feature, delete the stateful set objects (**not the PostgreSQL objects**)
 for instances that use extensions. Your data will be preserved, and the stateful sets will
 automatically be recreated.
@@ -102,7 +106,7 @@ version `v1alpha1` will not be available in v0.3.0.
   > Attempts to create a PostgreSQL API object with one or more values not
     compliant with the min and max listed above will be rejected with an error by
     the K8s API server.
-* **Breaking change**: Postgresql-controllers finalizer has been updated from 
+* **Breaking change**: Postgresql-controllers finalizer has been updated from
   `postgresql.operator.a8s.anynines.com` to `a8s.anynines.com/postgresql.operator`.
 * **Breaking change**: Postgresql-operator now uses an emptyDir instead of a persistent volume.
 * **Breaking change**: The field `postgresConfiguration` has been renamed to
@@ -122,50 +126,50 @@ version `v1alpha1` will not be available in v0.3.0.
 
 ### Removed
 
-* **Breaking change:** PostgreSQL version `v1alpha1` has been removed and is replaced by version 
+* **Breaking change:** PostgreSQL version `v1alpha1` has been removed and is replaced by version
 `v1beta3`.
 
 ## [0.2.0] - 2022-11-08
 
 ### Added
 
-- Publish API version v1beta3
-- max\_locks\_per\_transaction PostgreSQL configuration property has been added
-- end-to-end tests on PostgreSQL tolerations to node taints.
-- service-binding controller emits events for change of state
-- add field `extensions` to  `Postgresql.spec`, that allows installation of supported
+* Publish API version v1beta3
+* max\_locks\_per\_transaction PostgreSQL configuration property has been added
+* end-to-end tests on PostgreSQL tolerations to node taints.
+* service-binding controller emits events for change of state
+* add field `extensions` to  `Postgresql.spec`, that allows installation of supported
   PostgreSQL extensions.
-- support for MobilityDB PostgreSQL extension
-- backup custom resources now have a `maxRetries` field that specifies how often a backup
+* support for MobilityDB PostgreSQL extension
+* backup custom resources now have a `maxRetries` field that specifies how often a backup
   will be retried before entering a failed state
-- Add chaos test for crashing backup agent
-- Add chaos test for ensuring interrupted backup data is cleaned up from S3
+* Add chaos test for crashing backup agent
+* Add chaos test for ensuring interrupted backup data is cleaned up from S3
 
 ### Updated
 
-- Due to some internal code clean-up some error messages have changed in the logs
-- Rename tests from "integration tests" to "end-to-end tests", as they are end-to-end tests
-- Upgrade ginkgo from v1 to v2 in the end-to-end tests
-- Upgrade version of PostgreSQL-Operator to v0.39.0
+* Due to some internal code clean-up some error messages have changed in the logs
+* Rename tests from "integration tests" to "end-to-end tests", as they are end-to-end tests
+* Upgrade ginkgo from v1 to v2 in the end-to-end tests
+* Upgrade version of PostgreSQL-Operator to v0.39.0
 
 ### Fixed
 
-- **breaking change** Fix bug that caused the event for the successful deletion of
+* **breaking change** Fix bug that caused the event for the successful deletion of
   a DSI to be emitted multiple times and before the deletion had actually
   completed successfully
-- **breaking change** Fix issue where only a single event was emitted for two secrets
+* **breaking change** Fix issue where only a single event was emitted for two secrets
   of a PostgreSQL instance
-- Apply fix to PostgreSQL-Operator end-to-end tests to reduce flakiness
-- backup manager now handles crashes of the backup agent gracefully by restarting the failed backup
+* Apply fix to PostgreSQL-Operator end-to-end tests to reduce flakiness
+* backup manager now handles crashes of the backup agent gracefully by restarting the failed backup
 
 ### Changed
 
-- backup-manager now uses a dedicated ServiceAccount, instead of the default one
-- service-binding controller now uses a dedicated ServiceAccount, instead of the default one
-- postgresql-operator now used a dedicated ServiceAccount, instead of the default one
-- **breaking change** backup custom resources now use a list of Conditions instead of a single enum
+* backup-manager now uses a dedicated ServiceAccount, instead of the default one
+* service-binding controller now uses a dedicated ServiceAccount, instead of the default one
+* postgresql-operator now used a dedicated ServiceAccount, instead of the default one
+* **breaking change** backup custom resources now use a list of Conditions instead of a single enum
 as the status
-- **breaking change** `Recovery` objects have been renamed to `Restore`.
+* **breaking change** `Recovery` objects have been renamed to `Restore`.
   The new version of the operator does no longer watch for objects of the `Recovery` type. Do not
   upgrade while a `Recovery` object is in progress.
 
@@ -173,28 +177,28 @@ as the status
 
 ### Added
 
-- Changelog has been added
-- Support for PostgreSQL 14 has been added
-- Instructions on how to update the framework have been added
-- Installation with the help of OLM bundles is supported
-- Validation webhooks are introduced, with the cert-manager to obtain
+* Changelog has been added
+* Support for PostgreSQL 14 has been added
+* Instructions on how to update the framework have been added
+* Installation with the help of OLM bundles is supported
+* Validation webhooks are introduced, with the cert-manager to obtain
   certificates for them
-- Volume size of the PersistentVolume of a PostgreSQL instance is configurable
+* Volume size of the PersistentVolume of a PostgreSQL instance is configurable
 
 ### Fixed
 
-- Backup encryption password has been moved to a secret
-- Memory and CPU resource requests on operator pods have been increased to
+* Backup encryption password has been moved to a secret
+* Memory and CPU resource requests on operator pods have been increased to
   prevent issues on ARM
 
 ### Changed
 
-- The PostgreSQL operator has been moved to the `a8s-system` namespace
-- Backup agent image and Spilo image are no longer configurable by the
+* The PostgreSQL operator has been moved to the `a8s-system` namespace
+* Backup agent image and Spilo image are no longer configurable by the
   Application Developer, but rather are set by the Platform Operator
-- Fluentbit is updated to v1.9.4
-- Fluentd is updated to v1.14.6-1.1, additionally the OpenSearch plugin has been
+* Fluentbit is updated to v1.9.4
+* Fluentd is updated to v1.14.6-1.1, additionally the OpenSearch plugin has been
   added and the deprecated ES plugin was removed
-- Update OpenSearch, OpenSearchDashboards to v2.0.0
-- Prometheus v2.32.1
-- Grafana 8.3.3, including updates to the documentation
+* Update OpenSearch, OpenSearchDashboards to v2.0.0
+* Prometheus v2.32.1
+* Grafana 8.3.3, including updates to the documentation
