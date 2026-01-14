@@ -1,0 +1,86 @@
+{{- $backupNamespace := include "a8s-backup-manager.namespace" . -}}
+{{- $backupSAName := default "a8s-backup-manager-account" .Values.serviceAccount.name -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/created-by: a8s-backup-manager
+    app.kubernetes.io/instance: a8s-backup-manager
+    app.kubernetes.io/name: a8s-backup-manager
+    app.kubernetes.io/part-of: a8s-backup
+  name: {{ include "a8s-backup-manager.fullname" . }}-controller-manager
+  namespace: {{ $backupNamespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: a8s-backup-manager
+      app.kubernetes.io/name: a8s-backup-manager
+      app.kubernetes.io/part-of: a8s-backup
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: a8s-backup-manager
+        app.kubernetes.io/name: a8s-backup-manager
+        app.kubernetes.io/part-of: a8s-backup
+    spec:
+      serviceAccountName: {{ $backupSAName }}
+      containers:
+      - name: manager
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: BACKUP_SYSTEM_NAMESPACE
+          value: {{ $backupNamespace }}
+        - name: BACKUP_CREDENTIAL_PATH
+          value: /etc/backup-store-secrets
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        volumeMounts:
+        - name: backup-store-config
+          mountPath: /etc/backup-store-config
+        - name: backup-store-secrets
+          mountPath: /etc/backup-store-secrets
+        {{- if .Values.resources.manager }}
+        resources:
+          {{- toYaml .Values.resources.manager | nindent 10 }}
+        {{- end }}
+      - name: kube-rbac-proxy
+        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
+        args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=0
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        {{- if .Values.resources.kubeRbacProxy }}
+        resources:
+          {{- toYaml .Values.resources.kubeRbacProxy | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: backup-store-config
+        configMap:
+          name: {{ .Values.backupStorageConfig.configMap.name }}
+      - name: backup-store-secrets
+        secret:
+          secretName: {{ .Values.backupStorageConfig.secret.name }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

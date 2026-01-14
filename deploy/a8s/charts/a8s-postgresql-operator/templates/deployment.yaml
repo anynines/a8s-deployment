@@ -1,0 +1,114 @@
+{{- $namespace := include "a8s-postgresql-operator.namespace" . -}}
+{{- $saName := default "postgresql-manager-account" .Values.serviceAccount.name -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-controller-manager
+  namespace: {{ $namespace }}
+  labels:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: postgresql-controller-manager
+    app.kubernetes.io/part-of: a8s-postgres
+    control-plane: controller-manager
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller-manager
+      app.kubernetes.io/name: postgresql-controller-manager
+      app.kubernetes.io/part-of: a8s-postgres
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+        prometheus.io/port: "{{ .Values.services.metrics.port }}"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/component: controller-manager
+        app.kubernetes.io/name: postgresql-controller-manager
+        app.kubernetes.io/part-of: a8s-postgres
+        control-plane: controller-manager
+    spec:
+      serviceAccountName: {{ $saName }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: manager
+          image: {{ printf "%s:%s" .Values.image.repository .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --health-probe-bind-address={{ .Values.controllerConfig.healthProbeBindAddress }}
+            - --metrics-bind-address={{ .Values.controllerConfig.metricsBindAddress }}
+            - --leader-elect
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          ports:
+            - containerPort: 9443
+              name: webhook-server
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources.manager | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: cert
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+              readOnly: true
+            - name: image-config
+              mountPath: /config/images
+        - name: kube-rbac-proxy
+          image: {{ printf "%s:%s" .Values.kubeRbacProxyImage.repository .Values.kubeRbacProxyImage.tag }}
+          imagePullPolicy: {{ .Values.kubeRbacProxyImage.pullPolicy }}
+          args:
+            - --secure-listen-address=0.0.0.0:8443
+            - --upstream=http://127.0.0.1:8080/
+            - --logtostderr=true
+            - --v=0
+          ports:
+            - containerPort: 8443
+              name: https
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources.kubeRbacProxy | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: cert
+          secret:
+            defaultMode: 420
+            secretName: {{ .Values.webhookCertificate.secretName }}
+        - name: image-config
+          configMap:
+            defaultMode: 420
+            name: postgresql-images
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

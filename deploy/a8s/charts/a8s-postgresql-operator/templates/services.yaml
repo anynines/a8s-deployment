@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-controller-manager-metrics-service
+  namespace: {{ include "a8s-postgresql-operator.namespace" . }}
+  labels:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: postgresql-controller-manager
+    app.kubernetes.io/part-of: a8s-postgres
+    control-plane: controller-manager
+spec:
+  ports:
+    - name: https
+      port: {{ .Values.services.metrics.port }}
+      protocol: TCP
+      targetPort: https
+  selector:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: postgresql-controller-manager
+    app.kubernetes.io/part-of: a8s-postgres
+    control-plane: controller-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-webhook-service
+  namespace: {{ include "a8s-postgresql-operator.namespace" . }}
+  labels:
+    app.kubernetes.io/name: postgresql-operator
+spec:
+  ports:
+    - port: {{ .Values.services.webhook.port }}
+      protocol: TCP
+      targetPort: 9443
+  selector:
+    app.kubernetes.io/component: controller-manager
+    app.kubernetes.io/name: postgresql-controller-manager
+    app.kubernetes.io/part-of: a8s-postgres
+    control-plane: controller-manager

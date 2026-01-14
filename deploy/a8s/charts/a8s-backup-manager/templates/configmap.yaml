@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.backupStorageConfig.configMap.name }}
+  namespace: {{ include "a8s-backup-manager.namespace" . }}
+  labels:
+    {{- include "a8s-backup-manager.labels" . | nindent 4 }}
+data:
+  backup-store-config.yaml: |
+    config:
+      cloud_configuration:
+        provider: {{ .Values.backupStorageConfig.configMap.config.cloud_configuration.provider | quote }}
+        container: {{ .Values.backupStorageConfig.configMap.config.cloud_configuration.container }}
+        region: {{ .Values.backupStorageConfig.configMap.config.cloud_configuration.region }}

@@ -27,7 +27,7 @@ for information on any known issues or limitations.
 - [CHANGELOG](CHANGELOG.md)
 - [Technical Requirements](docs/technical_requirements.md)
 - [Platform Operator Documentation](docs/platform-operators/README.md)
-  - [Install the a8s Control Plane](./docs/platform-operators/installing_framework.md#/install-the-a8s-control-plane)
+  - [Install the a8s Control Plane](./docs/platform-operators/installing_framework.md)
   - [Update the a8s Control Plane](./docs/platform-operators/updating_framework.md)
 - [Application Developer Documentation](docs/application-developers/README.md)
   - [Usage Overview](docs/application-developers/usage_overview.md)

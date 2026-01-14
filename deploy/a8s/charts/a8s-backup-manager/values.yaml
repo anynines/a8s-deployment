@@ -1,0 +1,69 @@
+namespace: a8s-system
+replicaCount: 1
+
+image:
+  repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager
+  tag: a8555999c8c6fd7a1544c599b47f458b172eb4ca
+  pullPolicy: IfNotPresent
+
+kubeRbacProxyImage:
+  repository: gcr.io/kubebuilder/kube-rbac-proxy
+  tag: v0.16.0
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: a8s-backup-manager-account
+
+controllerConfig:
+  healthProbeBindAddress: :8081
+  metricsBindAddress: 127.0.0.1:8080
+  leaderElect: true
+  backupCredentialPath: /etc/backup-store-secrets
+
+services:
+  metrics:
+    port: 8443
+
+# Backup storage configuration - Configure S3/cloud storage for backups
+backupStorageConfig:
+  # ConfigMap for backup store coordinates
+  configMap:
+    name: a8s-backup-store-config
+    # The actual backup storage configuration
+    config:
+      cloud_configuration:
+        provider: "AWS"
+        container: a8s-shared-backups
+        region: eu-central-1
+
+  # Secret for backup storage credentials
+  secret:
+    name: a8s-backup-storage-credentials
+    # Create the secret from these values (or provide externally)
+    create: true
+    # When create=true, provide credentials inline:
+    accessKeyId: "YOUR_AWS_ACCESS_KEY_ID"
+    secretAccessKey: "YOUR_AWS_SECRET_ACCESS_KEY"
+    encryptionPassword: "YOUR_ENCRYPTION_PASSWORD"
+    # When create=false, reference an existing secret
+
+resources:
+  manager:
+    limits:
+      cpu: 150m
+      memory: 150Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  kubeRbacProxy:
+    limits:
+      cpu: 400m
+      memory: 128Mi
+    requests:
+      cpu: 5m
+      memory: 64Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: service-binding-controller
+description: Helm chart for deploying the service binding controller
+version: 0.1.0
+appVersion: "d9d34fbe"
+type: application

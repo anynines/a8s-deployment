@@ -1,0 +1,124 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: servicebindings.servicebindings.anynines.com
+spec:
+  group: servicebindings.anynines.com
+  names:
+    categories:
+      - all
+      - a8s
+    kind: ServiceBinding
+    listKind: ServiceBindingList
+    plural: servicebindings
+    shortNames:
+      - sb
+    singular: servicebinding
+  scope: Namespaced
+  versions:
+    - name: v1beta3
+      schema:
+        openAPIV3Schema:
+          description: ServiceBinding is the Schema for the servicebindings API
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: ServiceBindingSpec defines the desired state of the ServiceBinding.
+              properties:
+                instance:
+                  description:
+                    Instance identifies the Data Service Instance that the
+                    ServiceBinding binds to.
+                  properties:
+                    apiVersion:
+                      description: |-
+                        APIVersion is the <api_group>/<version> of the referenced Data Service Instance,
+                        e.g. "postgresql.anynines.com/v1beta3" or "rds.aws.anynines.com/v1"
+                      enum:
+                        - postgresql.anynines.com/v1beta3
+                        - rds.aws.anynines.com/v1
+                      type: string
+                    kind:
+                      description: |-
+                        Kind is the Kubernetes API Kind of the referenced Data Service Instance.
+                        e.g. "Postgresql" or "PostgresqlInstance".
+                      enum:
+                        - Postgresql
+                        - PostgresqlInstance
+                      type: string
+                    name:
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the Instance, if not provided the same namespace as the service bindings
+                        will be used
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                      type: string
+                  required:
+                    - apiVersion
+                    - kind
+                    - name
+                  type: object
+              required:
+                - instance
+              type: object
+            status:
+              description: ServiceBindingStatus defines the observed state of the ServiceBinding.
+              properties:
+                error:
+                  description: |-
+                    Error is a message explaining why the service binding could not be implemented if that's the
+                    case.
+                  type: string
+                implemented:
+                  description: |-
+                    Implemented is `true` if and only if the service binding has been implemented by creating
+                    a user with the appropriate permissions in the bound Data Service Instance.
+                    Users can safely consume the service binding secret identified by `Secret` IF AND ONLY IF
+                    `Implemented` is true. In other words, even if the secret identified by `Secret` gets created
+                    before `Implemented` becomes true, users MUST NOT consume that secret before `Implemented`
+                    has become true.
+                  type: boolean
+                secret:
+                  description: |-
+                    Secret contains the namespace and name of the Kubernetes API secret that stores the
+                    credentials and information (e.g. URL) associated to the service binding to access the bound
+                    Data Service Instance.
+                  properties:
+                    name:
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                      type: string
+                    namespace:
+                      description: |-
+                        Namespace of the Instance, if not provided the same namespace as the service bindings
+                        will be used
+                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                      type: string
+                  required:
+                    - name
+                  type: object
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

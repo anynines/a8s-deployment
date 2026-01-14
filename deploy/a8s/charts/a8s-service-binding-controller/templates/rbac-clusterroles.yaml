@@ -1,0 +1,127 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: service-binding-manager-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - postgresql.anynines.com
+    resources:
+      - postgresqls
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - postgresql.anynines.com
+    resources:
+      - postgresqls/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - rds.aws.anynines.com
+    resources:
+      - postgresqlinstances
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - rds.aws.anynines.com
+    resources:
+      - postgresqlinstances/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - servicebindings.anynines.com
+    resources:
+      - servicebindings
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - servicebindings.anynines.com
+    resources:
+      - servicebindings/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - servicebindings.anynines.com
+    resources:
+      - servicebindings/status
+    verbs:
+      - get
+      - patch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: metrics-reader
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/part-of: a8s-service-binding
+  name: service-binding-metrics-reader
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: a8s-service-binding-controller
+    app.kubernetes.io/instance: proxy-role
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/part-of: a8s-service-binding
+  name: service-binding-proxy-role
+rules:
+  - apiGroups:
+      - authentication.k8s.io
+    resources:
+      - tokenreviews
+    verbs:
+      - create
+  - apiGroups:
+      - authorization.k8s.io
+    resources:
+      - subjectaccessreviews
+    verbs:
+      - create
