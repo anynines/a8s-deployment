@@ -7,7 +7,7 @@ image:
   pullPolicy: IfNotPresent
 
 kubeRbacProxyImage:
-  repository: gcr.io/kubebuilder/kube-rbac-proxy
+  repository: quay.io/brancz/kube-rbac-proxy
   tag: v0.16.0
   pullPolicy: IfNotPresent
 

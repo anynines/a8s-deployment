@@ -51,7 +51,8 @@ spec:
           {{- toYaml .Values.resources.manager | nindent 10 }}
         {{- end }}
       - name: kube-rbac-proxy
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
+        image: {{ printf "%s:%s" .Values.kubeRbacProxyImage.repository .Values.kubeRbacProxyImage.tag }}
+        imagePullPolicy: {{ .Values.kubeRbacProxyImage.pullPolicy }}
         args:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
