@@ -5,7 +5,7 @@ image:
   tag: d9d34fbeada18ad3410975eeef746531c0e2c6d0
   pullPolicy: IfNotPresent
 kubeRbacProxyImage:
-  repository: gcr.io/kubebuilder/kube-rbac-proxy
+  repository: quay.io/brancz/kube-rbac-proxy
   tag: v0.16.0
   pullPolicy: IfNotPresent
 serviceAccount:
