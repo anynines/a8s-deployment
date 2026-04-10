@@ -4,32 +4,42 @@ All notable changes to the a9s Dataservices on Kubernetes will be documented
 here, the format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased
+## [unreleased]
+
+## [1.3.0] - 2026-04-08
 
 ### Added
 
-* Add helm charts to support installation of the a8s control plane(postgresql-operator, service-binding-controller and backup-manager).
+* Add helm charts to support installation of the a8s control plane (postgresql-operator, service-binding-controller and backup-manager).
 * Add support in service-binding-controller to handle user creation of AWS RDS postgresql instances.
 * BackupPolicy feature: Create new backups based on a schedule. You can now configure a schedule for each Postgresql instance's backups and when the backups will be cleaned up.
 * PostgreSQL 16 support ([Release Notes](https://www.postgresql.org/docs/release/16.0/))
 * Improved backup/restore reliability across versions.
+* Added support for OpenShift to postgresql-operator, a8s-service-binding-controller and a8s-backup-manager.
+
+### Changed
+
+* a8s-service-binding-controller: DSI namespace now defaults to the ServiceBinding's namespace if not explicitly set.
+* a8s-service-binding-controller can be configured via --config flag again after a regression in release v1.2.0. See [configuration documentation](docs/platform-operators/config-documentation/a8s-service-binding-controller/v1beta3.md) for details on the configuration file format.
+* a8s-backup-manager: path_style is now automatically determined based on whether a backup store endpoint is configured or not.
 
 ### Updated
 
 * Bump Operator-SDK version to v1.34.1 for a8s-backup-manager
 * Remove hard-coded start commands from deployment manifests
 * Bump cert-manager version to v1.15.3
+* Update various dependencies across operators.
+* Update kube-rbac-proxy image across operator deployments.
 
 ### Fixed
 
-* Fix nil pointer dereference in OwnerUIDExtractor indexer function of PostgreSQL Operator
+* Fix nil pointer dereference in OwnerUIDExtractor indexer function of PostgreSQL Operator.
 
 ## [1.2.0] - 2024-06-24
 
 ### Added
 
-* Backup-manager now supports S3-compatible storage services, allowing users to back up and restore
-  data with any S3-compatible provider.
+* Backup-manager now supports S3-compatible storage services, allowing users to back up and restore data with any S3-compatible provider.
 
 ### Updated
 
