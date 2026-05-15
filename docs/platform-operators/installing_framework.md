@@ -501,7 +501,7 @@ To install the a8s Service Binding Controller using Helm:
    ```shell
    helm install a8s-service-binding-controller \
      oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/service-binding-controller \
-     --version 0.1.0 \
+     --version 0.1.1 \
      --namespace a8s-system \
      --create-namespace
    ```
@@ -519,7 +519,7 @@ To install the a8s Service Binding Controller using Helm:
    ```shell
    helm install a8s-service-binding-controller \
      oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/service-binding-controller \
-     --version 0.1.0 \
+     --version 0.1.1 \
      --namespace a8s-system \
      --create-namespace \
      --set controllerConfig.enable-integration=postgresql \
