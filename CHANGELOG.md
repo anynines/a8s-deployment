@@ -6,7 +6,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
-* Use templates for CRDs in helm charts. Add `crd.install` and `crd.keep` variables.
+* Use templates for CRDs in helm charts. Add `crd.enable` and `crd.keep` variables.
 
 ## [1.3.0] - 2026-04-08
 

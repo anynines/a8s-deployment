@@ -2,7 +2,7 @@ namespace: a8s-system
 replicaCount: 1
 
 crd:
-  install: true
+  enable: true
   keep: true
 
 image:

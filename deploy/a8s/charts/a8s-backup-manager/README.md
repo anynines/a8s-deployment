@@ -90,7 +90,7 @@ kubectl create secret generic a8s-backup-storage-credentials \
 
 Key configurable values:
 
-- `crd.install`: Install CRDs via Helm
+- `crd.enable`: Install CRDs via Helm
 - `crd.keep`: Keep CRDs on uninstall (avoids potential data loss)
 - `image.repository`: Docker image repository
 - `image.tag`: Image tag/version

@@ -76,7 +76,7 @@ Key configurable values:
 |-----------|---------|-------------|
 | `namespace` | `a8s-system` | Kubernetes namespace for the controller |
 | `replicaCount` | `1` | Number of controller replicas |
-| `crd.install` | `true` | Install CRDs via Helm |
+| `crd.enable` | `true` | Install CRDs via Helm |
 | `crd.keep` | `true` | Keep CRDs on uninstall (avoids potential data loss) |
 | `image.repository` | ECR public registry | Docker image repository |
 | `image.tag` | `a8555999c8c6fd7a1544c599b47f458b172eb4ca` | Image tag/version |
