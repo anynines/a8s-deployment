@@ -1,6 +1,10 @@
 namespace: a8s-system
 replicaCount: 1
 
+crd:
+  enable: true
+  keep: true
+
 image:
   repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/backup-manager
   tag: a8555999c8c6fd7a1544c599b47f458b172eb4ca

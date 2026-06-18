@@ -1,6 +1,6 @@
 apiVersion: v2
 name: postgresql-operator
 description: Helm chart for the a8s PostgreSQL operator
-version: 0.1.0
+version: 0.2.0
 appVersion: "0dc360e"
 type: application

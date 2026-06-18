@@ -1,6 +1,10 @@
 namespace: a8s-system
 replicaCount: 1
 
+crd:
+  enable: true
+  keep: true
+
 image:
   repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/postgresql-operator
   tag: 0dc360e4590ff6fb7f86927f1a48422790b0a9c9

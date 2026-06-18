@@ -1,5 +1,10 @@
 namespace: a8s-system
 replicaCount: 1
+
+crd:
+  enable: true
+  keep: true
+
 image:
   repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller
   tag: af0fb7372bc816094dc534e1557dde15d27a233d
