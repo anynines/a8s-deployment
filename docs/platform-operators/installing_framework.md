@@ -522,7 +522,6 @@ To install the a8s Service Binding Controller using Helm:
      --version 0.1.1 \
      --namespace a8s-system \
      --create-namespace \
-     --set controllerConfig.enable-integration=postgresql \
      --set replicaCount=1
    ```
 

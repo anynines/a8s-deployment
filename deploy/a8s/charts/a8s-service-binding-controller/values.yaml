@@ -7,7 +7,7 @@ crd:
 
 image:
   repository: public.ecr.aws/w5n9a2g2/a9s-ds-for-k8s/dev/service-binding-controller
-  tag: af0fb7372bc816094dc534e1557dde15d27a233d
+  tag: 39037b5e4148d69dae1cbe35857e3a705eafb5d6
   pullPolicy: IfNotPresent
 kubeRbacProxyImage:
   repository: quay.io/brancz/kube-rbac-proxy
@@ -19,7 +19,6 @@ serviceAccount:
 controllerConfig:
   postgresqlRootRole: a9s_user
   postgresqlDefaultDatabase: a9s_apps_default_db
-  enable-integration: postgresql
   leaderElection: true
 service:
   port: 8443
