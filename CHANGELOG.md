@@ -13,6 +13,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 * a8s-service-binding-controller helm chart: Remove `controllerConfig.enable-integration` variable and bump controller image. Bump chart version to `0.3.0`.
 * postgresql-operator: Add Annotation to make LoadBalancers on EKS use scheme internet-facing.
 * a8s-postgresql-operator helm chart: Bump controller image. Bump chart version to `0.2.1`.
+* a8s-backup-manager helm chart: Fix backup config not being mountable. Bump chart version to `0.2.1`.
 
 ## [1.3.0] - 2026-04-08
 
