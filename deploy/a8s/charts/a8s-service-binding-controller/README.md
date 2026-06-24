@@ -31,21 +31,6 @@ helm install a8s-service-binding-controller ./deploy/a8s/charts/a8s-service-bind
   --create-namespace
 ```
 
-### Enable PostgreSQL Integration
-
-```bash
-helm install a8s-service-binding-controller ./deploy/a8s/charts/a8s-service-binding-controller \
-  --namespace a8s-system \
-  --create-namespace \
-  --set controllerConfig.enable-integration=postgresql
-```
-
-> **Note:** PostgreSQL integration is enabled by default in both the `Basic Installation` and `Enable PostgreSQL Integration` examples above. They are functionally equivalent. The explicit `--set controllerConfig.enable-integration=postgresql` flag is shown for clarity and future extensibility. To enable a different integration in the future, simply replace `postgresql` with the desired integration name:
->
-> ```bash
-> --set controllerConfig.enable-integration=<integration-name>
-> ```
-
 ### Custom Image Tag
 
 ```bash
@@ -56,15 +41,6 @@ helm install a8s-service-binding-controller ./deploy/a8s/charts/a8s-service-bind
 ```
 
 ## Configuration
-
-### Integration Options
-
-Set `postgresql` activate the integration for the service binding controller.
-
-```yaml
-controllerConfig:
-  enable-integration: "postgresql"  # Enable PostgreSQL integration
-```
 
 See [values.yaml](values.yaml) for all available options.
 
@@ -81,7 +57,6 @@ Key configurable values:
 | `image.repository` | ECR public registry | Docker image repository |
 | `image.tag` | `a8555999c8c6fd7a1544c599b47f458b172eb4ca` | Image tag/version |
 | `image.pullPolicy` | `IfNotPresent` | Image pull policy |
-| `controllerConfig.enable-integration` | `postgresql` | Data service integration to enable |
 | `controllerConfig.healthProbeBindAddress` | `:8081` | Health probe address |
 | `controllerConfig.metricsBindAddress` | `127.0.0.1:8080` | Metrics address |
 | `controllerConfig.leaderElect` | `true` | Enable leader election |
@@ -125,12 +100,6 @@ kubectl logs -n a8s-system -l app.kubernetes.io/name=a8s-service-binding-control
 ## Troubleshooting
 
 ### PostgreSQL Integration Not Working
-
-Verify PostgreSQL integration is enabled:
-
-```bash
-helm get values a8s-service-binding-controller -n a8s-system | grep enable-integration
-```
 
 Ensure the PostgreSQL Operator is installed and running:
 

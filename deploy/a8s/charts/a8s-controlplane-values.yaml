@@ -42,5 +42,3 @@ serviceBindingController:
   enabled: true
   namespace: a8s-system
   replicaCount: 1
-  controllerConfig:
-    enable-integration: "postgresql" # Enable PostgreSQL service binding

@@ -43,7 +43,6 @@ spec:
             - --config=/config/controller_manager_config.yaml
             - --postgresql-root-role={{ .Values.controllerConfig.postgresqlRootRole }}
             - --postgresql-default-database={{ .Values.controllerConfig.postgresqlDefaultDatabase }}
-            - --enable-integration={{ index .Values.controllerConfig "enable-integration" }}
           livenessProbe:
             httpGet:
               path: /healthz

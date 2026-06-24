@@ -6,7 +6,14 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
-* Use templates for CRDs in helm charts. Add `crd.enable` and `crd.keep` variables.
+## [1.4.0] - 2026-06-23
+
+* Use `templates` instead of `crd` directory for CRDs in helm charts. Add `crd.enable` and `crd.keep` variables.
+* **BREAKING** service-binding-controller: Remove `enable-integration` flag. The controller now auto detects relevant CDRs.
+* a8s-service-binding-controller helm chart: Remove `controllerConfig.enable-integration` variable and bump controller image. Bump chart version to `0.3.0`.
+* postgresql-operator: Add Annotation to make LoadBalancers on EKS use scheme internet-facing.
+* a8s-postgresql-operator helm chart: Bump controller image. Bump chart version to `0.2.1`.
+* a8s-backup-manager helm chart: Fix backup config not being mountable. Bump chart version to `0.2.1`.
 
 ## [1.3.0] - 2026-04-08
 
