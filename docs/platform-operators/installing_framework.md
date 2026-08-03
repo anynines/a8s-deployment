@@ -346,7 +346,6 @@ together in a single command, similar to the `kubectl apply --kustomize` approac
    helm install backup-manager \
      backup-manager/backup-manager \
      --namespace a8s-system \
-     --set backupStorageConfig.secret.create=true \
      --set backupStorageConfig.secret.accessKeyId=YOUR_AWS_ACCESS_KEY_ID \
      --set backupStorageConfig.secret.secretAccessKey=YOUR_AWS_SECRET_ACCESS_KEY \
      --set backupStorageConfig.secret.encryptionPassword=YOUR_ENCRYPTION_PASSWORD && \
@@ -362,8 +361,8 @@ together in a single command, similar to the `kubectl apply --kustomize` approac
    - `backupManager.backupStorageConfig.secret.accessKeyId`: Your AWS access key
    - `backupManager.backupStorageConfig.secret.secretAccessKey`: Your AWS secret key
    - `backupManager.backupStorageConfig.secret.encryptionPassword`: Your encryption password
-   - `backupManager.backupStorageConfig.configMap.config.cloud_configuration.container`: Your S3 bucket name
-   - `backupManager.backupStorageConfig.configMap.config.cloud_configuration.region`: Your S3 region
+   - `backupManager.backupStorageConfig.configMap.container`: Your S3 bucket name
+   - `backupManager.backupStorageConfig.configMap.region`: Your S3 region
 
    Then install:
 
@@ -579,7 +578,7 @@ To install the a8s Backup Manager using Helm:
      oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/backup-manager \
      --version 0.1.0 \
      --namespace a8s-system \
-     --set backupStorageConfig.secret.create=false
+     --set backupStorageConfig.secret.existingSecret=a8s-backup-storage-credentials
    ```
 
    Or use the local chart:
@@ -587,7 +586,7 @@ To install the a8s Backup Manager using Helm:
    ```shell
    helm install a8s-backup-manager ./deploy/a8s/charts/a8s-backup-manager \
      --namespace a8s-system \
-     --set backupStorageConfig.secret.create=false
+     --set backupStorageConfig.secret.existingSecret=a8s-backup-storage-credentials
    ```
 
    Option B: Provide credentials directly to Helm (use with caution, best for testing):
@@ -597,7 +596,6 @@ To install the a8s Backup Manager using Helm:
      oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/backup-manager \
      --version 0.1.0 \
      --namespace a8s-system \
-     --set backupStorageConfig.secret.create=true \
      --set backupStorageConfig.secret.accessKeyId=YOUR_AWS_ACCESS_KEY_ID \
      --set backupStorageConfig.secret.secretAccessKey=YOUR_AWS_SECRET_ACCESS_KEY \
      --set backupStorageConfig.secret.encryptionPassword=YOUR_ENCRYPTION_PASSWORD
@@ -610,10 +608,10 @@ To install the a8s Backup Manager using Helm:
      oci://public.ecr.aws/w5n9a2g2/anynines/klutch/charts/backup-manager \
      --version 0.1.0 \
      --namespace a8s-system \
-     --set backupStorageConfig.configMap.config.cloud_configuration.provider=AWS \
-     --set backupStorageConfig.configMap.config.cloud_configuration.container=my-backup-bucket \
-     --set backupStorageConfig.configMap.config.cloud_configuration.region=eu-central-1 \
-     --set backupStorageConfig.secret.create=false
+     --set backupStorageConfig.configMap.provider=AWS \
+     --set backupStorageConfig.configMap.container=my-backup-bucket \
+     --set backupStorageConfig.configMap.region=eu-central-1 \
+     --set backupStorageConfig.secret.existingSecret=a8s-backup-storage-credentials
    ```
 
    Or for S3-compatible storage (MinIO):
@@ -625,15 +623,13 @@ To install the a8s Backup Manager using Helm:
    backupStorageConfig:
      configMap:
        name: a8s-backup-store-config
-       config:
-         cloud_configuration:
-           provider: "S3"
-           container: "my-bucket"
-           region: "us-east-1"
-           endpoint: "http://minio.default.svc.cluster.local:9000"
-           path_style: true
+       provider: "S3"
+       container: "my-bucket"
+       region: "us-east-1"
+       endpoint: "http://minio.default.svc.cluster.local:9000"
+       pathStyle: true
      secret:
-       create: false
+       existingSecret: a8s-backup-storage-credentials
    EOF
    ```
 

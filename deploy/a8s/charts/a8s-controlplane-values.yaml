@@ -19,22 +19,23 @@ backupManager:
     # ConfigMap for backup store coordinates
     configMap:
       name: a8s-backup-store-config
-      config:
-        cloud_configuration:
-          provider: "AWS"
-          container: "my-backup-bucket" # CHANGE: Set to your S3 bucket name
-          region: "eu-central-1" # CHANGE: Set to your S3 region
-          # For S3-compatible storage (e.g., MinIO), also add:
-          # endpoint: "http://minio.default.svc.cluster.local:9000"
-          # path_style: true
+      provider: "AWS"
+      container: "my-backup-bucket" # CHANGE: Set to your S3 bucket name
+      region: "eu-central-1" # CHANGE: Set to your S3 region
+      # For S3-compatible storage (e.g., MinIO), also set:
+      # endpoint: "http://minio.default.svc.cluster.local:9000"
+      # pathStyle: true
     # Secret for backup storage credentials
     secret:
       name: a8s-backup-storage-credentials
-      create: true # Set to false to use existing secret
+      # Provide credentials inline (the chart creates the Secret above), or set
+      # existingSecret to reference a Secret you manage yourself (takes
+      # precedence over the inline values below).
       # CHANGE: Provide your AWS credentials
       accessKeyId: "YOUR_AWS_ACCESS_KEY_ID"
       secretAccessKey: "YOUR_AWS_SECRET_ACCESS_KEY"
       encryptionPassword: "YOUR_ENCRYPTION_PASSWORD"
+      # existingSecret: a8s-backup-storage-credentials
 
 # Service Binding Controller configuration
 # For all available options, see: deploy/a8s/helm/a8s-service-binding-controller/values.yaml
