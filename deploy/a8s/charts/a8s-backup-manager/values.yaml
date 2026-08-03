@@ -1,6 +1,12 @@
 namespace: a8s-system
 replicaCount: 1
 
+# Set by the parent umbrella chart to its dependency alias (e.g.
+# "a8sBackupOperator."). Leave empty for standalone installs. Only affects the
+# value paths printed in validation error messages, so they point at the key the
+# user actually edits. Not a functional setting.
+umbrellaValuePathPrefix: ""
+
 crd:
   enable: true
   keep: true
@@ -30,27 +36,47 @@ services:
     port: 8443
 
 # Backup storage configuration - Configure S3/cloud storage for backups
+# Set the destination bucket in configMap and the credentials in
+# secret (either inline or via an existing Secret).
 backupStorageConfig:
   # ConfigMap for backup store coordinates
   configMap:
     name: a8s-backup-store-config
-    # The actual backup storage configuration
-    config:
-      cloud_configuration:
-        provider: "AWS"
-        container: a8s-shared-backups
-        region: eu-central-1
+    # Storage provider, e.g. "AWS".
+    provider: "AWS"
+    # Bucket/container name. Required.
+    container: ""
+    # Bucket region, e.g. "eu-central-1". Required.
+    region: ""
+    # Optional endpoint URL for S3-compatible storage.
+    endpoint: ""
+    # Optional path_style setting for S3-compatible storage. If endpoint is set,
+    # this is automatically set to true.
+    pathStyle: false
 
-  # Secret for backup storage credentials
+  # Credentials for accessing the backup storage.
+  # Provide them inline (the chart creates the Secret named below) OR set
+  # existingSecret to reference a Secret you manage yourself.
+  # existingSecret takes precedence over the inline values.
   secret:
+    # Name of the Secret the backup manager mounts. When credentials are
+    # provided inline, the chart creates a Secret with this name.
     name: a8s-backup-storage-credentials
-    # Create the secret from these values (or provide externally)
-    create: true
-    # When create=true, provide credentials inline:
-    accessKeyId: "YOUR_AWS_ACCESS_KEY_ID"
-    secretAccessKey: "YOUR_AWS_SECRET_ACCESS_KEY"
-    encryptionPassword: "YOUR_ENCRYPTION_PASSWORD"
-    # When create=false, reference an existing secret
+
+    # Option A - inline credentials. When set (and existingSecret is empty),
+    # the chart creates the Secret above with keys access-key-id,
+    # secret-access-key and encryption-password.
+    accessKeyId: ""
+    secretAccessKey: ""
+    encryptionPassword: ""
+
+    # Option B - reference an existing Secret instead of providing credentials
+    # inline. Takes precedence over the inline values above.
+    existingSecret: ""
+    # Keys within existingSecret. Defaults match the chart-created Secret.
+    accessKeyIdKey: "access-key-id"
+    secretAccessKeyKey: "secret-access-key"
+    encryptionPasswordKey: "encryption-password"
 
 resources:
   manager:

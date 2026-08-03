@@ -1,3 +1,4 @@
+{{- $p := include "a8s-backup-manager.valuePath" . -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,6 +10,12 @@ data:
   backup-store-config.yaml: |
     config:
       cloud_configuration:
-        provider: {{ .Values.backupStorageConfig.configMap.config.cloud_configuration.provider | quote }}
-        container: {{ .Values.backupStorageConfig.configMap.config.cloud_configuration.container }}
-        region: {{ .Values.backupStorageConfig.configMap.config.cloud_configuration.region }}
+        provider: {{ .Values.backupStorageConfig.configMap.provider | quote }}
+        container: {{ required (printf "%sbackupStorageConfig.configMap.container is required (the backup bucket/container name)." $p) .Values.backupStorageConfig.configMap.container }}
+        region: {{ required (printf "%sbackupStorageConfig.configMap.region is required (the backup bucket region, e.g. eu-central-1)." $p) .Values.backupStorageConfig.configMap.region }}
+        {{- if .Values.backupStorageConfig.configMap.endpoint }}
+        endpoint: {{ .Values.backupStorageConfig.configMap.endpoint | quote }}
+        {{- end }}
+        {{- if .Values.backupStorageConfig.configMap.pathStyle }}
+        path_style: {{ .Values.backupStorageConfig.configMap.pathStyle }}
+        {{- end }}
