@@ -43,7 +43,7 @@ spec:
           protocol: TCP
         volumeMounts:
         - name: backup-store-config
-          mountPath: /etc/backup-store-config
+          mountPath: /etc/config
         - name: backup-store-secrets
           mountPath: /etc/backup-store-secrets
         {{- if .Values.resources.manager }}
@@ -70,6 +70,9 @@ spec:
       - name: backup-store-config
         configMap:
           name: {{ .Values.backupStorageConfig.configMap.name }}
+          items:
+            - key: backup-store-config.yaml
+              path: config.yaml
       - name: backup-store-secrets
         secret:
           secretName: {{ .Values.backupStorageConfig.secret.name }}
