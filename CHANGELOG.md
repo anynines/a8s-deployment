@@ -6,7 +6,22 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 
-* Use templates for CRDs in helm charts. Add `crd.enable` and `crd.keep` variables.
+### Added
+
+* Helm charts: Add `crd.enable` and `crd.keep` variables.
+* a8s-backup-manager chart: Add `umbrellaValuePathPrefix` field for easier integration into parent charts.
+* a8s-backup-manager chart: Add `backupStorageConfig.secret.existingSecret` to reference an externally managed credentials Secret, with configurable `accessKeyIdKey`, `secretAccessKeyKey` and `encryptionPasswordKey` for custom Secret keys. Replaces the previous `backupStorageConfig.secret.create` flag. 
+* a8s-backup-manager chart: Add `backupStorageConfig.configMap.endpoint` and `backupStorageConfig.configMap.pathStyle` variables.
+
+### Changed
+
+* Helm charts: Use templates for CRDs in helm charts instead of helm's `crd` directory.
+* a8s-backup-manager chart: **Breaking** Flatten backup store coordinates from `backupStorageConfig.configMap.config.cloud_configuration.{provider,container,region}` to `backupStorageConfig.configMap.{provider,container,region}`.
+* a8s-backup-manager chart: Make configuration and secret fields explicitly required.
+
+### Fixed
+
+* a8s-backup-manager chart: Mount the backup store config at `/etc/config/config.yaml` to match the path the manager expects.
 
 ## [1.3.0] - 2026-04-08
 
