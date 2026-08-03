@@ -75,7 +75,14 @@ spec:
               path: config.yaml
       - name: backup-store-secrets
         secret:
-          secretName: {{ .Values.backupStorageConfig.secret.name }}
+          secretName: {{ .Values.backupStorageConfig.secret.existingSecret | default .Values.backupStorageConfig.secret.name }}
+          items:
+            - key: {{ .Values.backupStorageConfig.secret.accessKeyIdKey | default "access-key-id" }}
+              path: access-key-id
+            - key: {{ .Values.backupStorageConfig.secret.secretAccessKeyKey | default "secret-access-key" }}
+              path: secret-access-key
+            - key: {{ .Values.backupStorageConfig.secret.encryptionPasswordKey | default "encryption-password" }}
+              path: encryption-password
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
