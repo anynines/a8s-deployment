@@ -46,7 +46,8 @@ backupStorageConfig:
     provider: "AWS"
     # Bucket/container name. Required.
     container: ""
-    # Bucket region, e.g. "eu-central-1". Required.
+    # Bucket region, e.g. "eu-central-1". Required unless a custom endpoint is
+    # set (e.g. for MinIO / S3-compatible storage, where region is optional).
     region: ""
     # Optional endpoint URL for S3-compatible storage.
     endpoint: ""

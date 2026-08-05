@@ -99,7 +99,7 @@ Key configurable values:
 - `backupStorageConfig.configMap.name`: ConfigMap name for storage coordinates
 - `backupStorageConfig.configMap.provider`: Storage provider (e.g. `AWS`)
 - `backupStorageConfig.configMap.container`: Bucket/container name (required)
-- `backupStorageConfig.configMap.region`: Bucket region (required)
+- `backupStorageConfig.configMap.region`: Bucket region (required unless a custom `endpoint` is set)
 - `backupStorageConfig.configMap.endpoint`: Endpoint URL for S3-compatible storage (optional)
 - `backupStorageConfig.configMap.pathStyle`: Use path-style addressing for S3-compatible storage (optional)
 - `backupStorageConfig.secret.name`: Secret name the chart creates for inline credentials
