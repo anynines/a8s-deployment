@@ -11,15 +11,20 @@ The backup-manager requires configuration for S3/cloud storage backup destinatio
 1. **ConfigMap** (`a8s-backup-store-config`): Stores the backup storage coordinates (provider, region, container)
 2. **Secret** (`a8s-backup-storage-credentials`): Stores credentials for accessing the backup storage
 
-### Using Existing Secret
+### Using an Existing Secret
 
-If you already have a Secret with backup storage credentials:
+If you already manage a Secret with backup storage credentials, reference it
+with `existingSecret`. This takes precedence over inline credentials:
 
 ```bash
 helm install a8s-backup-manager ./a8s-backup-manager \
-  --set backupStorageConfig.secret.create=false \
-  --set backupStorageConfig.secret.name=a8s-backup-storage-credentials
+  --set backupStorageConfig.secret.existingSecret=a8s-backup-storage-credentials
 ```
+
+By default the chart expects the keys `access-key-id`, `secret-access-key` and
+`encryption-password`. If your Secret uses different keys, override
+`backupStorageConfig.secret.accessKeyIdKey`, `.secretAccessKeyKey` and
+`.encryptionPasswordKey`.
 
 ### Creating Secret via Helm Values
 
@@ -27,11 +32,13 @@ Provide credentials directly via Helm values to have the chart create the Secret
 
 ```bash
 helm install a8s-backup-manager ./a8s-backup-manager \
-  --set backupStorageConfig.secret.create=true \
   --set backupStorageConfig.secret.accessKeyId="YOUR_AWS_KEY" \
   --set backupStorageConfig.secret.secretAccessKey="YOUR_AWS_SECRET" \
   --set backupStorageConfig.secret.encryptionPassword="YOUR_ENCRYPTION_PASSWORD"
 ```
+
+> **Not recommended for production.** For production, manage the Secret yourself and reference it
+> with `existingSecret` — see [Using an Existing Secret](#using-an-existing-secret).
 
 ### Customizing Backup Storage Configuration
 
@@ -39,9 +46,10 @@ To configure the S3 backup storage coordinates:
 
 ```bash
 helm install a8s-backup-manager ./a8s-backup-manager \
-  --set backupStorageConfig.configMap.config.cloud_configuration.provider="AWS" \
-  --set backupStorageConfig.configMap.config.cloud_configuration.container="my-backup-bucket" \
-  --set backupStorageConfig.configMap.config.cloud_configuration.region="us-east-1"
+  --set backupStorageConfig.configMap.provider="AWS" \
+  --set backupStorageConfig.configMap.container="my-backup-bucket" \
+  --set backupStorageConfig.configMap.region="us-east-1"
+  --set backupStorageConfig.configMap.endpoint="https://<custom-s3-endpoint>"
 ```
 
 Or using a values file:
@@ -50,13 +58,10 @@ Or using a values file:
 # values-override.yaml
 backupStorageConfig:
   configMap:
-    config:
-      cloud_configuration:
-        provider: "AWS"
-        container: "my-backup-bucket"
-        region: "us-east-1"
+    provider: "AWS"
+    container: "my-backup-bucket"
+    region: "us-east-1"
   secret:
-    create: true
     accessKeyId: "YOUR_AWS_KEY"
     secretAccessKey: "YOUR_AWS_SECRET"
     encryptionPassword: "YOUR_ENCRYPTION_PASSWORD"
@@ -70,13 +75,9 @@ helm install a8s-backup-manager ./a8s-backup-manager -f values-override.yaml
 
 ## Required Kubernetes Credentials
 
-The backup-manager requires credentials stored in the `a8s-backup-storage-credentials` Secret with the following keys:
-
-- `access-key-id`: AWS access key ID
-- `secret-access-key`: AWS secret access key
-- `encryption-password`: Password for encrypting backups
-
-These can be created separately before installing the chart:
+To create the backup storage Secret yourself before installing the chart,
+then reference it via `backupStorageConfig.secret.existingSecret` (see
+[Using an Existing Secret](#using-an-existing-secret) for the key details):
 
 ```bash
 kubectl create secret generic a8s-backup-storage-credentials \
@@ -96,8 +97,15 @@ Key configurable values:
 - `image.tag`: Image tag/version
 - `replicaCount`: Number of backup-manager replicas
 - `backupStorageConfig.configMap.name`: ConfigMap name for storage coordinates
-- `backupStorageConfig.secret.name`: Secret name for credentials
-- `backupStorageConfig.secret.create`: Whether to create the secret (default: true)
+- `backupStorageConfig.configMap.provider`: Storage provider (e.g. `AWS`)
+- `backupStorageConfig.configMap.container`: Bucket/container name (required)
+- `backupStorageConfig.configMap.region`: Bucket region (required unless a custom `endpoint` is set)
+- `backupStorageConfig.configMap.endpoint`: Endpoint URL for S3-compatible storage (optional)
+- `backupStorageConfig.configMap.pathStyle`: Use path-style addressing for S3-compatible storage (optional)
+- `backupStorageConfig.secret.name`: Secret name the chart creates for inline credentials
+- `backupStorageConfig.secret.existingSecret`: Reference an externally managed credentials Secret (takes precedence over inline credentials)
+- `backupStorageConfig.secret.accessKeyIdKey` / `.secretAccessKeyKey` / `.encryptionPasswordKey`: Key names within `existingSecret`
+- `umbrellaValuePathPrefix`: Set by a parent umbrella chart so validation error messages point at the right value path (leave empty for standalone installs)
 - `resources`: Resource limits and requests for containers
 - `nodeSelector`: Node selection constraints
 - `affinity`: Pod affinity rules
